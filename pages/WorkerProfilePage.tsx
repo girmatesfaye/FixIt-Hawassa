@@ -103,7 +103,7 @@ const WorkerProfilePage: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column */}
           <div className="flex-grow flex flex-col gap-6">
-            <div className="bg-white dark:bg-surface-dark rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-start gap-8">
               <div className="relative shrink-0">
                 <div className="size-40 rounded-full border-4 border-white dark:border-gray-700 shadow-lg overflow-hidden">
                   <img src={worker.avatar} alt={worker.name} className="w-full h-full object-cover" />
@@ -111,31 +111,41 @@ const WorkerProfilePage: React.FC = () => {
                 <div className="absolute bottom-2 right-2 size-6 bg-green-500 border-4 border-white dark:border-surface-dark rounded-full"></div>
               </div>
               <div className="flex flex-col items-center sm:items-start gap-3">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-3xl font-bold tracking-tight text-[#120e1b] dark:text-white">{worker.name}</h1>
-                  <span className="material-symbols-outlined text-primary text-[24px] fill-current">verified</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">{worker.name}</h1>
+                  </div>
+                  <div className="inline-flex items-center gap-3 ml-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Available</span>
+                    <button className={`w-12 h-6 rounded-full flex items-center p-1 transition-colors ${worker.isAvailable ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                      <div className={`bg-white size-5 rounded-full shadow-md transform transition-transform ${worker.isAvailable ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                    </button>
+                  </div>
                 </div>
-                <p className="text-lg font-bold text-primary">{worker.title}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <span key={s} className="material-symbols-outlined text-amber-400 text-[20px] fill-current">star</span>
-                    ))}
-                    <span className="text-sm font-bold dark:text-white ml-1">{worker.rating}</span>
+                <p className="text-lg font-bold text-gray-500 dark:text-gray-400">{worker.title}</p>
+                <div className="flex flex-wrap items-center gap-4 mt-2">
+                  <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-100 dark:border-amber-500/20">
+                    <span className="material-symbols-outlined text-amber-500 text-[18px] fill-current">star</span>
+                    <span className="text-sm font-bold text-amber-700 dark:text-amber-400 ml-1">{worker.rating}</span>
+                    <span className="text-xs font-semibold text-amber-600/70 dark:text-amber-400/70 ml-1">({worker.reviews} reviews)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                    <span className="material-symbols-outlined text-[18px]">location_on</span>
+                    <span className="text-sm font-semibold">{worker.location}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-surface-dark rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
-              <h3 className="text-xl font-bold tracking-tight text-[#120e1b] dark:text-white mb-6">About Me</h3>
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-6">About Me</h3>
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">{worker.about}</p>
             </div>
 
             {/* Portfolio Section */}
-            <div className="bg-white dark:bg-surface-dark rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold tracking-tight text-[#120e1b] dark:text-white">Proof of Work</h3>
+                <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">Proof of Work</h3>
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{portfolioItems.length} Projects</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -154,8 +164,8 @@ const WorkerProfilePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-surface-dark rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
-              <h3 className="text-xl font-bold tracking-tight text-[#120e1b] dark:text-white mb-8">Recent Reviews</h3>
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-8">Recent Reviews</h3>
               <div className="flex flex-col gap-6">
                  {recentReviews.map(review => (
                   <div key={review.id} className="border-b border-gray-50 dark:border-gray-800 pb-6 last:border-0 last:pb-0">
@@ -169,10 +179,10 @@ const WorkerProfilePage: React.FC = () => {
 
           {/* Right Sidebar */}
           <div className="w-full lg:w-[360px] flex flex-col gap-6">
-            <div className="bg-white dark:bg-surface-dark rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-800">
-              <h3 className="text-xl font-bold tracking-tight text-[#120e1b] dark:text-white mb-6">Connect with {worker.name.split(' ')[0]}</h3>
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
+              <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-6">Contact {worker.name.split(' ')[0]}</h3>
               
-              <div className="flex flex-col gap-3 mb-4">
+              <div className="flex flex-col gap-3 mb-6">
                 <button 
                   onClick={() => setIsContactOpen(!isContactOpen)}
                   className={`h-14 w-full flex items-center justify-between px-6 rounded-xl font-bold uppercase tracking-widest transition-all ${
@@ -180,7 +190,7 @@ const WorkerProfilePage: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined">{isContactOpen ? 'contact_mail' : 'person_add'}</span>
+                    <span className="material-symbols-outlined text-[20px]">{isContactOpen ? 'contact_mail' : 'person_add'}</span>
                     Contact Worker
                   </div>
                   <span className={`material-symbols-outlined transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`}>
@@ -188,65 +198,61 @@ const WorkerProfilePage: React.FC = () => {
                   </span>
                 </button>
 
-                <div className={`flex flex-col gap-2 overflow-hidden transition-all duration-300 ${
+                <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${
                   isContactOpen ? 'max-h-[300px] opacity-100 mt-2' : 'max-h-0 opacity-0 pointer-events-none'
                 }`}>
                   <a 
                     href={`tel:+251911234567`}
-                    className="h-14 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-[#120e1b] dark:text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="group relative h-14 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-green-500/25 active:scale-95 overflow-hidden text-sm"
                   >
-                    <span className="material-symbols-outlined text-green-500">call</span> 
-                    Call +251 911...
+                    <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                    <span className="material-symbols-outlined relative z-10 text-[20px]">call</span> 
+                    <span className="relative z-10">Call +251 911...</span>
                   </a>
+                  
                   <a 
                     href="https://t.me/abebe_kebede"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-14 bg-[#26a5e4] hover:bg-[#1e8ec5] text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all"
+                    className="group relative h-14 bg-[#26a5e4] hover:bg-[#1e8ec5] text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#26a5e4]/25 active:scale-95 overflow-hidden text-sm"
                   >
-                    <span className="material-symbols-outlined">send</span> 
-                    Telegram Message
+                    <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                    <span className="material-symbols-outlined relative z-10 text-[20px]">send</span> 
+                    <span className="relative z-10">Telegram Message</span>
                   </a>
+
                   <a 
                     href={worker.tiktokUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-14 bg-black text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all hover:opacity-80"
+                    className="group relative h-14 bg-[#120e1b] dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-black/20 active:scale-95 overflow-hidden border border-transparent dark:border-gray-700 text-sm"
                   >
-                    <span className="material-symbols-outlined">movie</span> 
-                    Watch on TikTok
+                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                    <span className="material-symbols-outlined relative z-10 text-[20px]">movie</span> 
+                    <span className="relative z-10">Watch on TikTok</span>
                   </a>
                 </div>
               </div>
 
+
+
               <button 
                 onClick={() => setIsReviewModalOpen(true)}
-                className="w-full h-14 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-amber-500/10 transition-all active:scale-95 flex items-center justify-center gap-2 mb-4"
+                className="w-full h-14 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 hover:border-amber-500 dark:hover:border-amber-500 text-[#120e1b] dark:text-white hover:text-amber-500 rounded-xl font-bold uppercase tracking-widest text-xs transition-colors active:scale-95 flex items-center justify-center gap-2 mb-6"
               >
-                <span className="material-symbols-outlined">star</span>
-                Leave a Rating
+                <span className="material-symbols-outlined text-[18px]">star</span>
+                Write a Review
               </button>
 
-              <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex justify-center">
                 <button 
                   onClick={() => setIsReportModalOpen(true)}
-                  className="w-full py-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs font-bold text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center gap-2"
+                  className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
                 >
-                  <span className="material-symbols-outlined text-[18px]">flag</span>
+                  <span className="material-symbols-outlined text-[16px]">flag</span>
                   Report Profile
                 </button>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
-              <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Availability</h4>
-              <div className="flex items-center gap-3">
-                <div className="size-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-bold text-green-600 uppercase tracking-tight">Available Now</span>
-              </div>
-              <p className="text-[10px] text-gray-500 font-medium mt-2 leading-relaxed">
-                Abebe is currently accepting requests in Hawassa.
-              </p>
             </div>
           </div>
         </div>

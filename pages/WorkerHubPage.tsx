@@ -64,8 +64,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         <header className="sticky top-0 z-10 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-10 py-6">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex flex-col">
-              <h1 className="text-2xl font-black text-[#120e1b] dark:text-white">Shop Presence</h1>
-              <p className="text-xs font-medium text-gray-500">How clients see you in Hawassa.</p>
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">Shop Presence</h1>
+              <p className="text-sm font-bold text-gray-500">How clients see you in Hawassa.</p>
             </div>
             <button 
               onClick={() => navigate('/worker/edit-profile')}
@@ -85,16 +85,16 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               : 'bg-gray-50 border-gray-100 dark:bg-gray-900 dark:border-gray-800'
           }`}>
             <div className="flex items-center gap-6">
-              <div className={`size-16 rounded-2xl flex items-center justify-center transition-colors ${
+              <div className={`size-16 rounded-3xl flex items-center justify-center transition-colors ${
                 isAvailable ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
               }`}>
                 <span className="material-symbols-outlined text-3xl">sensors</span>
               </div>
               <div className="flex flex-col">
-                <h3 className="text-xl font-bold dark:text-white">
+                <h3 className="text-xl font-extrabold tracking-tight dark:text-white">
                   {isAvailable ? 'You are visible to clients' : 'Your profile is hidden'}
                 </h3>
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-bold text-gray-500 mt-1">
                   {isAvailable 
                     ? 'Clients can call or message you for physical work.' 
                     : 'Turn this on to appear in Hawassa search results.'}
@@ -116,8 +116,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                   <span className="material-symbols-outlined text-3xl">add_a_photo</span>
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-amber-900 dark:text-amber-100">Finish setting up your shop</h4>
-                  <p className="text-sm font-medium text-amber-700">Add photos of your physical work to build trust.</p>
+                  <h4 className="text-lg font-extrabold tracking-tight text-amber-900 dark:text-amber-100">Finish setting up your shop</h4>
+                  <p className="text-sm font-bold text-amber-700 mt-1">Add photos of your physical work to build trust.</p>
                 </div>
               </div>
               <button 
@@ -139,8 +139,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-2xl font-bold dark:text-white">Abebe Kebede</h2>
-                      <span className="material-symbols-outlined text-primary fill-current text-[20px]">verified</span>
+                      <h2 className="text-2xl font-extrabold tracking-tight dark:text-white">Abebe Kebede</h2>
+                      <span className="material-symbols-outlined text-primary fill-current text-[24px]">verified</span>
                     </div>
                     <p className="text-sm font-bold text-primary mb-4">Master Plumber</p>
                     <div className="flex flex-wrap gap-2">
@@ -161,16 +161,16 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               {/* Physical Service Gallery - The Proof */}
               <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-50 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-bold dark:text-white">Service Gallery</h3>
+                  <h3 className="text-xl font-extrabold tracking-tight dark:text-white">Service Gallery</h3>
                   <button className="text-sm font-bold text-primary">View All</button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-gray-100 group relative">
+                    <div key={i} className="aspect-square rounded-3xl overflow-hidden bg-gray-100 group relative">
                       <img src={`https://picsum.photos/id/${10+i}/400/400`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
                   ))}
-                  <div className="aspect-square rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center text-gray-300 gap-2 hover:bg-gray-50 cursor-pointer transition-colors">
+                  <div className="aspect-square rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center text-gray-300 gap-2 hover:bg-gray-50 cursor-pointer transition-colors">
                     <span className="material-symbols-outlined text-4xl">add</span>
                   </div>
                 </div>
@@ -182,10 +182,10 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-50 dark:border-gray-800 text-center">
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Worker Reputation</p>
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-5xl font-bold dark:text-white">4.9</span>
-                  <span className="material-symbols-outlined text-amber-400 text-4xl fill-current">star</span>
+                  <span className="text-5xl font-extrabold tracking-tight dark:text-white">4.9</span>
+                  <span className="material-symbols-outlined text-amber-400 text-5xl fill-current">star</span>
                 </div>
-                <p className="text-[10px] font-semibold text-green-500 uppercase tracking-widest">Excellent Rating</p>
+                <p className="text-[11px] font-bold text-green-500 uppercase tracking-widest mt-2">Excellent Rating</p>
                 <div className="mt-6 pt-6 border-t border-gray-50 dark:border-gray-800">
                   <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
                     <span>Profile Views</span>
@@ -200,18 +200,18 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
 
               {/* Direct Contact Options */}
               <div className="bg-[#120e1b] rounded-3xl p-8 shadow-xl text-white">
-                <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-green-500">contact_phone</span>
+                <h4 className="text-lg font-extrabold tracking-tight mb-6 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-green-500 text-[24px]">contact_phone</span>
                   My Contact Info
                 </h4>
                 <div className="space-y-4">
-                  <div className="p-4 bg-white/5 rounded-2xl">
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">Phone</p>
-                    <p className="text-sm font-medium">+251 911 234 567</p>
+                  <div className="p-5 bg-white/5 rounded-2xl">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone</p>
+                    <p className="text-base font-bold tracking-tight">+251 911 234 567</p>
                   </div>
-                  <div className="p-4 bg-white/5 rounded-2xl">
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">Telegram</p>
-                    <p className="text-sm font-medium">@abebe_plumb</p>
+                  <div className="p-5 bg-white/5 rounded-2xl">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Telegram</p>
+                    <p className="text-base font-bold tracking-tight">@abebe_plumb</p>
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-500 mt-6 leading-relaxed italic">
