@@ -15,6 +15,85 @@ const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationHint, setLocationHint] = useState("");
+
+  const reverseGeocodeOpenStreetMap = async (
+    latitude: number,
+    longitude: number,
+  ): Promise<string | null> => {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+    );
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json().catch(() => null)) as {
+      display_name?: string;
+    } | null;
+
+    if (!data?.display_name?.trim()) {
+      return null;
+    }
+
+    return data.display_name.trim();
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setLocationHint(
+        "Geolocation is not supported on this device. Enter location manually.",
+      );
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationHint("");
+    if (formError) {
+      setFormError("");
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const osmAddress = await reverseGeocodeOpenStreetMap(
+            latitude,
+            longitude,
+          );
+
+          if (osmAddress) {
+            setLocationValue(osmAddress);
+            setLocationHint("Location detected and filled from OpenStreetMap.");
+            return;
+          }
+
+          setLocationValue(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          setLocationHint(
+            "Exact coordinates detected. You can keep this or type neighborhood manually.",
+          );
+        } catch (_error) {
+          setLocationHint(
+            "Location detected, but address lookup failed. Enter neighborhood manually if needed.",
+          );
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (_error) => {
+        setIsLocating(false);
+        setLocationHint(
+          "Location permission was denied. Please type your neighborhood manually.",
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      },
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -279,6 +358,24 @@ const RegisterPage: React.FC = () => {
                       placeholder="e.g., Piazza or Tabor"
                       type="text"
                     />
+                    <button
+                      type="button"
+                      onClick={handleUseCurrentLocation}
+                      disabled={isLocating}
+                      className="self-start mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary disabled:text-gray-400"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        my_location
+                      </span>
+                      {isLocating
+                        ? "Detecting location..."
+                        : "Use current location"}
+                    </button>
+                    {locationHint ? (
+                      <p className="text-xs text-[#4c669a] dark:text-gray-400">
+                        {locationHint}
+                      </p>
+                    ) : null}
                   </label>
                   {role === "worker" ? (
                     <label className="flex flex-col gap-2">

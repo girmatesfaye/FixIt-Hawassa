@@ -1,9 +1,12 @@
 import { Router } from "express";
+import { Request } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { getDatabaseStatus } from "../config/db";
 import { requireAuth } from "../middleware/auth";
 import { ServiceRequest } from "../models";
+
+type AuthenticatedRequest = Request & { userId?: string };
 
 const requestsRouter = Router();
 
@@ -37,11 +40,18 @@ requestsRouter.post("/", requireAuth, (req, res) => {
     });
   }
 
+  const authenticatedUserId = (req as AuthenticatedRequest).userId;
   const userIdHeader = req.headers["x-user-id"];
-  const clientUserId =
-    typeof userIdHeader === "string" && Types.ObjectId.isValid(userIdHeader)
-      ? new Types.ObjectId(userIdHeader)
-      : new Types.ObjectId("000000000000000000000001");
+  const rawUserId =
+    typeof authenticatedUserId === "string"
+      ? authenticatedUserId
+      : typeof userIdHeader === "string"
+        ? userIdHeader
+        : "";
+
+  const clientUserId = Types.ObjectId.isValid(rawUserId)
+    ? new Types.ObjectId(rawUserId)
+    : new Types.ObjectId("000000000000000000000001");
 
   return ServiceRequest.create({
     clientUserId,
