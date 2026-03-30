@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { RequestDraft } from "../types";
 import {
@@ -15,7 +15,7 @@ const SearchResultsPage: React.FC = () => {
   const [minRating, setMinRating] = useState(4.4);
   const [onlyActive, setOnlyActive] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -41,6 +41,12 @@ const SearchResultsPage: React.FC = () => {
       rankWorkers(MOCK_WORKERS, requestDraft, distance, minRating, onlyActive),
     [distance, minRating, onlyActive, requestDraft],
   );
+
+  useEffect(() => {
+    setIsLoading(true);
+    const timeout = setTimeout(() => setIsLoading(false), 350);
+    return () => clearTimeout(timeout);
+  }, [distance, minRating, onlyActive, requestDraft]);
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -185,7 +191,12 @@ const SearchResultsPage: React.FC = () => {
                 Request context: {requestDraft.category} • {requestDraft.area} •{" "}
                 {requestDraft.maintenanceLevel}
               </p>
-            ) : null}
+            ) : (
+              <p className="text-xs text-amber-600 font-semibold">
+                No saved request context found. Recommendations are using
+                default matching.
+              </p>
+            )}
           </div>
 
           {isLoading ? (

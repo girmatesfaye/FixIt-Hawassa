@@ -51,7 +51,7 @@ const App: React.FC = () => {
         <Route
           path="/dashboard"
           element={
-            isAuthenticated && userRole !== "admin" ? (
+            isAuthenticated && userRole === "client" ? (
               <DashboardPage onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
@@ -61,25 +61,41 @@ const App: React.FC = () => {
         <Route
           path="/request-service"
           element={
-            isAuthenticated ? <ServiceRequestPage /> : <Navigate to="/login" />
+            isAuthenticated && userRole === "client" ? (
+              <ServiceRequestPage />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
         <Route
           path="/search-results"
           element={
-            isAuthenticated ? <SearchResultsPage /> : <Navigate to="/login" />
+            isAuthenticated && userRole === "client" ? (
+              <SearchResultsPage />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
         <Route
           path="/messages"
           element={
-            isAuthenticated ? <MessagesPage /> : <Navigate to="/login" />
+            isAuthenticated && userRole === "client" ? (
+              <MessagesPage />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
         <Route
           path="/my-requests"
           element={
-            isAuthenticated ? <MyRequestsPage /> : <Navigate to="/login" />
+            isAuthenticated && userRole === "client" ? (
+              <MyRequestsPage />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
         <Route

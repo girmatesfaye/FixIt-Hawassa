@@ -4,9 +4,25 @@ import { Link, useNavigate } from "react-router-dom";
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (!/^9\d{8}$/.test(phoneDigits)) {
+      setFormError("Enter a valid Ethiopian mobile number (9XXXXXXXX).");
+      return;
+    }
+
+    if (password.trim().length < 6) {
+      setFormError("Password must be at least 6 characters.");
+      return;
+    }
+
+    setFormError("");
     navigate("/verify");
   };
 
@@ -90,6 +106,11 @@ const LoginPage: React.FC = () => {
                     </div>
                     <input
                       required
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (formError) setFormError("");
+                      }}
                       className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-16 pr-4 text-base dark:text-white placeholder-[#4c669a] dark:placeholder-gray-500"
                       placeholder="911 234 567"
                       type="tel"
@@ -104,6 +125,11 @@ const LoginPage: React.FC = () => {
                   <div className="relative">
                     <input
                       required
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (formError) setFormError("");
+                      }}
                       className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a] dark:placeholder-gray-500 pr-10"
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
@@ -134,6 +160,11 @@ const LoginPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-4">
+                {formError ? (
+                  <p className="text-sm font-medium text-red-600">
+                    {formError}
+                  </p>
+                ) : null}
                 <button
                   type="submit"
                   className="flex items-center justify-center w-full h-12 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium text-base transition-colors shadow-sm"
