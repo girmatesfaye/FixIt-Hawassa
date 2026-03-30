@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   HashRouter as Router,
   Routes,
@@ -26,6 +26,9 @@ import CategoryManagementPage from "./admin/CategoryManagementPage";
 type UserRole = "client" | "worker" | "admin";
 const AUTH_TOKEN_KEY = "fixit_auth_token";
 const AUTH_ROLE_KEY = "fixit_user_role";
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const getStoredRole = (): UserRole | null => {
   const role = localStorage.getItem(AUTH_ROLE_KEY);
@@ -44,6 +47,48 @@ const App: React.FC = () => {
       Boolean(localStorage.getItem(AUTH_TOKEN_KEY)) && getStoredRole() !== null
     );
   });
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const storedRole = getStoredRole();
+
+    if (!token || !storedRole) {
+      setUserRole(null);
+      setIsAuthenticated(false);
+      setIsCheckingAuth(false);
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (response) => {
+        const result = (await response.json().catch(() => null)) as {
+          user?: { role?: UserRole };
+        } | null;
+
+        if (!response.ok || !result?.user?.role) {
+          throw new Error("Unauthorized");
+        }
+
+        localStorage.setItem(AUTH_ROLE_KEY, result.user.role);
+        setUserRole(result.user.role);
+        setIsAuthenticated(true);
+      })
+      .catch(() => {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_ROLE_KEY);
+        setUserRole(null);
+        setIsAuthenticated(false);
+      })
+      .finally(() => {
+        setIsCheckingAuth(false);
+      });
+  }, []);
 
   const handleLogin = (role: UserRole = "client") => {
     localStorage.setItem(AUTH_ROLE_KEY, role);
@@ -57,6 +102,16 @@ const App: React.FC = () => {
     setUserRole(null);
     setIsAuthenticated(false);
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          Checking session...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Router>

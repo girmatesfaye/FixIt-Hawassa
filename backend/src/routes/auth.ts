@@ -2,6 +2,7 @@ import { Router } from "express";
 import { randomBytes, scryptSync } from "crypto";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { requireAuth } from "../middleware/auth";
 import { env } from "../config/env";
 import { getDatabaseStatus } from "../config/db";
 import { mockUsers } from "../data/mockData";
@@ -111,6 +112,67 @@ const DUMMY_WORKER_NATIONAL_IDS = new Set([
   "ETH-WORKER-1003",
   "ETH-WORKER-1004",
 ]);
+
+authRouter.get("/me", requireAuth, async (req, res) => {
+  const userId = (req as { userId?: string }).userId;
+  const role = (req as { userRole?: UserRole }).userRole;
+
+  if (!userId || !role) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const databaseStatus = getDatabaseStatus();
+
+  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
+    const mockUser = mockAuthUsers.find((entry) => entry.id === userId);
+    if (!mockUser) {
+      return res
+        .status(404)
+        .json({ message: "User not found", source: "mock" });
+    }
+
+    return res.json({
+      user: {
+        id: mockUser.id,
+        name: mockUser.name,
+        role: mockUser.role,
+        phone: mockUser.phone,
+        area: mockUser.area,
+        status: mockUser.status,
+        isVerified: mockUser.isVerified,
+      },
+      source: "mock",
+    });
+  }
+
+  try {
+    const user = await User.findById(userId)
+      .select("_id fullName role phone area status isVerified")
+      .lean();
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found", source: "mongodb" });
+    }
+
+    return res.json({
+      user: {
+        id: String(user._id),
+        name: user.fullName,
+        role: user.role,
+        phone: user.phone,
+        area: user.area,
+        status: user.status,
+        isVerified: user.isVerified,
+      },
+      source: "mongodb",
+    });
+  } catch (error) {
+    console.error("[auth] Failed to load current user", error);
+    return res.status(500).json({ message: "Failed to load current user" });
+  }
+});
 
 authRouter.post("/register", async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);

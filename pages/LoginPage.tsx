@@ -230,7 +230,9 @@ const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() =>
-                    navigate("/verify", { state: { role: "admin" } })
+                    setFormError(
+                      "Admin access requires phone/password login and OTP verification.",
+                    )
                   }
                   className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-primary uppercase tracking-wider transition-colors"
                   aria-label="Admin access"
