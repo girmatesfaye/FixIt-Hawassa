@@ -11,13 +11,19 @@ import {
 const SearchResultsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const PAGE_SIZE = 12;
   const [distance, setDistance] = useState(5);
   const [minRating, setMinRating] = useState(4.4);
   const [onlyActive, setOnlyActive] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [workers, setWorkers] = useState<WorkerRecommendation[]>([]);
   const [recommendationSource, setRecommendationSource] = useState("");
+  const [snapshotCreatedAt, setSnapshotCreatedAt] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalWorkers, setTotalWorkers] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -62,10 +68,16 @@ const SearchResultsPage: React.FC = () => {
       maxDistanceKm: distance,
       minRating,
       onlyActive,
+      page: 1,
+      limit: PAGE_SIZE,
     })
       .then((result) => {
         setWorkers(result.recommendations);
         setRecommendationSource(result.source);
+        setSnapshotCreatedAt(result.snapshotCreatedAt ?? "");
+        setCurrentPage(result.page);
+        setTotalWorkers(result.total);
+        setHasMore(result.hasMore);
       })
       .catch((error) => {
         if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -80,6 +92,38 @@ const SearchResultsPage: React.FC = () => {
         setIsLoading(false);
       });
   }, [distance, minRating, onlyActive, requestDraft, requestId]);
+
+  const handleLoadMore = () => {
+    if (!requestId || isLoadingMore || !hasMore) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    fetchRecommendations(requestId, {
+      maxDistanceKm: distance,
+      minRating,
+      onlyActive,
+      page: currentPage + 1,
+      limit: PAGE_SIZE,
+    })
+      .then((result) => {
+        setWorkers((previous) => [...previous, ...result.recommendations]);
+        setCurrentPage(result.page);
+        setTotalWorkers(result.total);
+        setHasMore(result.hasMore);
+      })
+      .catch((error) => {
+        if (error instanceof Error && error.message === "UNAUTHORIZED") {
+          navigate("/login");
+          return;
+        }
+        setLoadError("Could not load more recommendations.");
+      })
+      .finally(() => {
+        setIsLoadingMore(false);
+      });
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -234,6 +278,11 @@ const SearchResultsPage: React.FC = () => {
                 Source: {recommendationSource}
               </p>
             ) : null}
+            {snapshotCreatedAt ? (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Snapshot: {new Date(snapshotCreatedAt).toLocaleString()}
+              </p>
+            ) : null}
           </div>
 
           {isLoading ? (
@@ -342,11 +391,17 @@ const SearchResultsPage: React.FC = () => {
 
               {/* Simplified Load More */}
               <div className="flex flex-col items-center gap-3 py-8">
-                <button className="px-6 py-2.5 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary shadow-sm transition-all md:w-auto w-full">
-                  Load More
-                </button>
+                {hasMore ? (
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="px-6 py-2.5 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary shadow-sm transition-all md:w-auto w-full disabled:opacity-60"
+                  >
+                    {isLoadingMore ? "Loading..." : "Load More"}
+                  </button>
+                ) : null}
                 <p className="text-xs text-gray-400">
-                  Showing {workers.length} recommended pros
+                  Showing {workers.length} of {totalWorkers} recommended pros
                 </p>
               </div>
             </>

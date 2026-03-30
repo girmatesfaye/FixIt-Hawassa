@@ -4,11 +4,20 @@ import { Types } from "mongoose";
 import { z } from "zod";
 import { getDatabaseStatus } from "../config/db";
 import { mockRequestStore } from "../data/mockRequests";
+import {
+  getRecommendationSnapshot,
+  setRecommendationSnapshot,
+} from "../data/recommendationSnapshots";
 import { mockWorkers } from "../data/mockData";
 import { requireAuth } from "../middleware/auth";
-import { ServiceRequest, User, WorkerProfile } from "../models";
+import {
+  RecommendationSnapshot,
+  ServiceRequest,
+  User,
+  WorkerProfile,
+} from "../models";
 import { rankWorkers } from "../services/recommendationService";
-import { RequestDraft } from "../types";
+import { RequestDraft, WorkerRecommendation } from "../types";
 
 const recommendationsRouter = Router();
 type AuthenticatedRequest = Request & { userId?: string };
@@ -17,6 +26,8 @@ const querySchema = z.object({
   maxDistanceKm: z.coerce.number().min(1).max(20).default(5),
   minRating: z.coerce.number().min(3).max(5).default(4.4),
   onlyActive: z.coerce.boolean().default(true),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(12),
 });
 
 const loadRankedWorkers = async (
@@ -26,7 +37,10 @@ const loadRankedWorkers = async (
     minRating: number;
     onlyActive: boolean;
   },
-) => {
+): Promise<{
+  ranked: Array<WorkerRecommendation & { score: number; reasons: string[] }>;
+  source: "mock" | "mongodb";
+}> => {
   const databaseStatus = getDatabaseStatus();
 
   if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
@@ -97,6 +111,25 @@ const loadRankedWorkers = async (
   }
 };
 
+const paginateRecommendations = (
+  recommendations: Array<
+    WorkerRecommendation & { score: number; reasons: string[] }
+  >,
+  page: number,
+  limit: number,
+) => {
+  const start = (page - 1) * limit;
+  const end = start + limit;
+  const items = recommendations.slice(start, end);
+  return {
+    items,
+    total: recommendations.length,
+    page,
+    limit,
+    hasMore: end < recommendations.length,
+  };
+};
+
 recommendationsRouter.post("/rank", async (req, res) => {
   const parsedQuery = querySchema.safeParse(req.query);
   if (!parsedQuery.success) {
@@ -107,16 +140,24 @@ recommendationsRouter.post("/rank", async (req, res) => {
   }
 
   const requestDraft = (req.body ?? null) as RequestDraft | null;
+  const { maxDistanceKm, minRating, onlyActive, page, limit } =
+    parsedQuery.data;
+
   const { ranked, source } = await loadRankedWorkers(requestDraft, {
-    maxDistanceKm: parsedQuery.data.maxDistanceKm,
-    minRating: parsedQuery.data.minRating,
-    onlyActive: parsedQuery.data.onlyActive,
+    maxDistanceKm,
+    minRating,
+    onlyActive,
   });
 
+  const paginated = paginateRecommendations(ranked, page, limit);
+
   return res.json({
-    total: ranked.length,
-    filters: parsedQuery.data,
-    recommendations: ranked,
+    total: paginated.total,
+    page: paginated.page,
+    limit: paginated.limit,
+    hasMore: paginated.hasMore,
+    filters: { maxDistanceKm, minRating, onlyActive },
+    recommendations: paginated.items,
     source,
   });
 });
@@ -138,6 +179,8 @@ recommendationsRouter.get(
       ? requestIdRaw[0]
       : requestIdRaw;
     const authenticatedUserId = (req as AuthenticatedRequest).userId;
+    const { maxDistanceKm, minRating, onlyActive, page, limit } =
+      parsedQuery.data;
 
     if (!requestId) {
       return res.status(400).json({ message: "Request ID is required" });
@@ -178,18 +221,42 @@ recommendationsRouter.get(
         createdAt: request.createdAt,
       };
 
-      const { ranked, source } = await loadRankedWorkers(requestDraft, {
-        maxDistanceKm: parsedQuery.data.maxDistanceKm,
-        minRating: parsedQuery.data.minRating,
-        onlyActive: parsedQuery.data.onlyActive,
+      let snapshot = getRecommendationSnapshot(requestId, {
+        maxDistanceKm,
+        minRating,
+        onlyActive,
       });
+      if (!snapshot) {
+        const { ranked, source } = await loadRankedWorkers(requestDraft, {
+          maxDistanceKm,
+          minRating,
+          onlyActive,
+        });
+        snapshot = setRecommendationSnapshot({
+          requestId,
+          filters: { maxDistanceKm, minRating, onlyActive },
+          recommendations: ranked,
+          source,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      const paginated = paginateRecommendations(
+        snapshot.recommendations,
+        page,
+        limit,
+      );
 
       return res.json({
         requestId,
-        total: ranked.length,
-        filters: parsedQuery.data,
-        recommendations: ranked,
-        source,
+        total: paginated.total,
+        page: paginated.page,
+        limit: paginated.limit,
+        hasMore: paginated.hasMore,
+        filters: { maxDistanceKm, minRating, onlyActive },
+        recommendations: paginated.items,
+        source: snapshot.source,
+        snapshotCreatedAt: snapshot.createdAt,
       });
     }
 
@@ -223,18 +290,69 @@ recommendationsRouter.get(
           : new Date(request.createdAt).toISOString(),
     };
 
-    const { ranked, source } = await loadRankedWorkers(requestDraft, {
-      maxDistanceKm: parsedQuery.data.maxDistanceKm,
-      minRating: parsedQuery.data.minRating,
-      onlyActive: parsedQuery.data.onlyActive,
-    });
+    const snapshotQuery = {
+      requestId: new Types.ObjectId(requestId),
+      "filters.maxDistanceKm": maxDistanceKm,
+      "filters.minRating": minRating,
+      "filters.onlyActive": onlyActive,
+    };
+
+    let snapshotDoc =
+      await RecommendationSnapshot.findOne(snapshotQuery).lean();
+
+    if (!snapshotDoc) {
+      const { ranked, source } = await loadRankedWorkers(requestDraft, {
+        maxDistanceKm,
+        minRating,
+        onlyActive,
+      });
+
+      snapshotDoc = await RecommendationSnapshot.findOneAndUpdate(
+        snapshotQuery,
+        {
+          $setOnInsert: {
+            requestId: new Types.ObjectId(requestId),
+            filters: { maxDistanceKm, minRating, onlyActive },
+            recommendations: ranked,
+            source,
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true, new: true },
+      ).lean();
+    }
+
+    if (!snapshotDoc) {
+      return res.status(500).json({
+        message: "Failed to load recommendation snapshot",
+      });
+    }
+
+    const snapshotRecommendations = Array.isArray(snapshotDoc.recommendations)
+      ? (snapshotDoc.recommendations as Array<
+          WorkerRecommendation & { score: number; reasons: string[] }
+        >)
+      : [];
+
+    const paginated = paginateRecommendations(
+      snapshotRecommendations,
+      page,
+      limit,
+    );
 
     return res.json({
       requestId,
-      total: ranked.length,
-      filters: parsedQuery.data,
-      recommendations: ranked,
-      source,
+      total: paginated.total,
+      page: paginated.page,
+      limit: paginated.limit,
+      hasMore: paginated.hasMore,
+      filters: { maxDistanceKm, minRating, onlyActive },
+      recommendations: paginated.items,
+      source: snapshotDoc.source,
+      snapshotCreatedAt:
+        snapshotDoc.createdAt instanceof Date
+          ? snapshotDoc.createdAt.toISOString()
+          : new Date(snapshotDoc.createdAt).toISOString(),
     });
   },
 );

@@ -209,12 +209,24 @@ export const fetchRecommendations = async (
     maxDistanceKm: number;
     minRating: number;
     onlyActive: boolean;
+    page: number;
+    limit: number;
   },
-): Promise<{ recommendations: WorkerRecommendation[]; source: string }> => {
+): Promise<{
+  recommendations: WorkerRecommendation[];
+  source: string;
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+  snapshotCreatedAt?: string;
+}> => {
   const params = new URLSearchParams({
     maxDistanceKm: String(filters.maxDistanceKm),
     minRating: String(filters.minRating),
     onlyActive: String(filters.onlyActive),
+    page: String(filters.page),
+    limit: String(filters.limit),
   });
 
   const token = getAuthToken();
@@ -240,6 +252,11 @@ export const fetchRecommendations = async (
   const result = (await response.json().catch(() => null)) as {
     recommendations?: WorkerRecommendation[];
     source?: string;
+    total?: number;
+    page?: number;
+    limit?: number;
+    hasMore?: boolean;
+    snapshotCreatedAt?: string;
   } | null;
 
   if (!response.ok || !Array.isArray(result?.recommendations)) {
@@ -249,5 +266,13 @@ export const fetchRecommendations = async (
   return {
     recommendations: result.recommendations,
     source: result.source ?? "unknown",
+    total: typeof result.total === "number" ? result.total : 0,
+    page: typeof result.page === "number" ? result.page : filters.page,
+    limit: typeof result.limit === "number" ? result.limit : filters.limit,
+    hasMore: Boolean(result.hasMore),
+    snapshotCreatedAt:
+      typeof result.snapshotCreatedAt === "string"
+        ? result.snapshotCreatedAt
+        : undefined,
   };
 };
