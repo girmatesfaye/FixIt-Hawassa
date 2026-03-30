@@ -16,14 +16,26 @@ const loginSchema = z.object({
   role: z.enum(["client", "worker", "admin"]).optional(),
 });
 
-const registerSchema = z.object({
-  fullName: z.string().min(2),
-  phone: z.string().min(9),
-  password: z.string().min(6),
-  role: z.enum(["client", "worker", "admin"]).optional(),
-  area: z.string().optional(),
-  nationalId: z.string().optional(),
-});
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2),
+    phone: z.string().min(9),
+    password: z.string().min(6),
+    role: z.enum(["client", "worker", "admin"]).optional(),
+    area: z.string().min(2).optional(),
+    location: z.string().min(2).optional(),
+    nationalId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const normalized = (data.location ?? data.area ?? "").trim();
+      return normalized.length >= 2;
+    },
+    {
+      message: "Location (Neighborhood/Area) is required",
+      path: ["location"],
+    },
+  );
 
 const verifySchema = z.object({
   sessionId: z.string().min(6),
@@ -112,7 +124,11 @@ authRouter.post("/register", async (req, res) => {
   const role: UserRole = parsed.data.role ?? "client";
   const normalizedPhone = parsed.data.phone.trim();
   const normalizedName = parsed.data.fullName.trim();
-  const normalizedArea = (parsed.data.area ?? "").trim();
+  const normalizedArea = (
+    parsed.data.location ??
+    parsed.data.area ??
+    ""
+  ).trim();
   const normalizedNationalId = (parsed.data.nationalId ?? "")
     .trim()
     .toUpperCase();

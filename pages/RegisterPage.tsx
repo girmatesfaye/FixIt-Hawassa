@@ -61,6 +61,7 @@ const RegisterPage: React.FC = () => {
           phone: normalizedPhone,
           password: password.trim(),
           role,
+          location: locationValue.trim(),
           area: locationValue.trim(),
           nationalId: role === "worker" ? normalizedNationalId : undefined,
         }),
