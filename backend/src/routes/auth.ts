@@ -20,6 +20,7 @@ const registerSchema = z.object({
   password: z.string().min(6),
   role: z.enum(["client", "worker", "admin"]).optional(),
   area: z.string().optional(),
+  nationalId: z.string().optional(),
 });
 
 const verifySchema = z.object({
@@ -32,6 +33,13 @@ const hashPassword = (password: string): string => {
   const hash = scryptSync(password, salt, 64).toString("hex");
   return `scrypt:${salt}:${hash}`;
 };
+
+const DUMMY_WORKER_NATIONAL_IDS = new Set([
+  "ETH-WORKER-1001",
+  "ETH-WORKER-1002",
+  "ETH-WORKER-1003",
+  "ETH-WORKER-1004",
+]);
 
 authRouter.post("/register", async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
@@ -46,6 +54,23 @@ authRouter.post("/register", async (req, res) => {
   const normalizedPhone = parsed.data.phone.trim();
   const normalizedName = parsed.data.fullName.trim();
   const normalizedArea = (parsed.data.area ?? "").trim();
+  const normalizedNationalId = (parsed.data.nationalId ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (role === "worker") {
+    if (!normalizedNationalId) {
+      return res.status(400).json({
+        message: "National ID is required for worker registration",
+      });
+    }
+
+    if (!DUMMY_WORKER_NATIONAL_IDS.has(normalizedNationalId)) {
+      return res.status(403).json({
+        message: "Worker national ID not recognized",
+      });
+    }
+  }
 
   const databaseStatus = getDatabaseStatus();
   if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
@@ -68,6 +93,7 @@ authRouter.post("/register", async (req, res) => {
         phone: normalizedPhone,
         status: "active",
         area: normalizedArea,
+        nationalId: role === "worker" ? normalizedNationalId : undefined,
         isVerified: false,
       },
       next: "/auth/verify",
@@ -93,6 +119,7 @@ authRouter.post("/register", async (req, res) => {
       passwordHash: hashPassword(parsed.data.password),
       role,
       area: normalizedArea,
+      nationalId: role === "worker" ? normalizedNationalId : "",
       isVerified: false,
       status: "active",
     });
@@ -106,6 +133,8 @@ authRouter.post("/register", async (req, res) => {
         phone: createdUser.phone,
         status: createdUser.status,
         area: createdUser.area,
+        nationalId:
+          createdUser.role === "worker" ? createdUser.nationalId : undefined,
         isVerified: createdUser.isVerified,
       },
       next: "/auth/verify",
@@ -125,6 +154,7 @@ authRouter.post("/register", async (req, res) => {
         phone: normalizedPhone,
         status: "active",
         area: normalizedArea,
+        nationalId: role === "worker" ? normalizedNationalId : undefined,
         isVerified: false,
       },
       next: "/auth/verify",

@@ -1,16 +1,22 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState<"client" | "worker">("client");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [locationValue, setLocationValue] = useState("");
+  const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (fullName.trim().length < 3) {
@@ -34,8 +40,47 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
+    const normalizedNationalId = nationalId.trim().toUpperCase();
+    if (role === "worker" && normalizedNationalId.length < 6) {
+      setFormError("Please enter a valid worker national ID.");
+      return;
+    }
+
     setFormError("");
-    navigate("/verify", { state: { role } });
+    setIsSubmitting(true);
+
+    try {
+      const normalizedPhone = `+251${phoneDigits}`;
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          phone: normalizedPhone,
+          password: password.trim(),
+          role,
+          area: locationValue.trim(),
+          nationalId: role === "worker" ? normalizedNationalId : undefined,
+        }),
+      });
+
+      const result = (await response.json().catch(() => null)) as
+        | { message?: string }
+        | null;
+
+      if (!response.ok) {
+        setFormError(result?.message ?? "Registration failed. Please try again.");
+        return;
+      }
+
+      navigate("/verify", { state: { role } });
+    } catch (_error) {
+      setFormError("Could not connect to server. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -107,7 +152,11 @@ const RegisterPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div
                       className="relative group cursor-pointer"
-                      onClick={() => setRole("client")}
+                      onClick={() => {
+                        setRole("client");
+                        setNationalId("");
+                        if (formError) setFormError("");
+                      }}
                     >
                       <div
                         className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "client" ? "border-primary bg-blue-50 dark:bg-primary/10 text-primary" : "border-[#e7ebf3] dark:border-gray-700 bg-white dark:bg-[#111827] text-[#4c669a] dark:text-gray-400"}`}
@@ -133,7 +182,10 @@ const RegisterPage: React.FC = () => {
                     </div>
                     <div
                       className="relative group cursor-pointer"
-                      onClick={() => setRole("worker")}
+                      onClick={() => {
+                        setRole("worker");
+                        if (formError) setFormError("");
+                      }}
                     >
                       <div
                         className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "worker" ? "border-primary bg-blue-50 dark:bg-primary/10 text-primary" : "border-[#e7ebf3] dark:border-gray-700 bg-white dark:bg-[#111827] text-[#4c669a] dark:text-gray-400"}`}
@@ -216,6 +268,24 @@ const RegisterPage: React.FC = () => {
                       type="text"
                     />
                   </label>
+                  {role === "worker" ? (
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                        National ID (Worker)
+                      </span>
+                      <input
+                        required
+                        value={nationalId}
+                        onChange={(e) => {
+                          setNationalId(e.target.value.toUpperCase());
+                          if (formError) setFormError("");
+                        }}
+                        className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a]"
+                        placeholder="e.g. ETH-WORKER-1001"
+                        type="text"
+                      />
+                    </label>
+                  ) : null}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
                       Password
@@ -255,9 +325,10 @@ const RegisterPage: React.FC = () => {
                   ) : null}
                   <button
                     type="submit"
+                    disabled={isSubmitting}
                     className="flex items-center justify-center w-full h-12 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium text-base transition-colors shadow-sm shadow-primary/20"
                   >
-                    Create Account
+                    {isSubmitting ? "Creating Account..." : "Create Account"}
                   </button>
                   <p className="text-center text-xs text-[#4c669a] dark:text-gray-500">
                     By continuing, you agree to our{" "}

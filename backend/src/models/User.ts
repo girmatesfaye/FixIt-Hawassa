@@ -18,6 +18,7 @@ const userSchema = new Schema(
       default: "active",
     },
     area: { type: String, default: "" },
+    nationalId: { type: String, default: "" },
   },
   {
     timestamps: true,
