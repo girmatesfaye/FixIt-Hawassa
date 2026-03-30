@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Modal from "../components/Modal";
 import { RequestStatus, ReportStatus, ServiceRequest, Report } from "../types";
+import { fetchClientRequests, fetchTopPros } from "../services/clientRequests";
 
 interface DashboardPageProps {
   onLogout: () => void;
@@ -12,28 +13,43 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [activeRequestsCount, setActiveRequestsCount] = useState(0);
+  const [topPros, setTopPros] = useState<
+    Array<{
+      id: string | number;
+      name: string;
+      location: string;
+      area: string;
+      rating: number;
+      reviews: number;
+      avatar: string;
+    }>
+  >([]);
 
   const handleServiceClick = () => {
     navigate("/request-service");
   };
 
-  const requests: ServiceRequest[] = [
-    {
-      id: "1",
-      title: "Kitchen Sink Leak",
-      category: "Plumbing",
-      description:
-        "Water is leaking under the sink cabinet, causing damage to the wood.",
-      status: RequestStatus.IN_PROGRESS,
-      date: "Oct 12, 2023",
-      workerName: "Dawit M.",
-      workerRole: "Plumber",
-      workerAvatar:
-        "https://images.unsplash.com/photo-1540560712858-450f34b3f150?q=80&w=100&h=100&auto=format&fit=crop",
-      location: "Hawassa, Piassa",
-      level: "Medium",
-    },
-  ];
+  useEffect(() => {
+    fetchClientRequests()
+      .then((items) => {
+        const count = items.filter(
+          (item) => item.status !== "COMPLETED",
+        ).length;
+        setActiveRequestsCount(count);
+      })
+      .catch(() => {
+        setActiveRequestsCount(0);
+      });
+
+    fetchTopPros()
+      .then((pros) => {
+        setTopPros(pros);
+      })
+      .catch(() => {
+        setTopPros([]);
+      });
+  }, []);
 
   const myReports: Report[] = [
     {
@@ -58,39 +74,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
       clientDescription: "Scheduled for 9 AM, arrived at 1 PM without notice.",
       adminResolution:
         "Worker has been issued a formal warning. A credit has been added to your account.",
-    },
-  ];
-
-  const topPros = [
-    {
-      id: 101,
-      name: "Abebe K.",
-      role: "Master Electrician",
-      rating: 4.9,
-      reviews: 142,
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&h=100&auto=format&fit=crop",
-      location: "Piassa",
-    },
-    {
-      id: 102,
-      name: "Tigist B.",
-      role: "Plumbing Expert",
-      rating: 4.8,
-      reviews: 89,
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&h=100&auto=format&fit=crop",
-      location: "Tabor",
-    },
-    {
-      id: 103,
-      name: "Dawit A.",
-      role: "General Repair",
-      rating: 4.7,
-      reviews: 56,
-      avatar:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&h=100&auto=format&fit=crop",
-      location: "Millennium",
     },
   ];
 
@@ -293,7 +276,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                           {pro.name}
                         </h4>
                         <p className="text-xs text-primary font-medium mb-1.5 truncate">
-                          {pro.role}
+                          {pro.location}
                         </p>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/10 rounded border border-amber-100 dark:border-amber-900/30">
@@ -329,10 +312,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <h3 className="text-lg font-semibold dark:text-white tracking-tight">
                 My Report Status
               </h3>
-              {requests.length ? (
+              {activeRequestsCount ? (
                 <p className="text-xs text-primary font-semibold">
-                  You have {requests.length} active request
-                  {requests.length > 1 ? "s" : ""} in progress.
+                  You have {activeRequestsCount} active request
+                  {activeRequestsCount > 1 ? "s" : ""} in progress.
                 </p>
               ) : null}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
