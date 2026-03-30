@@ -86,7 +86,9 @@ const RegisterPage: React.FC = () => {
         },
       });
     } catch (_error) {
-      setFormError("Could not connect to server. Please try again.");
+      setFormError(
+        `Could not reach backend at ${API_BASE_URL}. Make sure backend is running, then try again.`,
+      );
     } finally {
       setIsSubmitting(false);
     }
