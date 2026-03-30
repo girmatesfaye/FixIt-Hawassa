@@ -66,12 +66,14 @@ const RegisterPage: React.FC = () => {
         }),
       });
 
-      const result = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
-        setFormError(result?.message ?? "Registration failed. Please try again.");
+        setFormError(
+          result?.message ?? "Registration failed. Please try again.",
+        );
         return;
       }
 

@@ -57,6 +57,48 @@
       }
     },
     {
+      "name": "Auth - Register Worker (Valid National ID)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Worker Demo\",\n  \"phone\": \"+251944100101\",\n  \"password\": \"secret123\",\n  \"role\": \"worker\",\n  \"area\": \"Tabor\",\n  \"nationalId\": \"ETH-WORKER-1001\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Register Worker (Invalid National ID)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Worker Rejected\",\n  \"phone\": \"+251944100102\",\n  \"password\": \"secret123\",\n  \"role\": \"worker\",\n  \"area\": \"Tabor\",\n  \"nationalId\": \"INVALID-0001\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
       "name": "Auth - Login",
       "request": {
         "method": "POST",
