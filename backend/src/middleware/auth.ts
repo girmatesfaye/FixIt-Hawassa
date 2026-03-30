@@ -107,3 +107,24 @@ export const requireRole = (required: UserRole) => {
     next();
   };
 };
+
+export const requireRoleToken = (required: UserRole) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const authContext = getAuthFromBearerToken(req);
+    if (!authContext) {
+      return res.status(401).json({
+        message: "Unauthorized: Bearer token required",
+      });
+    }
+
+    if (authContext.role !== required) {
+      return res
+        .status(403)
+        .json({ message: `Forbidden: ${required} role required` });
+    }
+
+    (req as AuthenticatedRequest).userRole = authContext.role;
+    (req as AuthenticatedRequest).userId = authContext.userId;
+    next();
+  };
+};

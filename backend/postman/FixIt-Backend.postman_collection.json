@@ -8,6 +8,10 @@
     {
       "key": "baseUrl",
       "value": "http://localhost:4000"
+    },
+    {
+      "key": "authToken",
+      "value": ""
     }
   ],
   "item": [
@@ -121,6 +125,20 @@
     },
     {
       "name": "Auth - Verify OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData && jsonData.token) {",
+              "  pm.collectionVariables.set('authToken', jsonData.token);",
+              "}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -150,12 +168,8 @@
             "value": "application/json"
           },
           {
-            "key": "x-user-role",
-            "value": "client"
-          },
-          {
-            "key": "x-user-id",
-            "value": "000000000000000000000001"
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
           }
         ],
         "body": {
@@ -210,8 +224,8 @@
         "method": "GET",
         "header": [
           {
-            "key": "x-user-role",
-            "value": "admin"
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
           }
         ],
         "url": {

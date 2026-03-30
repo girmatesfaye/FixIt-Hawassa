@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { getDatabaseStatus } from "../config/db";
 import { mockUsers } from "../data/mockData";
-import { requireRole } from "../middleware/auth";
+import { requireRoleToken } from "../middleware/auth";
 import { User } from "../models";
 
 const adminRouter = Router();
 
-adminRouter.use(requireRole("admin"));
+adminRouter.use(requireRoleToken("admin"));
 
 adminRouter.get("/users", async (_req, res) => {
   const databaseStatus = getDatabaseStatus();
