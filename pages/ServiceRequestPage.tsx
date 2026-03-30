@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RequestDraft } from "../types";
 import { LAST_REQUEST_KEY } from "../services/recommendation";
+import { clearSession, getAuthToken } from "../services/auth";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
-const AUTH_TOKEN_KEY = "fixit_auth_token";
 
 const ServiceRequestPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const ServiceRequestPage: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    const authToken = getAuthToken();
     if (!authToken) {
       setFormError("Your session has expired. Please login again.");
       navigate("/login");
@@ -65,7 +65,7 @@ const ServiceRequestPage: React.FC = () => {
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem(AUTH_TOKEN_KEY);
+          clearSession();
           setFormError("Your session has expired. Please login again.");
           navigate("/login");
           return;

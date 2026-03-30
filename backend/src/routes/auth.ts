@@ -63,6 +63,17 @@ type OtpSession = {
   expiresAt: number;
 };
 
+const signAccessToken = (payload: {
+  sub: string;
+  role: UserRole;
+  phone?: string;
+}) => {
+  return jwt.sign(payload, env.jwtSecret, {
+    algorithm: "HS256",
+    expiresIn: "7d",
+  });
+};
+
 const hashPassword = (password: string): string => {
   const salt = randomBytes(16).toString("hex");
   const hash = scryptSync(password, salt, 64).toString("hex");
@@ -126,9 +137,18 @@ authRouter.get("/me", requireAuth, async (req, res) => {
   if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
     const mockUser = mockAuthUsers.find((entry) => entry.id === userId);
     if (!mockUser) {
-      return res
-        .status(404)
-        .json({ message: "User not found", source: "mock" });
+      return res.json({
+        user: {
+          id: userId,
+          name: "FixIt User",
+          role,
+          phone: "",
+          area: "",
+          status: "active",
+          isVerified: true,
+        },
+        source: "token",
+      });
     }
 
     return res.json({
@@ -171,6 +191,68 @@ authRouter.get("/me", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("[auth] Failed to load current user", error);
     return res.status(500).json({ message: "Failed to load current user" });
+  }
+});
+
+authRouter.post("/refresh", requireAuth, async (req, res) => {
+  const userId = (req as { userId?: string }).userId;
+  const roleFromToken = (req as { userRole?: UserRole }).userRole;
+
+  if (!userId || !roleFromToken) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const databaseStatus = getDatabaseStatus();
+
+  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
+    const mockUser = mockAuthUsers.find((entry) => entry.id === userId);
+    if (mockUser && mockUser.status !== "active") {
+      return res.status(403).json({ message: "Account is not active" });
+    }
+
+    const role = mockUser?.role ?? roleFromToken;
+    return res.json({
+      message: "Token refreshed",
+      token: signAccessToken({
+        sub: userId,
+        role,
+        phone: mockUser?.phone,
+      }),
+      role,
+      source: mockUser ? "mock" : "token",
+    });
+  }
+
+  try {
+    const user = await User.findById(userId)
+      .select("_id role status phone")
+      .lean();
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found", source: "mongodb" });
+    }
+
+    if (user.status !== "active") {
+      return res
+        .status(403)
+        .json({ message: "Account is not active", source: "mongodb" });
+    }
+
+    return res.json({
+      message: "Token refreshed",
+      token: signAccessToken({
+        sub: String(user._id),
+        role: user.role,
+        phone: user.phone,
+      }),
+      role: user.role,
+      source: "mongodb",
+    });
+  } catch (error) {
+    console.error("[auth] Failed to refresh token", error);
+    return res.status(500).json({ message: "Failed to refresh token" });
   }
 });
 
@@ -482,18 +564,11 @@ authRouter.post("/verify", (req, res) => {
 
   return res.json({
     message: "Verification successful",
-    token: jwt.sign(
-      {
-        sub: session.userId,
-        role,
-        phone: session.phone,
-      },
-      env.jwtSecret,
-      {
-        algorithm: "HS256",
-        expiresIn: "7d",
-      },
-    ),
+    token: signAccessToken({
+      sub: session.userId,
+      role,
+      phone: session.phone,
+    }),
     role,
   });
 });

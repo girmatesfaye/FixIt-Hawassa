@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { saveSession } from "../services/auth";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
-const AUTH_TOKEN_KEY = "fixit_auth_token";
-const AUTH_ROLE_KEY = "fixit_user_role";
 
 interface VerifyPageProps {
   onVerify: (role: "client" | "worker" | "admin") => void;
@@ -110,8 +109,7 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
         return;
       }
 
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
-      localStorage.setItem(AUTH_ROLE_KEY, resolvedRole);
+      saveSession(token, resolvedRole);
       onVerify(resolvedRole);
 
       if (resolvedRole === "admin") {

@@ -22,40 +22,42 @@ import UserManagementPage from "./admin/UserManagementPage";
 import ReportManagementPage from "./admin/ReportManagementPage";
 import AnalyticsPage from "./admin/AnalyticsPage";
 import CategoryManagementPage from "./admin/CategoryManagementPage";
+import {
+  clearSession,
+  getAuthToken,
+  getStoredRole,
+  getTokenExpiryMs,
+  isTokenExpired,
+  refreshAuthSession,
+  saveSession,
+  UserRole,
+} from "./services/auth";
 
-type UserRole = "client" | "worker" | "admin";
-const AUTH_TOKEN_KEY = "fixit_auth_token";
-const AUTH_ROLE_KEY = "fixit_user_role";
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
-
-const getStoredRole = (): UserRole | null => {
-  const role = localStorage.getItem(AUTH_ROLE_KEY);
-  if (role === "client" || role === "worker" || role === "admin") {
-    return role;
-  }
-  return null;
-};
 
 const App: React.FC = () => {
   const [userRole, setUserRole] = useState<UserRole | null>(() =>
     getStoredRole(),
   );
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return (
-      Boolean(localStorage.getItem(AUTH_TOKEN_KEY)) && getStoredRole() !== null
-    );
+    return Boolean(getAuthToken()) && getStoredRole() !== null;
   });
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
 
+  const applyLogout = () => {
+    clearSession();
+    setUserRole(null);
+    setIsAuthenticated(false);
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = getAuthToken();
     const storedRole = getStoredRole();
 
-    if (!token || !storedRole) {
-      setUserRole(null);
-      setIsAuthenticated(false);
+    if (!token || !storedRole || isTokenExpired(token)) {
+      applyLogout();
       setIsCheckingAuth(false);
       return;
     }
@@ -75,32 +77,74 @@ const App: React.FC = () => {
           throw new Error("Unauthorized");
         }
 
-        localStorage.setItem(AUTH_ROLE_KEY, result.user.role);
+        saveSession(token, result.user.role);
         setUserRole(result.user.role);
         setIsAuthenticated(true);
       })
       .catch(() => {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem(AUTH_ROLE_KEY);
-        setUserRole(null);
-        setIsAuthenticated(false);
+        applyLogout();
       })
       .finally(() => {
         setIsCheckingAuth(false);
       });
   }, []);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const intervalId = window.setInterval(async () => {
+      const token = getAuthToken();
+      if (!token) {
+        applyLogout();
+        return;
+      }
+
+      if (isTokenExpired(token)) {
+        applyLogout();
+        return;
+      }
+
+      const expiryMs = getTokenExpiryMs(token);
+      if (!expiryMs) {
+        applyLogout();
+        return;
+      }
+
+      // Refresh token when less than 15 minutes remain.
+      if (expiryMs - Date.now() <= 15 * 60 * 1000) {
+        const refreshed = await refreshAuthSession();
+        if (!refreshed) {
+          applyLogout();
+          return;
+        }
+
+        saveSession(refreshed.token, refreshed.role);
+        setUserRole(refreshed.role);
+        setIsAuthenticated(true);
+      }
+    }, 60 * 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated]);
+
   const handleLogin = (role: UserRole = "client") => {
-    localStorage.setItem(AUTH_ROLE_KEY, role);
+    const token = getAuthToken();
+    if (!token) {
+      applyLogout();
+      return;
+    }
+
+    saveSession(token, role);
     setUserRole(role);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_ROLE_KEY);
-    setUserRole(null);
-    setIsAuthenticated(false);
+    applyLogout();
   };
 
   if (isCheckingAuth) {
