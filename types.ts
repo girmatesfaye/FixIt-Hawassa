@@ -1,15 +1,14 @@
-
 export enum RequestStatus {
-  IN_PROGRESS = 'In Progress',
-  SEARCHING = 'Searching',
-  PENDING = 'Pending',
-  COMPLETED = 'Completed'
+  IN_PROGRESS = "In Progress",
+  SEARCHING = "Searching",
+  PENDING = "Pending",
+  COMPLETED = "Completed",
 }
 
 export enum ReportStatus {
-  RESOLVED = 'Resolved',
-  UNDER_REVIEW = 'Under Review',
-  ACTION_TAKEN = 'Action Taken'
+  RESOLVED = "Resolved",
+  UNDER_REVIEW = "Under Review",
+  ACTION_TAKEN = "Action Taken",
 }
 
 export interface ServiceRequest {
@@ -42,4 +41,29 @@ export interface User {
   location: string;
   avatar: string;
   isVerified: boolean;
+}
+
+export interface RequestDraft {
+  category: string;
+  description: string;
+  area: string;
+  landmark: string;
+  maintenanceLevel: "New" | "Medium" | "Old";
+  hasPhotos: boolean;
+  createdAt: string;
+}
+
+export interface WorkerRecommendation {
+  id: number;
+  name: string;
+  location: string;
+  area: string;
+  rating: number;
+  reviews: number;
+  isActive: boolean;
+  distanceKm: number;
+  completionRate: number;
+  responseMinutes: number;
+  skills: string[];
+  avatar: string;
 }

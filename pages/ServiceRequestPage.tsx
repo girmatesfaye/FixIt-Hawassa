@@ -1,14 +1,41 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { RequestDraft } from "../types";
+import { LAST_REQUEST_KEY } from "../services/recommendation";
 
 const ServiceRequestPage: React.FC = () => {
   const navigate = useNavigate();
   const [description, setDescription] = useState("");
   const [maintenanceLevel, setMaintenanceLevel] = useState("Medium");
   const [area, setArea] = useState("Piassa");
+  const [landmark, setLandmark] = useState("");
+  const [formError, setFormError] = useState("");
 
   const handleBack = () => navigate("/dashboard");
-  const handleFindWorkers = () => navigate("/search-results");
+  const handleFindWorkers = () => {
+    if (description.trim().length < 20) {
+      setFormError("Please describe the issue with at least 20 characters.");
+      return;
+    }
+
+    if (!landmark.trim()) {
+      setFormError("Please add your house number or landmark.");
+      return;
+    }
+
+    const requestDraft: RequestDraft = {
+      category: "Plumbing",
+      description: description.trim(),
+      area,
+      landmark: landmark.trim(),
+      maintenanceLevel: maintenanceLevel as "New" | "Medium" | "Old",
+      hasPhotos: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(LAST_REQUEST_KEY, JSON.stringify(requestDraft));
+    navigate("/search-results", { state: { requestDraft } });
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -93,7 +120,10 @@ const ServiceRequestPage: React.FC = () => {
               <textarea
                 maxLength={500}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  if (formError) setFormError("");
+                }}
                 placeholder="E.g., The kitchen sink pipe is leaking underneath the cabinet. It started dripping yesterday and the water pressure is low..."
                 className="w-full h-32 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-primary dark:text-white text-sm resize-none"
               />
@@ -168,6 +198,11 @@ const ServiceRequestPage: React.FC = () => {
                 </span>
                 <input
                   type="text"
+                  value={landmark}
+                  onChange={(e) => {
+                    setLandmark(e.target.value);
+                    if (formError) setFormError("");
+                  }}
                   placeholder="House Number / Landmark"
                   className="w-full h-12 pl-10 pr-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-primary dark:text-white text-sm"
                 />
@@ -207,6 +242,11 @@ const ServiceRequestPage: React.FC = () => {
 
           {/* Action Button */}
           <div className="pt-4 pb-12">
+            {formError ? (
+              <p className="mb-3 text-sm font-medium text-red-600">
+                {formError}
+              </p>
+            ) : null}
             <button
               onClick={handleFindWorkers}
               className="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-primary/30 transition-all transform active:scale-95"
