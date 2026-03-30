@@ -23,11 +23,21 @@ import ReportManagementPage from "./admin/ReportManagementPage";
 import AnalyticsPage from "./admin/AnalyticsPage";
 import CategoryManagementPage from "./admin/CategoryManagementPage";
 
+type UserRole = "client" | "worker" | "admin";
+
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
-  const handleLogin = () => setIsAuthenticated(true);
-  const handleLogout = () => setIsAuthenticated(false);
+  const handleLogin = (role: UserRole = "client") => {
+    setUserRole(role);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setUserRole(null);
+    setIsAuthenticated(false);
+  };
 
   return (
     <Router>
@@ -41,7 +51,7 @@ const App: React.FC = () => {
         <Route
           path="/dashboard"
           element={
-            isAuthenticated ? (
+            isAuthenticated && userRole !== "admin" ? (
               <DashboardPage onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
@@ -75,7 +85,7 @@ const App: React.FC = () => {
         <Route
           path="/worker-hub"
           element={
-            isAuthenticated ? (
+            isAuthenticated && userRole === "worker" ? (
               <WorkerHubPage onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
@@ -85,7 +95,7 @@ const App: React.FC = () => {
         <Route
           path="/worker/edit-profile"
           element={
-            isAuthenticated ? (
+            isAuthenticated && userRole === "worker" ? (
               <EditWorkerProfilePage />
             ) : (
               <Navigate to="/login" />
@@ -98,7 +108,7 @@ const App: React.FC = () => {
         <Route
           path="/admin"
           element={
-            isAuthenticated ? (
+            isAuthenticated && userRole === "admin" ? (
               <AdminLayout onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />

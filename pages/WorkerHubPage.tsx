@@ -20,9 +20,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafd] dark:bg-background-dark font-sans overflow-hidden">
+    <div className="flex h-screen portal-shell dark:bg-background-dark font-sans overflow-hidden">
       {/* Minified Sidebar for the Physical Work model */}
-      <aside className="w-64 flex flex-col bg-white dark:bg-surface-dark border-r border-gray-100 dark:border-gray-800 shrink-0">
+      <aside className="w-64 flex flex-col portal-panel-soft border-r-[#e8edf7] dark:border-gray-800 shrink-0">
         <div className="p-8 border-b border-gray-50 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
@@ -43,13 +43,13 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
 
         <div className="p-6">
           <nav className="flex flex-col gap-2">
-            <button className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-primary/10 text-primary font-bold text-sm text-left transition-all">
+            <button className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-primary text-white shadow-md shadow-primary/25 font-bold text-sm text-left transition-all">
               <span className="material-symbols-outlined">account_circle</span>
               My Profile
             </button>
             <button
               onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-3 px-5 py-3.5 rounded-2xl text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-bold text-sm text-left transition-all"
+              className="flex items-center gap-3 px-5 py-3.5 rounded-2xl text-gray-500 hover:bg-white/80 dark:hover:bg-gray-800 font-bold text-sm text-left transition-all"
             >
               <span className="material-symbols-outlined">person_search</span>
               Find Help
@@ -60,7 +60,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         <div className="mt-auto p-6 border-t border-gray-50 dark:border-gray-800">
           <button
             onClick={onLogout}
-            className="flex items-center gap-3 px-5 py-3.5 w-full text-gray-400 hover:text-red-500 font-semibold text-sm transition-colors"
+            className="flex items-center gap-3 px-5 py-3.5 w-full text-gray-500 hover:text-red-500 font-semibold text-sm transition-colors"
           >
             <span className="material-symbols-outlined">logout</span>
             Logout Account
@@ -70,7 +70,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-10 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-10 py-6">
+        <header className="sticky top-0 z-10 portal-topbar border-x-0 border-t-0 px-10 py-6">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex flex-col">
               <h1 className="text-2xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">
@@ -82,7 +82,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
             </div>
             <button
               onClick={() => navigate("/worker/edit-profile")}
-              className="h-11 px-6 bg-[#120e1b] hover:bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+              className="h-11 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md shadow-primary/20"
             >
               Update Profile
             </button>
@@ -152,7 +152,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               </div>
               <button
                 onClick={() => navigate("/worker/edit-profile")}
-                className="h-11 px-8 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-amber-500/20"
+                className="h-11 px-8 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20"
               >
                 Upload Photos
               </button>
@@ -162,7 +162,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               {/* Profile Overview */}
-              <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-50 dark:border-gray-800">
+              <div className="portal-panel rounded-3xl p-8">
                 <div className="flex items-start gap-8 mb-8">
                   <div className="size-24 rounded-3xl overflow-hidden shadow-lg border-2 border-white dark:border-gray-700">
                     <img
@@ -209,7 +209,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               </div>
 
               {/* Physical Service Gallery - The Proof */}
-              <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-50 dark:border-gray-800">
+              <div className="portal-panel rounded-3xl p-8">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-extrabold tracking-tight dark:text-white">
                     Service Gallery
@@ -242,7 +242,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
 
             <div className="space-y-8">
               {/* Ratings - Performance based on physical work */}
-              <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-50 dark:border-gray-800 text-center">
+              <div className="portal-panel rounded-3xl p-8 text-center">
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
                   Worker Reputation
                 </p>

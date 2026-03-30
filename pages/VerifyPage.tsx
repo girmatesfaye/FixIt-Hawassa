@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface VerifyPageProps {
-  onVerify: () => void;
+  onVerify: (role: "client" | "worker" | "admin") => void;
 }
 
 const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
@@ -11,8 +11,13 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
   const [timer, setTimer] = useState(45);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 
-  // Simulated role detection from registration state
-  const isWorker = location.state?.role === "worker";
+  // Simulated role detection from login/register state
+  const verifiedRole =
+    location.state?.role === "admin"
+      ? "admin"
+      : location.state?.role === "worker"
+        ? "worker"
+        : "client";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -47,9 +52,11 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
   const isOtpComplete = otp.every((digit) => digit.length === 1);
 
   const handleVerify = () => {
-    onVerify();
+    onVerify(verifiedRole);
     // Redirect based on role to ensure immediate profile setup
-    if (isWorker) {
+    if (verifiedRole === "admin") {
+      navigate("/admin/users");
+    } else if (verifiedRole === "worker") {
       navigate("/worker-hub");
     } else {
       navigate("/dashboard");

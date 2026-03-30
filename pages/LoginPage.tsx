@@ -4,11 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [portal, setPortal] = useState<"client" | "worker">("client");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate navigation to verification
-    navigate("/verify");
+    // Simulate navigation to verification while carrying selected portal role
+    navigate("/verify", { state: { role: portal } });
   };
 
   return (
@@ -78,6 +79,36 @@ const LoginPage: React.FC = () => {
             </div>
 
             <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                  Portal
+                </span>
+                <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setPortal("client")}
+                    className={`h-10 rounded-lg text-sm font-semibold transition-all ${
+                      portal === "client"
+                        ? "bg-white dark:bg-surface-dark text-primary shadow-sm"
+                        : "text-gray-500 dark:text-gray-300"
+                    }`}
+                  >
+                    Client
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPortal("worker")}
+                    className={`h-10 rounded-lg text-sm font-semibold transition-all ${
+                      portal === "worker"
+                        ? "bg-white dark:bg-surface-dark text-primary shadow-sm"
+                        : "text-gray-500 dark:text-gray-300"
+                    }`}
+                  >
+                    Worker
+                  </button>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-5">
                 <label className="flex flex-col gap-2">
                   <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
@@ -154,6 +185,17 @@ const LoginPage: React.FC = () => {
                   Sign up
                 </Link>
               </p>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => navigate("/verify", { state: { role: "admin" } })}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-primary uppercase tracking-wider transition-colors"
+                  aria-label="Admin access"
+                >
+                  <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                  Admin
+                </button>
+              </div>
             </div>
           </div>
         </div>
