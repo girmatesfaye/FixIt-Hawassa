@@ -1,0 +1,183 @@
+{
+  "info": {
+    "name": "FixIt Backend API",
+    "description": "Postman collection for testing all current FixIt backend routes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Root - API Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        }
+      }
+    },
+    {
+      "name": "Health - Service and DB Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Test User\",\n  \"phone\": \"+251944000123\",\n  \"password\": \"secret123\",\n  \"role\": \"client\",\n  \"area\": \"Piassa\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+251944000123\",\n  \"password\": \"secret123\",\n  \"role\": \"client\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"otp\": \"123456\",\n  \"role\": \"client\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/verify",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "verify"]
+        }
+      }
+    },
+    {
+      "name": "Requests - Create Service Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-user-role",
+            "value": "client"
+          },
+          {
+            "key": "x-user-id",
+            "value": "000000000000000000000001"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"category\": \"Plumbing\",\n  \"description\": \"Kitchen sink leak needs urgent repair and tightening\",\n  \"area\": \"Piassa\",\n  \"landmark\": \"Near post office\",\n  \"maintenanceLevel\": \"Medium\",\n  \"hasPhotos\": false,\n  \"createdAt\": \"2026-03-30T09:00:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/requests",
+          "host": ["{{baseUrl}}"],
+          "path": ["requests"]
+        }
+      }
+    },
+    {
+      "name": "Recommendations - Rank Workers",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"category\": \"Plumbing\",\n  \"description\": \"Kitchen sink leak needs urgent repair and tightening\",\n  \"area\": \"Piassa\",\n  \"landmark\": \"Near post office\",\n  \"maintenanceLevel\": \"Medium\",\n  \"hasPhotos\": false,\n  \"createdAt\": \"2026-03-30T09:00:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/recommendations/rank?maxDistanceKm=5&minRating=4.4&onlyActive=true",
+          "host": ["{{baseUrl}}"],
+          "path": ["recommendations", "rank"],
+          "query": [
+            {
+              "key": "maxDistanceKm",
+              "value": "5"
+            },
+            {
+              "key": "minRating",
+              "value": "4.4"
+            },
+            {
+              "key": "onlyActive",
+              "value": "true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Admin - List Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-user-role",
+            "value": "admin"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "users"]
+        }
+      }
+    }
+  ]
+}
