@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { RequestDraft } from "../types";
 import { LAST_REQUEST_KEY } from "../services/recommendation";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+const AUTH_TOKEN_KEY = "fixit_auth_token";
+
 const ServiceRequestPage: React.FC = () => {
   const navigate = useNavigate();
   const [description, setDescription] = useState("");
@@ -10,9 +15,10 @@ const ServiceRequestPage: React.FC = () => {
   const [area, setArea] = useState("Piassa");
   const [landmark, setLandmark] = useState("");
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBack = () => navigate("/dashboard");
-  const handleFindWorkers = () => {
+  const handleFindWorkers = async () => {
     if (description.trim().length < 20) {
       setFormError("Please describe the issue with at least 20 characters.");
       return;
@@ -33,8 +39,51 @@ const ServiceRequestPage: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(LAST_REQUEST_KEY, JSON.stringify(requestDraft));
-    navigate("/search-results", { state: { requestDraft } });
+    const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!authToken) {
+      setFormError("Your session has expired. Please login again.");
+      navigate("/login");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/requests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(requestDraft),
+      });
+
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          setFormError("Your session has expired. Please login again.");
+          navigate("/login");
+          return;
+        }
+
+        setFormError(
+          result?.message ?? "Could not submit your request. Please try again.",
+        );
+        return;
+      }
+
+      localStorage.setItem(LAST_REQUEST_KEY, JSON.stringify(requestDraft));
+      navigate("/search-results", { state: { requestDraft } });
+    } catch (_error) {
+      setFormError("Could not connect to server. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -249,9 +298,10 @@ const ServiceRequestPage: React.FC = () => {
             ) : null}
             <button
               onClick={handleFindWorkers}
+              disabled={isSubmitting}
               className="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-primary/30 transition-all transform active:scale-95"
             >
-              Find Plumbers
+              {isSubmitting ? "Submitting..." : "Find Plumbers"}
               <span className="material-symbols-outlined">arrow_forward</span>
             </button>
             <p className="text-center text-[10px] text-gray-400 font-medium mt-4 leading-relaxed max-w-sm mx-auto">

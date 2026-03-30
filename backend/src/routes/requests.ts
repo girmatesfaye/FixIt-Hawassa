@@ -29,6 +29,18 @@ requestsRouter.post("/", requireAuth, (req, res) => {
     });
   }
 
+  const authenticatedUserId = (req as AuthenticatedRequest).userId;
+  if (
+    typeof authenticatedUserId !== "string" ||
+    !Types.ObjectId.isValid(authenticatedUserId)
+  ) {
+    return res.status(401).json({
+      message: "Unauthorized: valid user token required",
+    });
+  }
+
+  const clientUserId = new Types.ObjectId(authenticatedUserId);
+
   const databaseStatus = getDatabaseStatus();
 
   if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
@@ -36,22 +48,10 @@ requestsRouter.post("/", requireAuth, (req, res) => {
       id: `req_${Date.now()}`,
       status: "SEARCHING",
       request: parsed.data,
+      clientUserId: authenticatedUserId,
       source: "mock",
     });
   }
-
-  const authenticatedUserId = (req as AuthenticatedRequest).userId;
-  const userIdHeader = req.headers["x-user-id"];
-  const rawUserId =
-    typeof authenticatedUserId === "string"
-      ? authenticatedUserId
-      : typeof userIdHeader === "string"
-        ? userIdHeader
-        : "";
-
-  const clientUserId = Types.ObjectId.isValid(rawUserId)
-    ? new Types.ObjectId(rawUserId)
-    : new Types.ObjectId("000000000000000000000001");
 
   return ServiceRequest.create({
     clientUserId,

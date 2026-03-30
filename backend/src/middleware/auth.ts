@@ -13,14 +13,6 @@ type TokenPayload = {
   role?: string;
 };
 
-const getRoleFromHeaders = (req: Request): UserRole | null => {
-  const role = req.headers["x-user-role"];
-  if (role === "client" || role === "worker" || role === "admin") {
-    return role;
-  }
-  return null;
-};
-
 const getAuthFromBearerToken = (
   req: Request,
 ): { role: UserRole; userId?: string } | null => {
@@ -50,35 +42,15 @@ const getAuthFromBearerToken = (
   }
 };
 
-const getAuthContext = (
-  req: Request,
-): { role: UserRole; userId?: string } | null => {
-  const bearerAuth = getAuthFromBearerToken(req);
-  if (bearerAuth) {
-    return bearerAuth;
-  }
-
-  const roleFromHeaders = getRoleFromHeaders(req);
-  if (!roleFromHeaders) {
-    return null;
-  }
-
-  const userIdHeader = req.headers["x-user-id"];
-  return {
-    role: roleFromHeaders,
-    userId: typeof userIdHeader === "string" ? userIdHeader : undefined,
-  };
-};
-
 export const requireAuth = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const authContext = getAuthContext(req);
+  const authContext = getAuthFromBearerToken(req);
   if (!authContext) {
     return res.status(401).json({
-      message: "Unauthorized: provide Bearer token or x-user-role header",
+      message: "Unauthorized: Bearer token required",
     });
   }
 
@@ -88,27 +60,6 @@ export const requireAuth = (
 };
 
 export const requireRole = (required: UserRole) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const authContext = getAuthContext(req);
-    if (!authContext) {
-      return res.status(401).json({
-        message: "Unauthorized: provide Bearer token or x-user-role header",
-      });
-    }
-
-    if (authContext.role !== required) {
-      return res
-        .status(403)
-        .json({ message: `Forbidden: ${required} role required` });
-    }
-
-    (req as AuthenticatedRequest).userRole = authContext.role;
-    (req as AuthenticatedRequest).userId = authContext.userId;
-    next();
-  };
-};
-
-export const requireRoleToken = (required: UserRole) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const authContext = getAuthFromBearerToken(req);
     if (!authContext) {
@@ -127,4 +78,8 @@ export const requireRoleToken = (required: UserRole) => {
     (req as AuthenticatedRequest).userId = authContext.userId;
     next();
   };
+};
+
+export const requireRoleToken = (required: UserRole) => {
+  return requireRole(required);
 };

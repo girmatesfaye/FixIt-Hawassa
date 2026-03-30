@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
+const AUTH_TOKEN_KEY = "fixit_auth_token";
+const AUTH_ROLE_KEY = "fixit_user_role";
 
 interface VerifyPageProps {
   onVerify: (role: "client" | "worker" | "admin") => void;
@@ -68,14 +70,7 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
     const otpValue = otp.join("");
 
     if (!sessionId) {
-      onVerify(verifiedRole);
-      if (verifiedRole === "admin") {
-        navigate("/admin/users");
-      } else if (verifiedRole === "worker") {
-        navigate("/worker-hub");
-      } else {
-        navigate("/dashboard");
-      }
+      setSubmitError("Verification session expired. Please login again.");
       return;
     }
 
@@ -98,6 +93,7 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
       const result = (await response.json().catch(() => null)) as {
         message?: string;
         role?: "client" | "worker" | "admin";
+        token?: string;
       } | null;
 
       if (!response.ok) {
@@ -108,6 +104,14 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
       }
 
       const resolvedRole = result?.role ?? verifiedRole;
+      const token = typeof result?.token === "string" ? result.token : "";
+      if (!token) {
+        setSubmitError("Verification failed: missing auth token.");
+        return;
+      }
+
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+      localStorage.setItem(AUTH_ROLE_KEY, resolvedRole);
       onVerify(resolvedRole);
 
       if (resolvedRole === "admin") {

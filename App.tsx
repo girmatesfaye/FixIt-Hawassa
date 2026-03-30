@@ -24,17 +24,36 @@ import AnalyticsPage from "./admin/AnalyticsPage";
 import CategoryManagementPage from "./admin/CategoryManagementPage";
 
 type UserRole = "client" | "worker" | "admin";
+const AUTH_TOKEN_KEY = "fixit_auth_token";
+const AUTH_ROLE_KEY = "fixit_user_role";
+
+const getStoredRole = (): UserRole | null => {
+  const role = localStorage.getItem(AUTH_ROLE_KEY);
+  if (role === "client" || role === "worker" || role === "admin") {
+    return role;
+  }
+  return null;
+};
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(() =>
+    getStoredRole(),
+  );
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return (
+      Boolean(localStorage.getItem(AUTH_TOKEN_KEY)) && getStoredRole() !== null
+    );
+  });
 
   const handleLogin = (role: UserRole = "client") => {
+    localStorage.setItem(AUTH_ROLE_KEY, role);
     setUserRole(role);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_ROLE_KEY);
     setUserRole(null);
     setIsAuthenticated(false);
   };
