@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+
 interface VerifyPageProps {
   onVerify: (role: "client" | "worker" | "admin") => void;
 }
@@ -10,6 +14,8 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
   const location = useLocation();
   const [timer, setTimer] = useState(45);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Simulated role detection from login/register state
   const verifiedRole =
@@ -18,6 +24,10 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
       : location.state?.role === "worker"
         ? "worker"
         : "client";
+  const sessionId =
+    typeof location.state?.sessionId === "string"
+      ? location.state.sessionId
+      : "";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,6 +41,9 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
     const newOtp = [...otp];
     newOtp[index] = numericValue;
     setOtp(newOtp);
+    if (submitError) {
+      setSubmitError("");
+    }
 
     // Auto-focus next input
     if (numericValue && index < 5) {
@@ -51,16 +64,66 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
 
   const isOtpComplete = otp.every((digit) => digit.length === 1);
 
-  const handleVerify = () => {
-    onVerify(verifiedRole);
-    // Redirect based on role to ensure immediate profile setup
-    if (verifiedRole === "admin") {
-      navigate("/admin/users");
-    } else if (verifiedRole === "worker") {
-      navigate("/worker-hub");
-    } else {
-      navigate("/dashboard");
+  const handleVerify = async () => {
+    const otpValue = otp.join("");
+
+    if (!sessionId) {
+      onVerify(verifiedRole);
+      if (verifiedRole === "admin") {
+        navigate("/admin/users");
+      } else if (verifiedRole === "worker") {
+        navigate("/worker-hub");
+      } else {
+        navigate("/dashboard");
+      }
+      return;
     }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId,
+          otp: otpValue,
+          role: verifiedRole,
+        }),
+      });
+
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        role?: "client" | "worker" | "admin";
+      } | null;
+
+      if (!response.ok) {
+        setSubmitError(
+          result?.message ?? "Verification failed. Please try again.",
+        );
+        return;
+      }
+
+      const resolvedRole = result?.role ?? verifiedRole;
+      onVerify(resolvedRole);
+
+      if (resolvedRole === "admin") {
+        navigate("/admin/users");
+      } else if (resolvedRole === "worker") {
+        navigate("/worker-hub");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (_error) {
+      setSubmitError("Could not connect to server. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+
+    // Redirect based on role to ensure immediate profile setup
   };
 
   return (
@@ -130,11 +193,17 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
 
             <button
               onClick={handleVerify}
-              disabled={!isOtpComplete}
+              disabled={!isOtpComplete || isSubmitting}
               className="w-full flex items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-primary enabled:hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-sm transition-all enabled:active:scale-[0.98]"
             >
-              Verify & Get Started
+              {isSubmitting ? "Verifying..." : "Verify & Get Started"}
             </button>
+
+            {submitError ? (
+              <p className="mt-3 text-sm font-medium text-red-600 text-center">
+                {submitError}
+              </p>
+            ) : null}
 
             <div className="mt-6">
               <button

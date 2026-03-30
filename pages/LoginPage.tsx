@@ -1,14 +1,19 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const phoneDigits = phone.replace(/\D/g, "");
@@ -23,7 +28,43 @@ const LoginPage: React.FC = () => {
     }
 
     setFormError("");
-    navigate("/verify");
+    setIsSubmitting(true);
+
+    try {
+      const normalizedPhone = `+251${phoneDigits}`;
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: normalizedPhone,
+          password: password.trim(),
+        }),
+      });
+
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        sessionId?: string;
+        role?: "client" | "worker" | "admin";
+      } | null;
+
+      if (!response.ok || !result?.sessionId) {
+        setFormError(result?.message ?? "Login failed. Please try again.");
+        return;
+      }
+
+      navigate("/verify", {
+        state: {
+          role: result.role ?? "client",
+          sessionId: result.sessionId,
+        },
+      });
+    } catch (_error) {
+      setFormError("Could not connect to server. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -167,9 +208,10 @@ const LoginPage: React.FC = () => {
                 ) : null}
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="flex items-center justify-center w-full h-12 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium text-base transition-colors shadow-sm"
                 >
-                  Log In
+                  {isSubmitting ? "Logging In..." : "Log In"}
                 </button>
               </div>
             </form>

@@ -131,7 +131,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"otp\": \"123456\",\n  \"role\": \"client\"\n}"
+          "raw": "{\n  \"sessionId\": \"REPLACE_WITH_SESSION_ID_FROM_LOGIN_OR_REGISTER\",\n  \"otp\": \"123456\",\n  \"role\": \"client\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/auth/verify",

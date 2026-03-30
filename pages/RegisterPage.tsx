@@ -68,6 +68,8 @@ const RegisterPage: React.FC = () => {
 
       const result = (await response.json().catch(() => null)) as {
         message?: string;
+        sessionId?: string;
+        user?: { role?: "client" | "worker" | "admin" };
       } | null;
 
       if (!response.ok) {
@@ -77,7 +79,12 @@ const RegisterPage: React.FC = () => {
         return;
       }
 
-      navigate("/verify", { state: { role } });
+      navigate("/verify", {
+        state: {
+          role: result?.user?.role ?? role,
+          sessionId: result?.sessionId ?? "",
+        },
+      });
     } catch (_error) {
       setFormError("Could not connect to server. Please try again.");
     } finally {
