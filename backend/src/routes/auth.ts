@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { randomBytes, scryptSync } from "crypto";
+import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { env } from "../config/env";
 import { getDatabaseStatus } from "../config/db";
 import { mockUsers } from "../data/mockData";
 import { User } from "../models";
@@ -402,7 +404,18 @@ authRouter.post("/verify", (req, res) => {
 
   return res.json({
     message: "Verification successful",
-    token: `mock-token-${role}-${Date.now()}`,
+    token: jwt.sign(
+      {
+        sub: session.userId,
+        role,
+        phone: session.phone,
+      },
+      env.jwtSecret,
+      {
+        algorithm: "HS256",
+        expiresIn: "7d",
+      },
+    ),
     role,
   });
 });
