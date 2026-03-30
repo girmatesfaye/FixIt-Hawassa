@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface VerifyPageProps {
   onVerify: () => void;
@@ -10,10 +9,10 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [timer, setTimer] = useState(45);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
   // Simulated role detection from registration state
-  const isWorker = location.state?.role === 'worker';
+  const isWorker = location.state?.role === "worker";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,44 +22,67 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
   }, []);
 
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) value = value[0];
+    const numericValue = value.replace(/\D/g, "").slice(0, 1);
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = numericValue;
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (numericValue && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
   };
 
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const isOtpComplete = otp.every((digit) => digit.length === 1);
+
   const handleVerify = () => {
     onVerify();
     // Redirect based on role to ensure immediate profile setup
     if (isWorker) {
-      navigate('/worker-hub');
+      navigate("/worker-hub");
     } else {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   };
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-sans min-h-screen flex flex-col relative overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-[0.08] dark:opacity-[0.05] pointer-events-none bg-center bg-cover bg-no-repeat grayscale" style={{ backgroundImage: `url('https://picsum.photos/id/20/1600/900')` }}></div>
-      
+      <div
+        className="absolute inset-0 z-0 opacity-[0.08] dark:opacity-[0.05] pointer-events-none bg-center bg-cover bg-no-repeat grayscale"
+        style={{
+          backgroundImage: `url('https://picsum.photos/id/20/1600/900')`,
+        }}
+      ></div>
+
       <div className="relative z-10 flex flex-col items-center justify-center flex-grow w-full px-4 py-12">
         <div className="w-full max-w-[480px] bg-white dark:bg-[#1e1b29] rounded-2xl shadow-xl overflow-hidden border border-[#ebe7f3] dark:border-slate-800">
           <div className="p-8 sm:p-10 flex flex-col items-center">
             <div className="flex items-center gap-3 mb-8">
               <div className="size-8 text-primary bg-primary/10 rounded-lg flex items-center justify-center">
-                <span className="material-symbols-outlined text-xl font-bold">handyman</span>
+                <span className="material-symbols-outlined text-xl font-bold">
+                  handyman
+                </span>
               </div>
-              <h2 className="text-[#120e1b] dark:text-white text-xl font-bold">FixIt Hawassa</h2>
+              <h2 className="text-[#120e1b] dark:text-white text-xl font-bold">
+                FixIt Hawassa
+              </h2>
             </div>
 
             <div className="text-center mb-8 w-full">
-              <h1 className="text-[#120e1b] dark:text-white tracking-tight text-2xl font-bold mb-3">Verify Phone</h1>
+              <h1 className="text-[#120e1b] dark:text-white tracking-tight text-2xl font-bold mb-3">
+                Verify Phone
+              </h1>
               <p className="text-slate-500 dark:text-slate-400 text-sm">
                 We sent a 6-digit code to your Hawassa mobile number.
               </p>
@@ -72,10 +94,13 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
                   <input
                     key={i}
                     id={`otp-${i}`}
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
                     className="flex h-14 w-full min-w-0 bg-[#f9f8fc] dark:bg-slate-800 dark:border-slate-700 dark:text-white text-center rounded-lg border border-[#ebe7f3] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-2xl font-semibold transition-all shadow-sm"
                   />
                 ))}
@@ -84,21 +109,34 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
 
             <div className="flex flex-col items-center gap-2 mb-8 w-full">
               <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
-                <span className="material-symbols-outlined text-[20px]">timer</span>
-                <span>Resend in <span className="text-primary dark:text-[#8b5cf6]">00:{timer.toString().padStart(2, '0')}</span></span>
+                <span className="material-symbols-outlined text-[20px]">
+                  timer
+                </span>
+                <span>
+                  Resend in{" "}
+                  <span className="text-primary dark:text-[#8b5cf6]">
+                    00:{timer.toString().padStart(2, "0")}
+                  </span>
+                </span>
               </div>
             </div>
 
-            <button 
+            <button
               onClick={handleVerify}
-              className="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-primary hover:bg-primary-dark text-white text-sm font-semibold shadow-sm transition-all active:scale-[0.98]"
+              disabled={!isOtpComplete}
+              className="w-full flex items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-primary enabled:hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-sm transition-all enabled:active:scale-[0.98]"
             >
               Verify & Get Started
             </button>
 
             <div className="mt-6">
-              <button onClick={() => navigate('/login')} className="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-white font-medium transition-colors flex items-center gap-1 group">
-                <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+              <button
+                onClick={() => navigate("/login")}
+                className="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-white font-medium transition-colors flex items-center gap-1 group"
+              >
+                <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">
+                  arrow_back
+                </span>
                 Wrong number?
               </button>
             </div>
