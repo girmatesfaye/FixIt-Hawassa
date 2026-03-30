@@ -3,27 +3,13 @@ import { Request } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { getDatabaseStatus } from "../config/db";
+import { mockRequestStore } from "../data/mockRequests";
 import { requireAuth } from "../middleware/auth";
 import { ServiceRequest } from "../models";
 
 type AuthenticatedRequest = Request & { userId?: string };
 
-type StoredRequest = {
-  id: string;
-  clientUserId: string;
-  category: string;
-  description: string;
-  area: string;
-  landmark: string;
-  maintenanceLevel: "New" | "Medium" | "Old";
-  hasPhotos: boolean;
-  status: "SEARCHING" | "IN_PROGRESS" | "PENDING" | "COMPLETED";
-  createdAt: string;
-  updatedAt: string;
-};
-
 const requestsRouter = Router();
-const mockRequestStore: StoredRequest[] = [];
 
 const requestDraftSchema = z.object({
   category: z.string().min(2),

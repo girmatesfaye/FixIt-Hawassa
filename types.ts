@@ -54,7 +54,7 @@ export interface RequestDraft {
 }
 
 export interface WorkerRecommendation {
-  id: number;
+  id: string | number;
   name: string;
   location: string;
   area: string;

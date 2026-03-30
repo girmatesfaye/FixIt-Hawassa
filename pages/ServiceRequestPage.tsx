@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RequestDraft } from "../types";
-import { LAST_REQUEST_KEY } from "../services/recommendation";
+import {
+  LAST_CREATED_REQUEST_ID_KEY,
+  LAST_REQUEST_KEY,
+} from "../services/recommendation";
 import { clearSession, getAuthToken } from "../services/auth";
 
 const API_BASE_URL =
@@ -61,6 +64,7 @@ const ServiceRequestPage: React.FC = () => {
 
       const result = (await response.json().catch(() => null)) as {
         message?: string;
+        id?: string;
       } | null;
 
       if (!response.ok) {
@@ -78,7 +82,16 @@ const ServiceRequestPage: React.FC = () => {
       }
 
       localStorage.setItem(LAST_REQUEST_KEY, JSON.stringify(requestDraft));
-      navigate("/search-results", { state: { requestDraft } });
+      if (result?.id) {
+        localStorage.setItem(LAST_CREATED_REQUEST_ID_KEY, result.id);
+      }
+
+      navigate("/search-results", {
+        state: {
+          requestDraft,
+          requestId: result?.id,
+        },
+      });
     } catch (_error) {
       setFormError("Could not connect to server. Please try again.");
     } finally {

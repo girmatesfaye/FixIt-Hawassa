@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { RequestDraft } from "../types";
+import { RequestDraft, WorkerRecommendation } from "../types";
 import {
+  fetchRecommendations,
   getRecommendationReasons,
+  LAST_CREATED_REQUEST_ID_KEY,
   LAST_REQUEST_KEY,
-  MOCK_WORKERS,
-  rankWorkers,
 } from "../services/recommendation";
 
 const SearchResultsPage: React.FC = () => {
@@ -14,8 +14,10 @@ const SearchResultsPage: React.FC = () => {
   const [distance, setDistance] = useState(5);
   const [minRating, setMinRating] = useState(4.4);
   const [onlyActive, setOnlyActive] = useState(true);
-
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [workers, setWorkers] = useState<WorkerRecommendation[]>([]);
+  const [recommendationSource, setRecommendationSource] = useState("");
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -36,17 +38,48 @@ const SearchResultsPage: React.FC = () => {
     }
   }, [location.state]);
 
-  const workers = useMemo(
-    () =>
-      rankWorkers(MOCK_WORKERS, requestDraft, distance, minRating, onlyActive),
-    [distance, minRating, onlyActive, requestDraft],
-  );
+  const requestId =
+    ((location.state as { requestId?: string } | null)?.requestId as
+      | string
+      | undefined) ??
+    localStorage.getItem(LAST_CREATED_REQUEST_ID_KEY) ??
+    "";
 
   useEffect(() => {
+    if (!requestDraft || !requestId) {
+      setWorkers([]);
+      setIsLoading(false);
+      setLoadError(
+        "Create a service request first to see personalized recommendations.",
+      );
+      return;
+    }
+
     setIsLoading(true);
-    const timeout = setTimeout(() => setIsLoading(false), 350);
-    return () => clearTimeout(timeout);
-  }, [distance, minRating, onlyActive, requestDraft]);
+    setLoadError("");
+
+    fetchRecommendations(requestId, {
+      maxDistanceKm: distance,
+      minRating,
+      onlyActive,
+    })
+      .then((result) => {
+        setWorkers(result.recommendations);
+        setRecommendationSource(result.source);
+      })
+      .catch((error) => {
+        if (error instanceof Error && error.message === "UNAUTHORIZED") {
+          navigate("/login");
+          return;
+        }
+
+        setWorkers([]);
+        setLoadError("Could not load recommendations. Please try again.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [distance, minRating, onlyActive, requestDraft, requestId]);
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -188,15 +221,19 @@ const SearchResultsPage: React.FC = () => {
             </p>
             {requestDraft ? (
               <p className="text-xs text-primary font-semibold">
-                Request context: {requestDraft.category} • {requestDraft.area} •{" "}
-                {requestDraft.maintenanceLevel}
+                Request #{requestId || "-"}: {requestDraft.category} •{" "}
+                {requestDraft.area} • {requestDraft.maintenanceLevel}
               </p>
             ) : (
               <p className="text-xs text-amber-600 font-semibold">
-                No saved request context found. Recommendations are using
-                default matching.
+                No saved request context found. Create a request to continue.
               </p>
             )}
+            {recommendationSource ? (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Source: {recommendationSource}
+              </p>
+            ) : null}
           </div>
 
           {isLoading ? (
@@ -205,6 +242,19 @@ const SearchResultsPage: React.FC = () => {
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Loading verified pros...
               </p>
+            </div>
+          ) : loadError ? (
+            <div className="bg-white dark:bg-surface-dark rounded-2xl p-10 border border-gray-100 dark:border-gray-800 text-center">
+              <p className="text-lg font-semibold text-[#120e1b] dark:text-white">
+                Recommendation unavailable
+              </p>
+              <p className="text-sm text-gray-500 mt-2">{loadError}</p>
+              <button
+                onClick={() => navigate("/request-service")}
+                className="mt-4 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold"
+              >
+                Create Request
+              </button>
             </div>
           ) : (
             <>

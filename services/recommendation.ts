@@ -1,6 +1,12 @@
 import { RequestDraft, WorkerRecommendation } from "../types";
+import { clearSession, getAuthToken } from "./auth";
 
 export const LAST_REQUEST_KEY = "fixit:lastRequestDraft";
+export const LAST_CREATED_REQUEST_ID_KEY = "fixit:lastCreatedRequestId";
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 export const MOCK_WORKERS: WorkerRecommendation[] = [
   {
@@ -195,4 +201,53 @@ export const rankWorkers = (
 
     return scoreB - scoreA;
   });
+};
+
+export const fetchRecommendations = async (
+  requestId: string,
+  filters: {
+    maxDistanceKm: number;
+    minRating: number;
+    onlyActive: boolean;
+  },
+): Promise<{ recommendations: WorkerRecommendation[]; source: string }> => {
+  const params = new URLSearchParams({
+    maxDistanceKm: String(filters.maxDistanceKm),
+    minRating: String(filters.minRating),
+    onlyActive: String(filters.onlyActive),
+  });
+
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/recommendations/request/${requestId}?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    recommendations?: WorkerRecommendation[];
+    source?: string;
+  } | null;
+
+  if (!response.ok || !Array.isArray(result?.recommendations)) {
+    throw new Error("RECOMMENDATION_LOAD_FAILED");
+  }
+
+  return {
+    recommendations: result.recommendations,
+    source: result.source ?? "unknown",
+  };
 };
