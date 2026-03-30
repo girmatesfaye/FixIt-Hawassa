@@ -141,11 +141,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="relative size-10 flex items-center justify-center text-gray-500 hover:text-[#120e1b] hover:bg-primary/10 rounded-full transition-colors">
+            <button
+              aria-label="Open admin notifications"
+              className="relative size-10 flex items-center justify-center text-gray-500 hover:text-[#120e1b] hover:bg-primary/10 rounded-full transition-colors"
+            >
               <span className="material-symbols-outlined">notifications</span>
               <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-white"></span>
             </button>
-            <div className="size-9 rounded-full overflow-hidden border border-gray-200 shadow-sm cursor-pointer">
+            <div
+              className="size-9 rounded-full overflow-hidden border border-gray-200 shadow-sm cursor-pointer"
+              aria-label="Admin profile"
+            >
               <img
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"
                 alt="Admin"

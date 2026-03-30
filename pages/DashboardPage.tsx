@@ -131,7 +131,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 </span>
                 Switch to Worker
               </button>
-              <button className="relative size-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-surface-dark dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors">
+              <button
+                aria-label="Open notifications"
+                className="relative size-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-surface-dark dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors"
+              >
                 <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">
                   notifications
                 </span>
@@ -139,6 +142,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               </button>
               <button
                 onClick={onLogout}
+                aria-label="Log out"
                 className="size-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-surface-dark dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors"
               >
                 <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">
@@ -273,39 +277,50 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 </p>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                {topPros.map((pro) => (
-                  <div
-                    key={pro.id}
-                    className="min-w-[260px] portal-panel p-4 flex items-center gap-3 group cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
-                  >
-                    <img
-                      src={pro.avatar}
-                      className="size-14 rounded-xl object-cover shadow-sm"
-                      alt=""
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-[#120e1b] dark:text-white truncate">
-                        {pro.name}
-                      </h4>
-                      <p className="text-xs text-primary font-medium mb-1.5 truncate">
-                        {pro.role}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/10 rounded border border-amber-100 dark:border-amber-900/30">
-                          <span className="material-symbols-outlined text-amber-500 text-[12px] fill-current">
-                            star
-                          </span>
-                          <span className="text-xs font-semibold">
-                            {pro.rating}
+                {topPros.length ? (
+                  topPros.map((pro) => (
+                    <div
+                      key={pro.id}
+                      className="min-w-[260px] portal-panel p-4 flex items-center gap-3 group cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
+                    >
+                      <img
+                        src={pro.avatar}
+                        className="size-14 rounded-xl object-cover shadow-sm"
+                        alt=""
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-[#120e1b] dark:text-white truncate">
+                          {pro.name}
+                        </h4>
+                        <p className="text-xs text-primary font-medium mb-1.5 truncate">
+                          {pro.role}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/10 rounded border border-amber-100 dark:border-amber-900/30">
+                            <span className="material-symbols-outlined text-amber-500 text-[12px] fill-current">
+                              star
+                            </span>
+                            <span className="text-xs font-semibold">
+                              {pro.rating}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            ({pro.reviews})
                           </span>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          ({pro.reviews})
-                        </span>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="portal-panel p-6 w-full text-center">
+                    <p className="text-sm font-semibold text-[#120e1b] dark:text-white">
+                      No recommendations yet
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Submit a service request to get nearby pros.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -314,47 +329,65 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <h3 className="text-lg font-semibold dark:text-white tracking-tight">
                 My Report Status
               </h3>
+              {requests.length ? (
+                <p className="text-xs text-primary font-semibold">
+                  You have {requests.length} active request
+                  {requests.length > 1 ? "s" : ""} in progress.
+                </p>
+              ) : null}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {myReports.map((report) => (
-                  <div
-                    key={report.id}
-                    className="portal-panel p-6 flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="space-y-1">
-                          <h4 className="text-base font-semibold dark:text-white tracking-tight">
-                            {report.category}
-                          </h4>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                            <span>Worker: {report.workerName}</span>
-                            <span>•</span>
-                            <span>{report.dateSubmitted}</span>
-                          </div>
-                        </div>
-                        <span
-                          className={`px-2.5 py-1 rounded inline-flex text-xs font-medium ${
-                            report.status === ReportStatus.RESOLVED
-                              ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-800/50"
-                              : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 animate-pulse"
-                          }`}
-                        >
-                          {report.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-5">
-                        {report.clientDescription}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => openReportDetail(report)}
-                      className="w-full h-10 bg-gray-50 hover:bg-primary text-gray-700 hover:text-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-all"
+                {myReports.length ? (
+                  myReports.map((report) => (
+                    <div
+                      key={report.id}
+                      className="portal-panel p-6 flex flex-col justify-between"
                     >
-                      View Report Details
-                    </button>
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="space-y-1">
+                            <h4 className="text-base font-semibold dark:text-white tracking-tight">
+                              {report.category}
+                            </h4>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                              <span>Worker: {report.workerName}</span>
+                              <span>•</span>
+                              <span>{report.dateSubmitted}</span>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-2.5 py-1 rounded inline-flex text-xs font-medium ${
+                              report.status === ReportStatus.RESOLVED
+                                ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-800/50"
+                                : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 animate-pulse"
+                            }`}
+                          >
+                            {report.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-5">
+                          {report.clientDescription}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => openReportDetail(report)}
+                        className="w-full h-10 bg-gray-50 hover:bg-primary text-gray-700 hover:text-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-all"
+                      >
+                        View Report Details
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="portal-panel p-8 text-center md:col-span-2">
+                    <p className="text-base font-semibold text-[#120e1b] dark:text-white">
+                      No reports submitted
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      If an issue happens, you can report it from your request
+                      details.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
