@@ -158,26 +158,7 @@ authRouter.post("/refresh", requireAuth, async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const databaseStatus = getDatabaseStatus();
 
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    const mockUser = mockAuthUsers.find((entry) => entry.id === userId);
-    if (mockUser && mockUser.status !== "active") {
-      return res.status(403).json({ message: "Account is not active" });
-    }
-
-    const role = mockUser?.role ?? roleFromToken;
-    return res.json({
-      message: "Token refreshed",
-      token: signAccessToken({
-        sub: userId,
-        role,
-        phone: mockUser?.phone,
-      }),
-      role,
-      source: mockUser ? "mock" : "token",
-    });
-  }
 
   try {
     const user = await User.findById(userId)
@@ -247,50 +228,7 @@ authRouter.post("/register", async (req, res) => {
     }
   }
 
-  const databaseStatus = getDatabaseStatus();
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    const existsInMock = mockAuthUsers.some(
-      (user) => user.phone === normalizedPhone,
-    );
-    if (existsInMock) {
-      return res.status(409).json({
-        message: "Phone number already registered",
-        source: "mock",
-      });
-    }
 
-    const createdUser: AuthUser = {
-      id: `usr_${Date.now()}`,
-      name: normalizedName,
-      role,
-      phone: normalizedPhone,
-      status: "active",
-      area: normalizedArea,
-      nationalId: role === "worker" ? normalizedNationalId : "",
-      isVerified: false,
-      passwordHash: hashPassword(parsed.data.password),
-    };
-    mockAuthUsers.push(createdUser);
-    const sessionId = createOtpSession(role, createdUser.id, normalizedPhone);
-
-    return res.status(201).json({
-      message: "Registration successful. OTP sent.",
-      sessionId,
-      user: {
-        id: createdUser.id,
-        name: createdUser.name,
-        role: createdUser.role,
-        phone: createdUser.phone,
-        status: createdUser.status,
-        area: createdUser.area,
-        nationalId:
-          createdUser.role === "worker" ? createdUser.nationalId : undefined,
-        isVerified: createdUser.isVerified,
-      },
-      next: "/auth/verify",
-      source: "mock",
-    });
-  }
 
   try {
     const existingUser = await User.findOne({ phone: normalizedPhone })
@@ -342,26 +280,8 @@ authRouter.post("/register", async (req, res) => {
       "[auth] Failed to create user in MongoDB, using mock response",
       error,
     );
-    const sessionId = createOtpSession(
-      role,
-      `usr_${Date.now()}`,
-      normalizedPhone,
-    );
-    return res.status(201).json({
-      message: "Registration successful. OTP sent.",
-      sessionId,
-      user: {
-        id: `usr_${Date.now()}`,
-        name: normalizedName,
-        role,
-        phone: normalizedPhone,
-        status: "active",
-        area: normalizedArea,
-        nationalId: role === "worker" ? normalizedNationalId : undefined,
-        isVerified: false,
-      },
-      next: "/auth/verify",
-      source: "mock",
+    return res.status(500).json({
+      message: "Registration failed",
     });
   }
 });
@@ -377,47 +297,7 @@ authRouter.post("/login", (req, res) => {
 
   const normalizedPhone = parsed.data.phone.trim();
   const providedRole = parsed.data.role;
-  const databaseStatus = getDatabaseStatus();
 
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    const user = mockAuthUsers.find((entry) => entry.phone === normalizedPhone);
-    if (!user) {
-      return res.status(401).json({
-        message: "Invalid phone or password",
-        source: "mock",
-      });
-    }
-
-    if (providedRole && providedRole !== user.role) {
-      return res.status(403).json({
-        message: "Role does not match this account",
-        source: "mock",
-      });
-    }
-
-    if (user.status !== "active") {
-      return res.status(403).json({
-        message: "Account is not active",
-        source: "mock",
-      });
-    }
-
-    if (!verifyPassword(parsed.data.password, user.passwordHash)) {
-      return res.status(401).json({
-        message: "Invalid phone or password",
-        source: "mock",
-      });
-    }
-
-    const sessionId = createOtpSession(user.role, user.id, user.phone);
-    return res.json({
-      message: "Login accepted. OTP sent.",
-      sessionId,
-      next: "/auth/verify",
-      role: user.role,
-      source: "mock",
-    });
-  }
 
   return User.findOne({ phone: normalizedPhone })
     .select("_id phone role status passwordHash")
@@ -504,19 +384,11 @@ authRouter.post("/verify", (req, res) => {
 
   otpSessions.delete(parsed.data.sessionId);
 
-  const databaseStatus = getDatabaseStatus();
-  if (databaseStatus.mode === "mongodb" && databaseStatus.connected) {
-    void User.findByIdAndUpdate(session.userId, { isVerified: true }).catch(
-      (error) => {
-        console.error("[auth] Failed to update verification flag", error);
-      },
-    );
-  } else {
-    const mockUser = mockAuthUsers.find((entry) => entry.id === session.userId);
-    if (mockUser) {
-      mockUser.isVerified = true;
-    }
-  }
+  void User.findByIdAndUpdate(session.userId, { isVerified: true }).catch(
+    (error) => {
+      console.error("[auth] Failed to update verification flag", error);
+    },
+  );
 
   return res.json({
     message: "Verification successful",

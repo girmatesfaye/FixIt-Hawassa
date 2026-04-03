@@ -2,13 +2,7 @@ import { Router } from "express";
 import { Request } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { getDatabaseStatus } from "../config/db";
-import { mockRequestStore } from "../data/mockRequests";
-import {
-  getRecommendationSnapshot,
-  setRecommendationSnapshot,
-} from "../data/recommendationSnapshots";
-import { mockWorkers } from "../data/mockData";
+
 import { requireAuth } from "../middleware/auth";
 import {
   RecommendationSnapshot,
@@ -41,20 +35,7 @@ const loadRankedWorkers = async (
   ranked: Array<WorkerRecommendation & { score: number; reasons: string[] }>;
   source: "mock" | "mongodb";
 }> => {
-  const databaseStatus = getDatabaseStatus();
 
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    return {
-      ranked: rankWorkers(
-        mockWorkers,
-        requestDraft,
-        filters.maxDistanceKm,
-        filters.minRating,
-        filters.onlyActive,
-      ),
-      source: "mock",
-    };
-  }
 
   try {
     const profiles = await WorkerProfile.find().lean();
@@ -99,14 +80,8 @@ const loadRankedWorkers = async (
       error,
     );
     return {
-      ranked: rankWorkers(
-        mockWorkers,
-        requestDraft,
-        filters.maxDistanceKm,
-        filters.minRating,
-        filters.onlyActive,
-      ),
-      source: "mock",
+      ranked: [],
+      source: "mongodb",
     };
   }
 };
@@ -195,70 +170,7 @@ recommendationsRouter.get(
       });
     }
 
-    const databaseStatus = getDatabaseStatus();
 
-    if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-      const request = mockRequestStore.find((entry) => entry.id === requestId);
-      if (!request) {
-        return res
-          .status(404)
-          .json({ message: "Request not found", source: "mock" });
-      }
-
-      if (request.clientUserId !== authenticatedUserId) {
-        return res
-          .status(403)
-          .json({ message: "Forbidden: request access denied" });
-      }
-
-      const requestDraft: RequestDraft = {
-        category: request.category,
-        description: request.description,
-        area: request.area,
-        landmark: request.landmark,
-        maintenanceLevel: request.maintenanceLevel,
-        hasPhotos: request.hasPhotos,
-        createdAt: request.createdAt,
-      };
-
-      let snapshot = getRecommendationSnapshot(requestId, {
-        maxDistanceKm,
-        minRating,
-        onlyActive,
-      });
-      if (!snapshot) {
-        const { ranked, source } = await loadRankedWorkers(requestDraft, {
-          maxDistanceKm,
-          minRating,
-          onlyActive,
-        });
-        snapshot = setRecommendationSnapshot({
-          requestId,
-          filters: { maxDistanceKm, minRating, onlyActive },
-          recommendations: ranked,
-          source,
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      const paginated = paginateRecommendations(
-        snapshot.recommendations,
-        page,
-        limit,
-      );
-
-      return res.json({
-        requestId,
-        total: paginated.total,
-        page: paginated.page,
-        limit: paginated.limit,
-        hasMore: paginated.hasMore,
-        filters: { maxDistanceKm, minRating, onlyActive },
-        recommendations: paginated.items,
-        source: snapshot.source,
-        snapshotCreatedAt: snapshot.createdAt,
-      });
-    }
 
     if (!Types.ObjectId.isValid(requestId)) {
       return res.status(400).json({ message: "Invalid request ID" });
