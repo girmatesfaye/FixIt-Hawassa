@@ -1,6 +1,4 @@
 import { Router } from "express";
-import { getDatabaseStatus } from "../config/db";
-import { mockUsers } from "../data/mockData";
 import { requireRoleToken } from "../middleware/auth";
 import { User, Report, Category, ServiceRequest, WorkerProfile } from "../models";
 
@@ -9,16 +7,6 @@ const adminRouter = Router();
 adminRouter.use(requireRoleToken("admin"));
 
 adminRouter.get("/users", async (_req, res) => {
-  const databaseStatus = getDatabaseStatus();
-
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    return res.json({
-      total: mockUsers.length,
-      users: mockUsers,
-      source: "mock",
-    });
-  }
-
   try {
     const users = await User.find()
       .select("fullName role status phone")
@@ -39,14 +27,9 @@ adminRouter.get("/users", async (_req, res) => {
       source: "mongodb",
     });
   } catch (error) {
-    console.error(
-      "[admin] Failed to fetch users from MongoDB, using mock data",
-      error,
-    );
-    return res.json({
-      total: mockUsers.length,
-      users: mockUsers,
-      source: "mock",
+    console.error("[admin] Failed to fetch users from MongoDB", error);
+    return res.status(500).json({
+      message: "Failed to fetch users",
     });
   }
 });
