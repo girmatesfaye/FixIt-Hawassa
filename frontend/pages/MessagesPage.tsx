@@ -1,66 +1,116 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getAuthToken } from "../services/auth";
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const MessagesPage: React.FC = () => {
-  const [selectedContact, setSelectedContact] = useState(0);
+  const [selectedContact, setSelectedContact] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
+  const [requests, setRequests] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [me, setMe] = useState<any>(null);
 
-  const contacts = [
-    {
-      id: 0,
-      name: "Dawit M.",
-      role: "Plumber",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dawit",
-      lastMsg: "I can come tomorrow at 10 AM.",
-      time: "10:45 AM",
-      unread: 2,
-      status: "online",
-    },
-    {
-      id: 1,
-      name: "Abebe K.",
-      role: "Electrician",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Abebe",
-      lastMsg: "The parts will cost about 500 ETB.",
-      time: "Yesterday",
-      unread: 0,
-      status: "offline",
-    },
-    {
-      id: 2,
-      name: "Meron H.",
-      role: "Cleaner",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Meron",
-      lastMsg: "Thank you for the tip!",
-      time: "Monday",
-      unread: 0,
-      status: "online",
-    },
-  ];
+  // Fetch current user
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const token = getAuthToken();
+        const res = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMe(data.user);
+        }
+      } catch (err) {
+        console.error("Failed to fetch me", err);
+      }
+    };
+    fetchMe();
+  }, []);
 
-  const messages = [
-    {
-      id: 1,
-      sender: "Dawit M.",
-      text: "Hi Abebe, I saw your request for the kitchen sink leak.",
-      time: "10:30 AM",
-      me: false,
-    },
-    {
-      id: 2,
-      sender: "Me",
-      text: "Yes, it needs urgent fixing. Water is pooling under the cabinet.",
-      time: "10:32 AM",
-      me: true,
-    },
-    {
-      id: 3,
-      sender: "Dawit M.",
-      text: "I can come tomorrow at 10 AM. Will that work for you?",
-      time: "10:45 AM",
-      me: false,
-    },
-  ];
+  // Fetch Threads (from active requests)
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const token = getAuthToken();
+        const res = await fetch(`${API_BASE_URL}/requests/mine`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setRequests(data.requests || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch requests", err);
+      }
+    };
+    fetchRequests();
+  }, []);
+
+  // Fetch specific thread messages
+  const fetchMessages = async (requestId: string) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/messages/${requestId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch messages", err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedContact !== null && requests[selectedContact]) {
+      const requestId = requests[selectedContact].id;
+      fetchMessages(requestId);
+      // Setup simple polling for updates (in absence of websockets)
+      const interval = setInterval(() => {
+        fetchMessages(requestId);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedContact, requests]);
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || selectedContact === null) return;
+
+    try {
+      const token = getAuthToken();
+      const requestId = requests[selectedContact].id;
+      
+      const res = await fetch(`${API_BASE_URL}/messages/${requestId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text: newMessage })
+      });
+      if (res.ok) {
+        setNewMessage("");
+        fetchMessages(requestId);
+      }
+    } catch (err) {
+      console.error("Failed to send message", err);
+    }
+  };
+
+  const getContactName = (req: any) => {
+    if (!me) return "Unknown";
+    if (req.clientUserId && req.clientUserId._id === me.id) {
+        return req.assignedWorkerId ? req.assignedWorkerId.name : "Unassigned Worker";
+    }
+    return req.clientUserId ? req.clientUserId.name : "Client";
+  };
 
   return (
     <div className="h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col overflow-hidden">
@@ -122,7 +172,7 @@ const MessagesPage: React.FC = () => {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {contacts.map((contact, idx) => (
+            {requests.map((contact, idx) => (
               <div
                 key={contact.id}
                 onClick={() => setSelectedContact(idx)}
@@ -130,32 +180,24 @@ const MessagesPage: React.FC = () => {
               >
                 <div className="relative shrink-0">
                   <div className="size-12 rounded-full overflow-hidden bg-gray-100">
-                    <img src={contact.avatar} alt={contact.name} />
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`} alt={getContactName(contact)} />
                   </div>
-                  <div
-                    className={`absolute bottom-0 right-0 size-3 rounded-full border-2 border-white dark:border-surface-dark ${contact.status === "online" ? "bg-green-500" : "bg-gray-300"}`}
-                  ></div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start mb-0.5">
                     <h4 className="text-sm font-bold text-[#120e1b] dark:text-white truncate">
-                      {contact.name}
+                      {getContactName(contact)}
                     </h4>
                     <span className="text-[10px] font-semibold text-gray-400">
-                      {contact.time}
+                      Request
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <p
-                      className={`text-xs truncate ${contact.unread > 0 ? "font-semibold text-gray-800 dark:text-gray-200" : "text-gray-500"}`}
+                      className={`text-xs truncate text-gray-500`}
                     >
-                      {contact.lastMsg}
+                      {contact.category}
                     </p>
-                    {contact.unread > 0 && (
-                      <span className="size-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-                        {contact.unread}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -165,98 +207,74 @@ const MessagesPage: React.FC = () => {
 
         {/* Chat Area */}
         <section className="flex-1 flex flex-col bg-gray-50/50 dark:bg-gray-900/10">
-          {/* Chat Header */}
-          <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full overflow-hidden bg-gray-100">
-                <img src={contacts[selectedContact].avatar} alt="" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[#120e1b] dark:text-white">
-                  {contacts[selectedContact].name}
-                </h3>
-                <p className="text-[10px] font-semibold text-green-500 uppercase tracking-widest">
-                  {contacts[selectedContact].status}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-gray-400">
-              <button className="hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">call</span>
-              </button>
-              <button className="hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">videocam</span>
-              </button>
-              <button className="hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">info</span>
-              </button>
-            </div>
-          </header>
-
-          {/* Messages List */}
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-            <div className="text-center">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                Today
-              </span>
-            </div>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.me ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-2xl p-4 shadow-sm ${msg.me ? "bg-primary text-white rounded-tr-none" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"}`}
-                >
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
-                  <div
-                    className={`text-[10px] mt-1 font-semibold uppercase opacity-60 ${msg.me ? "text-right" : "text-left"}`}
-                  >
-                    {msg.time}
+          {selectedContact !== null ? (
+            <>
+              {/* Chat Header */}
+              <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-full overflow-hidden bg-gray-100">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(requests[selectedContact])}`} alt="" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#120e1b] dark:text-white">
+                      {getContactName(requests[selectedContact])}
+                    </h3>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              </header>
 
-          {/* Input Area */}
-          <div className="p-4 bg-white dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
-            <form
-              className="flex items-center gap-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setNewMessage("");
-              }}
-            >
-              <button
-                type="button"
-                className="text-gray-400 hover:text-primary transition-colors"
-              >
-                <span className="material-symbols-outlined">add_circle</span>
-              </button>
-              <button
-                type="button"
-                className="text-gray-400 hover:text-primary transition-colors"
-              >
-                <span className="material-symbols-outlined">image</span>
-              </button>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="w-full h-11 px-4 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-1 focus:ring-primary"
-                />
+              {/* Messages List */}
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+                {messages.map((msg) => {
+                  const isMe = msg.senderId === me?.id;
+                  return (
+                  <div
+                    key={msg._id}
+                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-2xl p-4 shadow-sm ${isMe ? "bg-primary text-white rounded-tr-none" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"}`}
+                    >
+                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                      <div
+                        className={`text-[10px] mt-1 font-semibold uppercase opacity-60 ${isMe ? "text-right" : "text-left"}`}
+                      >
+                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                )})}
               </div>
-              <button
-                type="submit"
-                className="size-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all"
-              >
-                <span className="material-symbols-outlined">send</span>
-              </button>
-            </form>
-          </div>
+
+              {/* Input Area */}
+              <div className="p-4 bg-white dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
+                <form
+                  className="flex items-center gap-3"
+                  onSubmit={sendMessage}
+                >
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type a message..."
+                      className="w-full h-11 px-4 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="size-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all"
+                  >
+                    <span className="material-symbols-outlined">send</span>
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-400">
+               Select a conversation to start messaging
+            </div>
+          )}
         </section>
       </main>
     </div>

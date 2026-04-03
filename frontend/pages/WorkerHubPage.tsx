@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAuthToken } from "../services/auth";
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 interface WorkerHubPageProps {
   onLogout: () => void;
@@ -8,16 +13,50 @@ interface WorkerHubPageProps {
 const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const [isAvailable, setIsAvailable] = useState(true);
-  const [skills, setSkills] = useState([
-    "Plumbing",
-    "Pipe Repair",
-    "Leak Detection",
-  ]);
+  const [skills, setSkills] = useState(["Plumbing", "Pipe Repair"]);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [workerName, setWorkerName] = useState("Worker Profile");
+  const [bio, setBio] = useState("Update your profile to set a bio.");
+  const [loading, setLoading] = useState(true);
 
-  const removeSkill = (skillToRemove: string) => {
-    setSkills(skills.filter((skill) => skill !== skillToRemove));
-  };
+  useEffect(() => {
+    const fetchWorkerData = async () => {
+      try {
+        const token = getAuthToken();
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // 1) Get current user ID
+        const meRes = await fetch(`${API_BASE_URL}/auth/me`, { headers });
+        if (!meRes.ok) throw new Error("Failed to load /auth/me");
+        const meData = await meRes.json();
+        const userId = meData.user?.id;
+        
+        if (userId) {
+          setWorkerName(meData.user?.name || "Worker Profile");
+
+          // 2) Get specific worker profile
+          const workerRes = await fetch(`${API_BASE_URL}/workers/${userId}`, { headers });
+          if (workerRes.ok) {
+             const workerData = await workerRes.json();
+             if (workerData.worker?.profile?.bio) {
+                setBio(workerData.worker.profile.bio);
+             }
+             if (workerData.worker?.profile?.skills) {
+                setSkills(workerData.worker.profile.skills);
+             }
+             if (workerData.worker?.profile) {
+                setIsProfileComplete(true);
+             }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load worker data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWorkerData();
+  }, []);
 
   return (
     <div className="flex h-screen portal-shell dark:bg-background-dark font-sans overflow-hidden">
@@ -174,7 +213,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <h2 className="text-2xl font-extrabold tracking-tight dark:text-white">
-                        Abebe Kebede
+                        {workerName}
                       </h2>
                       <span className="material-symbols-outlined text-primary fill-current text-[24px]">
                         verified
@@ -200,10 +239,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                     My Bio
                   </p>
                   <p className="text-sm text-gray-600 leading-relaxed italic">
-                    "Providing reliable plumbing services in Hawassa for over 8
-                    years. I specialize in home installations and emergency leak
-                    fixes. I am always punctual and offer fair pricing for
-                    physical work."
+                    "{bio}"
                   </p>
                 </div>
               </div>

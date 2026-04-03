@@ -1,88 +1,95 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getAuthToken } from "../services/auth";
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const UserManagementPage: React.FC = () => {
-  const stats = [
-    {
-      label: "Total Users",
-      value: "1,240",
-      change: "+ 5.2%",
-      icon: "group",
-      color: "bg-red-500",
-    },
-    {
-      label: "Pending Complaints",
-      value: "18",
-      sub: "Action needed",
-      icon: "report_problem",
-      color: "bg-orange-500",
-      alert: true,
-    },
-    {
-      label: "New User Registrations",
-      value: "+8",
-      sub: "Today",
-      icon: "person_add",
-      color: "bg-green-500",
-    },
-    {
-      label: "New Services Created",
-      value: "+15",
-      sub: "Today",
-      icon: "playlist_add",
-      color: "bg-blue-500",
-    },
-  ];
+  const [users, setUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+  const [recentReports, setRecentReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentReports = [
-    {
-      type: "LATE ARRIVAL",
-      time: "2 hrs ago",
-      text: '"Worker arrived 3 hours late without any prior notice and was rude when asked."',
-      against: "Abebe Kebede",
-    },
-    {
-      type: "PRICING DISPUTE",
-      time: "5 hrs ago",
-      text: '"Charged 50% more than the agreed quote after the job was completed."',
-      against: "Dawit Alemu",
-    },
-    {
-      type: "POOR QUALITY",
-      time: "1 day ago",
-      text: '"The paint started peeling off the next day. Very unprofessional work."',
-      against: "Yonas Bekele",
-    },
-  ];
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const token = getAuthToken();
+        const headers = { Authorization: `Bearer ${token}` };
 
-  const users = [
-    {
-      name: "Abebe Kebede",
-      email: "abebe.k@example.com",
-      role: "Worker (Plumber)",
-      status: "Active",
-      joined: "Oct 24, 2023",
-      reports: 2,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Abebe",
-    },
-    {
-      name: "Sarah Tadesse",
-      email: "sarah.t@example.com",
-      role: "Client",
-      status: "Active",
-      joined: "Nov 02, 2023",
-      reports: null,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-    },
-    {
-      name: "Dawit Alemu",
-      email: "dawit.alemu@example.com",
-      role: "Worker (Electrician)",
-      status: "Suspended",
-      joined: "Sep 15, 2023",
-      reports: 5,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dawit",
-    },
-  ];
+        const [usersRes, statsRes, reportsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/admin/users`, { headers }),
+          fetch(`${API_BASE_URL}/admin/stats`, { headers }),
+          fetch(`${API_BASE_URL}/admin/reports`, { headers }),
+        ]);
+
+        const usersData = await usersRes.json();
+        const statsData = await statsRes.json();
+        const reportsData = await reportsRes.json();
+
+        setUsers(
+          (usersData.users || []).map((u: any) => ({
+            name: u.name,
+            email: u.phone, // mapping phone to email placeholder
+            role: u.role,
+            status: u.status,
+            joined: "N/A", // could map from id or createdAt if returned
+            reports: null,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
+          }))
+        );
+
+        setStats([
+          {
+            label: "Total Users",
+            value: statsData.totalUsers?.toString() || "0",
+            change: "",
+            icon: "group",
+            color: "bg-red-500",
+          },
+          {
+            label: "Pending Complaints",
+            value: statsData.pendingReports?.toString() || "0",
+            sub: "Action needed",
+            icon: "report_problem",
+            color: "bg-orange-500",
+            alert: true,
+          },
+          {
+            label: "Total Workers",
+            value: statsData.totalWorkers?.toString() || "0",
+            icon: "engineering",
+            color: "bg-green-500",
+          },
+          {
+            label: "Total Services",
+            value: statsData.totalRequests?.toString() || "0",
+            icon: "home_repair_service",
+            color: "bg-blue-500",
+          },
+        ]);
+
+        setRecentReports(
+          (reportsData.reports || []).slice(0, 3).map((r: any) => ({
+            type: r.type,
+            time: new Date(r.createdAt).toLocaleDateString(),
+            text: r.text,
+            against: r.reportedUserId?.fullName || "Unknown",
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch admin data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8">Loading admin data...</div>;
+  }
 
   return (
     <div className="p-8 space-y-8">

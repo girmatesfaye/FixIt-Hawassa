@@ -1,7 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
+import { getAuthToken } from '../services/auth';
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const WorkerProfilePage: React.FC = () => {
   const { id } = useParams();
@@ -10,48 +15,124 @@ const WorkerProfilePage: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [selectedGalleryIdx, setSelectedGalleryIdx] = useState<number | null>(null);
+  
   const [ratingValue, setRatingValue] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [isHiring, setIsHiring] = useState(false);
 
-  const worker = {
-    name: 'Abebe Kebede',
-    title: 'Electrician & Home Repair Specialist',
-    rating: 4.8,
-    reviews: 120,
-    location: 'Hawassa, Piassa',
-    isAvailable: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&h=256&auto=format&fit=crop',
-    about: 'Over 10 years of experience fixing electrical issues in the Hawassa area. I specialize in wiring, installation, and maintenance for both residential and commercial properties. I am certified by the Ethiopian Electric Utility and take pride in delivering safe, high-quality work.',
-    aboutExtended: 'Whether you need a simple bulb replacement, a complex circuit board fix, or full home wiring, I am here to help. I am punctual, honest, and offer fair pricing for all my services.',
-    serviceId: '#FH-8821',
-    tiktokUrl: 'https://tiktok.com/@abebe_fixes'
+  const [loading, setLoading] = useState(true);
+  const [worker, setWorker] = useState<any>(null);
+  const [recentReviews, setRecentReviews] = useState<any[]>([]);
+
+  const fetchWorker = async () => {
+    try {
+      if (!id) return;
+      const res = await fetch(`${API_BASE_URL}/workers/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWorker({
+          name: data.worker.name,
+          title: data.worker.profile?.title || 'Worker Professional',
+          rating: 4.8, // Mocked rating for now
+          reviews: data.worker.reviews?.length || 0,
+          location: data.worker.profile?.location || 'Hawassa',
+          isAvailable: data.worker.profile?.isAvailable ?? true,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.worker.id}`,
+          about: data.worker.profile?.bio || 'Worker bio will appear here.',
+          serviceId: `#FH-${data.worker.id.slice(-4).toUpperCase()}`,
+        });
+        setRecentReviews((data.worker.reviews || []).map((r: any) => ({
+          id: r._id,
+          name: r.clientId?.fullName || 'Client',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.clientId?._id || 'A'}`,
+          date: new Date(r.createdAt).toLocaleDateString(),
+          rating: r.rating,
+          comment: r.comment
+        })));
+      }
+    } catch (e) {
+      console.error('Failed to load worker profile', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchWorker();
+  }, [id]);
+
   const portfolioItems = [
-    { id: 1, url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800&h=600&auto=format&fit=crop', title: 'Home Rewiring Project' },
-    { id: 2, url: 'https://images.unsplash.com/photo-1558403194-611308249627?q=80&w=800&h=600&auto=format&fit=crop', title: 'Industrial Control Panel' },
-    { id: 3, url: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=800&h=600&auto=format&fit=crop', title: 'Custom Lighting Installation' },
-    { id: 4, url: 'https://images.unsplash.com/photo-1454165833767-13143896b369?q=80&w=800&h=600&auto=format&fit=crop', title: 'Emergency Repair Service' },
-    { id: 5, url: 'https://images.unsplash.com/photo-1610033104523-958b4f1416e9?q=80&w=800&h=600&auto=format&fit=crop', title: 'Outdoor Security Lighting' }
+    { id: 1, url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800&h=600&auto=format&fit=crop', title: 'Example Project 1' },
+    { id: 2, url: 'https://images.unsplash.com/photo-1558403194-611308249627?q=80&w=800&h=600&auto=format&fit=crop', title: 'Example Project 2' }
   ];
 
-  const recentReviews = [
-    {
-      id: 1,
-      name: 'Tigist M.',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tigist',
-      date: 'Oct 12, 2023',
-      rating: 5,
-      comment: 'Fast and reliable service! He arrived on time and fixed the short circuit that was causing power outages in my kitchen. Highly recommended.'
-    },
-    {
-      id: 2,
-      name: 'Dawit A.',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dawit',
-      date: 'Sep 28, 2023',
-      rating: 4,
-      comment: 'Fixed my lights in 20 minutes. Very professional behavior. Price was a bit higher than expected but worth the quality.'
+  const submitReview = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
+      const res = await fetch(`${API_BASE_URL}/workers/${id}/review`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ rating: ratingValue, comment: reviewComment })
+      });
+      if (res.ok) {
+        setIsReviewModalOpen(false);
+        setReviewComment("");
+        fetchWorker();
+      } else {
+        alert("Failed to submit review");
+      }
+    } catch (error) {
+      console.error(error);
     }
-  ];
+  };
+
+  const hireDirectly = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      setIsHiring(true);
+      const requestDraft = {
+        category: worker?.title || "Direct Hire",
+        description: `Direct request to hire ${worker?.name}.`,
+        area: "Hawassa",
+        landmark: "Provided in chat",
+        maintenanceLevel: "Medium",
+        hasPhotos: false,
+        createdAt: new Date().toISOString(),
+        assignedWorkerId: id
+      };
+      
+      const res = await fetch(`${API_BASE_URL}/requests`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestDraft)
+      });
+      if (res.ok) {
+        alert("Worker requested! Check Messages.");
+        navigate('/messages');
+      } else {
+        alert("Failed to submit request");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsHiring(false);
+    }
+  };
 
   const nextImage = () => {
     if (selectedGalleryIdx !== null) {
@@ -64,6 +145,10 @@ const WorkerProfilePage: React.FC = () => {
       setSelectedGalleryIdx((selectedGalleryIdx - 1 + portfolioItems.length) % portfolioItems.length);
     }
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (!worker) return <div>Worker not found.</div>;
+
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -209,6 +294,14 @@ const WorkerProfilePage: React.FC = () => {
                     <span className="material-symbols-outlined relative z-10 text-[20px]">call</span> 
                     <span className="relative z-10">Call +251 911...</span>
                   </a>
+                  <button
+                    onClick={hireDirectly}
+                    disabled={isHiring}
+                    className="group relative h-14 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-500/25 active:scale-95 overflow-hidden text-sm"
+                  >
+                    <span className="material-symbols-outlined relative z-10 text-[20px]">work</span> 
+                    <span className="relative z-10">{isHiring ? "Requesting..." : "Hire Worker Directly"}</span>
+                  </button>
                   
                   <a 
                     href="https://t.me/abebe_kebede"
@@ -221,16 +314,6 @@ const WorkerProfilePage: React.FC = () => {
                     <span className="relative z-10">Telegram Message</span>
                   </a>
 
-                  <a 
-                    href={worker.tiktokUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative h-14 bg-[#120e1b] dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-black/20 active:scale-95 overflow-hidden border border-transparent dark:border-gray-700 text-sm"
-                  >
-                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                    <span className="material-symbols-outlined relative z-10 text-[20px]">movie</span> 
-                    <span className="relative z-10">Watch on TikTok</span>
-                  </a>
                 </div>
               </div>
 
@@ -321,13 +404,15 @@ const WorkerProfilePage: React.FC = () => {
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Your Comments</label>
             <textarea 
+              value={reviewComment}
+              onChange={e => setReviewComment(e.target.value)}
               placeholder="Tell others about the physical work done, punctuality, and quality..."
               className="w-full h-32 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-amber-500 text-sm resize-none dark:text-white"
             />
           </div>
 
           <button 
-            onClick={() => setIsReviewModalOpen(false)}
+            onClick={submitReview}
             className="w-full h-14 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold uppercase tracking-widest shadow-xl shadow-amber-500/20 transition-all active:scale-95"
           >
             Submit Review

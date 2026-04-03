@@ -1,85 +1,74 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { getAuthToken } from '../services/auth';
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const CategoryManagementPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    {
-      id: 1,
-      name: 'Plumbing',
-      description: 'Installation and repair of pipes, fittings, and...',
-      icon: 'plumbing',
-      iconBg: 'bg-blue-50 text-blue-600',
-      workers: 124,
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'Electrical',
-      description: 'Wiring, circuit installation, and electrical repairs.',
-      icon: 'bolt',
-      iconBg: 'bg-amber-50 text-amber-600',
-      workers: 98,
-      status: 'Active'
-    },
-    {
-      id: 3,
-      name: 'Painting',
-      description: 'Interior and exterior painting and finishing.',
-      icon: 'format_paint',
-      iconBg: 'bg-purple-50 text-purple-600',
-      workers: 42,
-      status: 'Active'
-    },
-    {
-      id: 4,
-      name: 'Carpentry',
-      description: 'Furniture making, structural woodwork, an...',
-      icon: 'carpenter',
-      iconBg: 'bg-orange-50 text-orange-600',
-      workers: 65,
-      status: 'Active'
-    },
-    {
-      id: 5,
-      name: 'Cleaning',
-      description: 'Residential and commercial cleaning...',
-      icon: 'cleaning_services',
-      iconBg: 'bg-green-50 text-green-600',
-      workers: 150,
-      status: 'Active'
-    },
-    {
-      id: 6,
-      name: 'Masonry',
-      description: 'Bricklaying, stonework, and concrete pouring.',
-      icon: 'foundation',
-      iconBg: 'bg-gray-50 text-gray-600',
-      workers: 76,
-      status: 'Active'
-    },
-    {
-      id: 7,
-      name: 'Moving',
-      description: 'Relocation assistance, loading, and unloading.',
-      icon: 'local_shipping',
-      iconBg: 'bg-indigo-50 text-indigo-600',
-      workers: 30,
-      status: 'Active'
-    },
-    {
-      id: 8,
-      name: 'Appliance Repair',
-      description: 'Repair of household electronics and...',
-      icon: 'build',
-      iconBg: 'bg-red-50 text-red-600',
-      workers: 25,
-      status: 'Inactive'
+  // New Category Form State
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [newIcon, setNewIcon] = useState('');
+
+  const fetchCategories = async () => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/admin/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setCategories((data.categories || []).map((c: any) => ({
+        id: c._id,
+        name: c.name,
+        description: c.description,
+        icon: c.icon || 'category',
+        iconBg: 'bg-blue-50 text-blue-600',
+        workers: 0, // Mock worker count until we fetch stats per category
+        status: c.isActive ? 'Active' : 'Inactive'
+      })));
+    } catch (error) {
+      console.error("Failed to fetch categories", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const handleCreateCategory = async () => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/admin/categories`, {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name: newName, description: newDesc, icon: newIcon || 'category' })
+      });
+      
+      if (res.ok) {
+        setIsAddModalOpen(false);
+        setNewName('');
+        setNewDesc('');
+        setNewIcon('');
+        fetchCategories();
+      }
+    } catch (error) {
+      console.error("Failed to create category", error);
+    }
+  };
 
   const filteredCategories = categories.filter(cat => 
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -161,6 +150,8 @@ const CategoryManagementPage: React.FC = () => {
             <label className="text-sm font-bold text-[#120e1b] dark:text-white">Category Name</label>
             <input 
               type="text" 
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
               placeholder="e.g. Landscaping" 
               className="w-full h-12 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-primary text-sm font-medium dark:text-white"
             />
@@ -169,22 +160,22 @@ const CategoryManagementPage: React.FC = () => {
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-[#120e1b] dark:text-white">Description</label>
             <textarea 
+              value={newDesc}
+              onChange={e => setNewDesc(e.target.value)}
               placeholder="Describe the skills and services in this category..."
               className="w-full h-32 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-primary text-sm font-medium dark:text-white resize-none"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-[#120e1b] dark:text-white">Category Icon</label>
-            <div className="w-full h-40 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group">
-              <div className="size-12 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:text-primary shadow-sm transition-colors">
-                <span className="material-symbols-outlined text-3xl">cloud_upload</span>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-primary">Click to upload <span className="text-gray-500 font-medium">or drag and drop</span></p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mt-1">SVG, PNG, JPG (MAX. 800x800px)</p>
-              </div>
-            </div>
+            <label className="text-sm font-bold text-[#120e1b] dark:text-white">Material Icon Name</label>
+            <input 
+              type="text" 
+              value={newIcon}
+              onChange={e => setNewIcon(e.target.value)}
+              placeholder="e.g. plumbing, format_paint" 
+              className="w-full h-12 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-primary text-sm font-medium dark:text-white"
+            />
           </div>
 
           <div className="flex gap-4 pt-4">
@@ -195,7 +186,7 @@ const CategoryManagementPage: React.FC = () => {
               Cancel
             </button>
             <button 
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={handleCreateCategory}
               className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
             >
               Create Category

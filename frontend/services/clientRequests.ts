@@ -22,6 +22,7 @@ export interface ClientRequestItem {
   status: ApiRequestStatus;
   createdAt: string;
   updatedAt: string;
+  assignedWorkerId?: { _id: string, name: string };
 }
 
 export const fetchClientRequests = async (): Promise<ClientRequestItem[]> => {

@@ -19,6 +19,7 @@ const requestDraftSchema = z.object({
   maintenanceLevel: z.enum(["New", "Medium", "Old"]),
   hasPhotos: z.boolean(),
   createdAt: z.string(),
+  assignedWorkerId: z.string().optional(),
 });
 
 requestsRouter.get("/mine", requireAuth, async (req, res) => {
@@ -36,7 +37,7 @@ requestsRouter.get("/mine", requireAuth, async (req, res) => {
 
   if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
     const requests = mockRequestStore.filter(
-      (request) => request.clientUserId === authenticatedUserId,
+      (request) => request.clientUserId === authenticatedUserId || request.assignedWorkerId === authenticatedUserId,
     );
     return res.json({
       total: requests.length,
@@ -47,8 +48,13 @@ requestsRouter.get("/mine", requireAuth, async (req, res) => {
 
   try {
     const requests = await ServiceRequest.find({
-      clientUserId: new Types.ObjectId(authenticatedUserId),
+      $or: [
+        { clientUserId: new Types.ObjectId(authenticatedUserId) },
+        { assignedWorkerId: new Types.ObjectId(authenticatedUserId) }
+      ]
     })
+      .populate("clientUserId", "name")
+      .populate("assignedWorkerId", "name")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -56,7 +62,8 @@ requestsRouter.get("/mine", requireAuth, async (req, res) => {
       total: requests.length,
       requests: requests.map((request) => ({
         id: String(request._id),
-        clientUserId: String(request.clientUserId),
+        clientUserId: request.clientUserId,
+        assignedWorkerId: request.assignedWorkerId,
         category: request.category,
         description: request.description,
         area: request.area,
@@ -140,7 +147,8 @@ requestsRouter.post("/", requireAuth, (req, res) => {
     landmark: parsed.data.landmark,
     maintenanceLevel: parsed.data.maintenanceLevel,
     hasPhotos: parsed.data.hasPhotos,
-    status: "SEARCHING",
+    status: parsed.data.assignedWorkerId ? "PENDING" : "SEARCHING",
+    assignedWorkerId: parsed.data.assignedWorkerId ? new Types.ObjectId(parsed.data.assignedWorkerId) : null,
   })
     .then((created) => {
       return res.status(201).json({

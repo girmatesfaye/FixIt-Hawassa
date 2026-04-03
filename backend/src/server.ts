@@ -6,6 +6,8 @@ import authRouter from "./routes/auth";
 import requestsRouter from "./routes/requests";
 import recommendationsRouter from "./routes/recommendations";
 import adminRouter from "./routes/admin";
+import workersRouter from "./routes/workers";
+import messagesRouter from "./routes/messages";
 import { connectToDatabase } from "./config/db";
 import { env } from "./config/env";
 
@@ -24,6 +26,8 @@ app.use("/auth", authRouter);
 app.use("/requests", requestsRouter);
 app.use("/recommendations", recommendationsRouter);
 app.use("/admin", adminRouter);
+app.use("/workers", workersRouter);
+app.use("/messages", messagesRouter);
 
 app.use(
   (

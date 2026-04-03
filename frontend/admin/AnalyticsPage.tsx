@@ -1,13 +1,39 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAuthToken } from '../services/auth';
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const AnalyticsPage: React.FC = () => {
-  const stats = [
-    { label: 'Total Clients', value: '2,450', trend: '+12.5%', icon: 'group', color: 'bg-blue-600', border: 'border-blue-600' },
-    { label: 'Total Workers', value: '580', trend: '+5.2%', icon: 'construction', color: 'bg-red-500', border: 'border-red-500' },
-    { label: 'New Users (This Week)', value: '125', trend: '+8.1%', icon: 'person_add', color: 'bg-indigo-500', border: 'border-gray-100' },
-    { label: 'Total Service Requests Created', value: '8,932', trend: '+24%', icon: 'check_box', color: 'bg-amber-500', border: 'border-gray-100' },
-  ];
+  const [stats, setStats] = useState<any[]>([
+    { label: 'Total Clients', value: '0', trend: '+0%', icon: 'group', color: 'bg-blue-600', border: 'border-blue-600' },
+    { label: 'Total Workers', value: '0', trend: '+0%', icon: 'construction', color: 'bg-red-500', border: 'border-red-500' },
+    { label: 'Total Service Requests', value: '0', trend: '+0%', icon: 'check_box', color: 'bg-amber-500', border: 'border-gray-100' },
+    { label: 'Pending Complaints', value: '0', trend: '0%', icon: 'report_problem', color: 'bg-orange-500', border: 'border-gray-100' },
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = getAuthToken();
+        const res = await fetch(`${API_BASE_URL}/admin/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setStats([
+          { label: 'Total Users', value: data.totalUsers?.toString() || '0', trend: 'Active', icon: 'group', color: 'bg-blue-600', border: 'border-blue-600' },
+          { label: 'Total Workers', value: data.totalWorkers?.toString() || '0', trend: 'Active', icon: 'construction', color: 'bg-red-500', border: 'border-red-500' },
+          { label: 'Total Service Requests', value: data.totalRequests?.toString() || '0', trend: 'Logged', icon: 'check_box', color: 'bg-amber-500', border: 'border-gray-100' },
+          { label: 'Pending Complaints', value: data.pendingReports?.toString() || '0', trend: 'Action Req', icon: 'report_problem', color: 'bg-orange-500', border: 'border-gray-100' },
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch analytics stats", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const trendData = [
     { day: 'Mon', value: 40, overflow: 10 },

@@ -1,45 +1,91 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { getAuthToken } from '../services/auth';
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
 
 const ReportManagementPage: React.FC = () => {
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  const [resolutionAction, setResolutionAction] = useState<'warning' | 'none'>('warning');
+  const [resolutionAction, setResolutionAction] = useState<'warning' | 'none' | 'resolved'>('warning');
   const [notifyParties, setNotifyParties] = useState(true);
+  const [internalNotes, setInternalNotes] = useState("");
 
-  const stats = [
-    { label: 'Total Reports', value: '482', sub: 'All time', icon: 'folder', color: 'bg-blue-600', border: 'border-blue-600' },
-    { label: 'Action Required', value: '18', sub: 'Open complaints', icon: 'priority_high', color: 'bg-red-500', border: 'border-red-500', alert: true },
-    { label: 'Investigating', value: '5', sub: 'In progress', icon: 'search', color: 'bg-orange-400', border: 'border-gray-100' },
-    { label: 'Resolved This Month', value: '42', sub: '+12% vs last mo.', icon: 'check_circle', color: 'bg-green-500', border: 'border-gray-100', success: true },
-  ];
+  const [reports, setReports] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const reports = [
-    {
-      id: 'RPT-2023-892',
-      category: 'Overcharging',
-      title: 'Pricing Dispute - Plumbing Job',
-      time: '2 hrs ago',
-      content: '"The worker quoted 500 ETB initially but demanded 1500 ETB after completing the job. He refused to leave until I paid the full amount. This is unacceptable behavior."',
-      reporter: { name: 'Sarah Tadesse', type: 'Client', avatar: 'ST' },
-      reported: { name: 'Dawit Alemu', type: 'Worker', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dawit' }
-    },
-    {
-      id: 'RPT-2023-891',
-      category: 'Late Arrival',
-      title: 'Attendance Issue - Painting',
-      time: '5 hrs ago',
-      content: '"The painter arrived 3 hours late without any prior notice. When I asked about it, he was dismissive and started work very slowly. This delayed my other plans."',
-      reporter: { name: 'Abebe Kebede', type: 'Client', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Abebe' },
-      reported: { name: 'Yonas Bekele', type: 'Worker', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yonas' }
+  const fetchReportsData = async () => {
+    try {
+      const token = getAuthToken();
+      const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
+      const [reportsRes, statsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/reports`, { headers }),
+        fetch(`${API_BASE_URL}/admin/stats`, { headers })
+      ]);
+
+      const reportsData = await reportsRes.json();
+      const statsData = await statsRes.json();
+
+      setReports((reportsData.reports || []).map((r: any) => ({
+        id: r._id,
+        category: r.type,
+        title: `Report on ${r.reportedUserId?.fullName || 'User'}`,
+        time: new Date(r.createdAt).toLocaleString(),
+        content: `"${r.text}"`,
+        reporter: { name: r.reporterUserId?.fullName || "Reporter", avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.reporterUserId?._id || 'reporter'}` },
+        reported: { name: r.reportedUserId?.fullName || "Reported", avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.reportedUserId?._id || 'reported'}` },
+        status: r.status
+      })));
+
+      setStats([
+        { label: 'Total Reports', value: reportsData.reports?.length?.toString() || '0', sub: 'All time', icon: 'folder', color: 'bg-blue-600', border: 'border-blue-600' },
+        { label: 'Action Required', value: statsData.pendingReports?.toString() || '0', sub: 'Open complaints', icon: 'priority_high', color: 'bg-red-500', border: 'border-red-500', alert: true },
+        { label: 'Investigating', value: '0', sub: 'In progress', icon: 'search', color: 'bg-orange-400', border: 'border-gray-100' },
+        { label: 'Resolved This Month', value: '0', sub: '+0% vs last mo.', icon: 'check_circle', color: 'bg-green-500', border: 'border-gray-100', success: true },
+      ]);
+    } catch (error) {
+      console.error("Error fetching reports", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchReportsData();
+  }, []);
 
   const handleOpenResolveModal = (id: string) => {
     setSelectedReportId(id);
     setIsResolveModalOpen(true);
   };
+
+  const submitResolution = async () => {
+    if (!selectedReportId) return;
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/admin/reports/${selectedReportId}/resolve`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status: resolutionAction === 'warning' ? 'investigating' : resolutionAction === 'none' ? 'dismissed' : 'resolved' })
+      });
+      if (res.ok) {
+        setIsResolveModalOpen(false);
+        fetchReportsData();
+      }
+    } catch (error) {
+      console.error("Error resolving report", error);
+    }
+  };
+
+  if (loading) return <div className="p-8">Loading reports...</div>;
 
   return (
     <div className="p-8 space-y-8">
@@ -144,18 +190,27 @@ const ReportManagementPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-50 flex gap-4">
-              <button className="flex-1 h-12 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
-                <span className="material-symbols-outlined text-xl">mail</span>
-                Contact User
-              </button>
-              <button 
-                onClick={() => handleOpenResolveModal(report.id)}
-                className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition-all active:scale-[0.98]"
-              >
-                <span className="material-symbols-outlined text-xl">check_circle</span>
-                Resolve Report
-              </button>
+            <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between gap-4">
+              <span className={`px-3 py-1 rounded text-xs font-bold ${
+                report.status === 'pending' ? 'bg-orange-100 text-orange-600' :
+                report.status === 'resolved' ? 'bg-green-100 text-green-600' :
+                'bg-gray-200 text-gray-600'
+              }`}>
+                {report.status.toUpperCase()}
+              </span>
+              <div className="flex gap-4">
+                <button className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
+                  <span className="material-symbols-outlined text-xl">mail</span>
+                  Contact User
+                </button>
+                <button 
+                  onClick={() => handleOpenResolveModal(report.id)}
+                  className="h-12 px-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition-all active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined text-xl">check_circle</span>
+                  Update Status
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -206,6 +261,8 @@ const ReportManagementPage: React.FC = () => {
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-[#120e1b] uppercase tracking-tight">Internal Notes</label>
               <textarea 
+                value={internalNotes}
+                onChange={e => setInternalNotes(e.target.value)}
                 placeholder="Document the reason for this decision and any evidence reviewed..."
                 className="w-full h-32 p-4 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none"
               />
@@ -233,7 +290,7 @@ const ReportManagementPage: React.FC = () => {
               Cancel
             </button>
             <button 
-              onClick={() => setIsResolveModalOpen(false)}
+              onClick={submitResolution}
               className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[20px]">verified</span>
@@ -246,7 +303,7 @@ const ReportManagementPage: React.FC = () => {
       {/* Pagination Footer */}
       <div className="flex items-center justify-between border-t border-gray-200 pt-6">
         <p className="text-xs font-medium text-gray-500 tracking-wider">
-          Showing <span className="text-[#120e1b] font-semibold">1-4</span> of <span className="text-[#120e1b] font-semibold">482</span> reports
+          Showing <span className="text-[#120e1b] font-semibold">1-{reports.length}</span> of <span className="text-[#120e1b] font-semibold">{reports.length}</span> reports
         </p>
         <div className="flex items-center gap-1">
           <button className="h-9 px-4 rounded-lg text-xs font-bold text-gray-400 hover:text-red-500 disabled:opacity-50">Previous</button>
