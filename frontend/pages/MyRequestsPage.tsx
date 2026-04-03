@@ -45,7 +45,8 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
     category: request.category,
     status: mapStatus(request.status),
     date: formatDate(request.createdAt),
-    worker: null,
+    worker: request.assignedWorkerId ? request.assignedWorkerId.name : null,
+    avatar: request.assignedWorkerId ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.assignedWorkerId._id}` : undefined,
     cost: "Pending Quotes",
   };
 };

@@ -5,7 +5,6 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
 import { env } from "../config/env";
 import { getDatabaseStatus } from "../config/db";
-import { mockUsers } from "../data/mockData";
 import { User } from "../models";
 import { UserRole } from "../types";
 
@@ -101,19 +100,7 @@ const createOtpSession = (role: UserRole, userId: string, phone: string) => {
   return sessionId;
 };
 
-const sanitizeMockPhone = (phone: string) => phone.replace(/\s+/g, "").trim();
 
-const mockAuthUsers: AuthUser[] = mockUsers.map((user) => ({
-  id: user.id,
-  name: user.name,
-  role: user.role as UserRole,
-  phone: sanitizeMockPhone(user.phone),
-  status: user.status as "active" | "suspended",
-  area: "",
-  nationalId: "",
-  isVerified: false,
-  passwordHash: hashPassword("secret123"),
-}));
 
 const otpSessions = new Map<string, OtpSession>();
 
@@ -132,38 +119,7 @@ authRouter.get("/me", requireAuth, async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const databaseStatus = getDatabaseStatus();
 
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    const mockUser = mockAuthUsers.find((entry) => entry.id === userId);
-    if (!mockUser) {
-      return res.json({
-        user: {
-          id: userId,
-          name: "FixIt User",
-          role,
-          phone: "",
-          area: "",
-          status: "active",
-          isVerified: true,
-        },
-        source: "token",
-      });
-    }
-
-    return res.json({
-      user: {
-        id: mockUser.id,
-        name: mockUser.name,
-        role: mockUser.role,
-        phone: mockUser.phone,
-        area: mockUser.area,
-        status: mockUser.status,
-        isVerified: mockUser.isVerified,
-      },
-      source: "mock",
-    });
-  }
 
   try {
     const user = await User.findById(userId)

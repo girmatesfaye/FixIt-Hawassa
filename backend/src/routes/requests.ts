@@ -3,7 +3,7 @@ import { Request } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { getDatabaseStatus } from "../config/db";
-import { mockRequestStore } from "../data/mockRequests";
+
 import { requireAuth } from "../middleware/auth";
 import { ServiceRequest } from "../models";
 
@@ -33,18 +33,7 @@ requestsRouter.get("/mine", requireAuth, async (req, res) => {
     });
   }
 
-  const databaseStatus = getDatabaseStatus();
 
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    const requests = mockRequestStore.filter(
-      (request) => request.clientUserId === authenticatedUserId || request.assignedWorkerId === authenticatedUserId,
-    );
-    return res.json({
-      total: requests.length,
-      requests,
-      source: "mock",
-    });
-  }
 
   try {
     const requests = await ServiceRequest.find({
@@ -111,33 +100,7 @@ requestsRouter.post("/", requireAuth, (req, res) => {
 
   const clientUserId = new Types.ObjectId(authenticatedUserId);
 
-  const databaseStatus = getDatabaseStatus();
 
-  if (databaseStatus.mode === "mock" || !databaseStatus.connected) {
-    const nowIso = new Date().toISOString();
-    const id = `req_${Date.now()}`;
-    mockRequestStore.unshift({
-      id,
-      clientUserId: authenticatedUserId,
-      category: parsed.data.category,
-      description: parsed.data.description,
-      area: parsed.data.area,
-      landmark: parsed.data.landmark,
-      maintenanceLevel: parsed.data.maintenanceLevel,
-      hasPhotos: parsed.data.hasPhotos,
-      status: "SEARCHING",
-      createdAt: nowIso,
-      updatedAt: nowIso,
-    });
-
-    return res.status(201).json({
-      id,
-      status: "SEARCHING",
-      request: parsed.data,
-      clientUserId: authenticatedUserId,
-      source: "mock",
-    });
-  }
 
   return ServiceRequest.create({
     clientUserId,
@@ -160,14 +123,11 @@ requestsRouter.post("/", requireAuth, (req, res) => {
     })
     .catch((error) => {
       console.error(
-        "[requests] Failed to persist request in MongoDB, using mock response",
+        "[requests] Failed to persist request in MongoDB",
         error,
       );
-      return res.status(201).json({
-        id: `req_${Date.now()}`,
-        status: "SEARCHING",
-        request: parsed.data,
-        source: "mock",
+      return res.status(500).json({
+        message: "Failed to persist request",
       });
     });
 });
