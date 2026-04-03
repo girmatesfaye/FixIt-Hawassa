@@ -1,6 +1,8 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { User, WorkerProfile, Review } from "../models";
 import { requireAuth } from "../middleware/auth";
+
+type AuthenticatedRequest = Request & { userId?: string };
 
 const workersRouter = Router();
 
@@ -37,7 +39,7 @@ workersRouter.get("/:id", async (req, res) => {
 workersRouter.post("/:id/review", requireAuth, async (req, res) => {
   try {
     const workerId = req.params.id;
-    const clientId = req.user!.id;
+    const clientId = (req as AuthenticatedRequest).userId;
     const { rating, comment } = req.body;
 
     if (!rating || !comment) {

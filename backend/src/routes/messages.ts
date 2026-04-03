@@ -1,6 +1,8 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { Message, ServiceRequest } from "../models";
 import { requireAuth } from "../middleware/auth";
+
+type AuthenticatedRequest = Request & { userId?: string };
 
 const messagesRouter = Router();
 
@@ -8,7 +10,7 @@ const messagesRouter = Router();
 messagesRouter.get("/:requestId", requireAuth, async (req, res) => {
   try {
     const { requestId } = req.params;
-    const userId = req.user!.id;
+    const userId = (req as AuthenticatedRequest).userId;
 
     // Check if user is part of the service request
     const request = await ServiceRequest.findById(requestId).lean();
@@ -32,7 +34,7 @@ messagesRouter.get("/:requestId", requireAuth, async (req, res) => {
 messagesRouter.post("/:requestId", requireAuth, async (req, res) => {
   try {
     const { requestId } = req.params;
-    const userId = req.user!.id;
+    const userId = (req as AuthenticatedRequest).userId;
     const { text } = req.body;
 
     if (!text) {
