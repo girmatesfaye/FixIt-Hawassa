@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuthToken } from "../services/auth";
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:4000";
+import {
+  ClientRequestItem,
+  fetchClientRequests,
+  respondToWorkerInvite,
+} from "../services/clientRequests";
+import { getMyWorkerProfile } from "../services/worker";
 
 interface WorkerHubPageProps {
   onLogout: () => void;
@@ -17,46 +18,79 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [workerName, setWorkerName] = useState("Worker Profile");
   const [bio, setBio] = useState("Update your profile to set a bio.");
+  const [requests, setRequests] = useState<ClientRequestItem[]>([]);
+  const [requestActionId, setRequestActionId] = useState("");
+  const [requestError, setRequestError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchWorkerData = async () => {
       try {
-        const token = getAuthToken();
-        const headers = { Authorization: `Bearer ${token}` };
+        const [profile, workerRequests] = await Promise.all([
+          getMyWorkerProfile(),
+          fetchClientRequests(),
+        ]);
 
-        // 1) Get current user ID
-        const meRes = await fetch(`${API_BASE_URL}/auth/me`, { headers });
-        if (!meRes.ok) throw new Error("Failed to load /auth/me");
-        const meData = await meRes.json();
-        const userId = meData.user?.id;
-        
-        if (userId) {
-          setWorkerName(meData.user?.name || "Worker Profile");
-
-          // 2) Get specific worker profile
-          const workerRes = await fetch(`${API_BASE_URL}/workers/${userId}`, { headers });
-          if (workerRes.ok) {
-             const workerData = await workerRes.json();
-             if (workerData.worker?.profile?.bio) {
-                setBio(workerData.worker.profile.bio);
-             }
-             if (workerData.worker?.profile?.skills) {
-                setSkills(workerData.worker.profile.skills);
-             }
-             if (workerData.worker?.profile) {
-                setIsProfileComplete(true);
-             }
-          }
-        }
+        setWorkerName(profile.name || "Worker Profile");
+        setBio(profile.profile.bio || "Update your profile to set a bio.");
+        setSkills(profile.profile.skills || []);
+        setIsAvailable(profile.profile.isActive ?? true);
+        setIsProfileComplete(
+          Boolean(
+            profile.profile.bio ||
+              profile.profile.skills.length ||
+              profile.profile.avatar ||
+              profile.profile.portfolio.length,
+          ),
+        );
+        setRequests(workerRequests);
       } catch (error) {
         console.error("Failed to load worker data", error);
+        setRequestError("Could not load invitations right now.");
       } finally {
         setLoading(false);
       }
     };
     fetchWorkerData();
   }, []);
+
+  const pendingInvites = requests.filter((request) => request.status === "PENDING");
+  const activeJobs = requests.filter((request) => request.status === "IN_PROGRESS");
+
+  const handleWorkerDecision = async (
+    requestId: string,
+    decision: "accept" | "decline",
+  ) => {
+    setRequestActionId(requestId);
+    setRequestError("");
+
+    try {
+      const updatedRequest = await respondToWorkerInvite(requestId, decision);
+      setRequests((current) => {
+        if (decision === "decline") {
+          return current.filter((request) => request.id !== requestId);
+        }
+
+        return current.map((request) =>
+          request.id === requestId ? updatedRequest : request,
+        );
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        onLogout();
+        navigate("/login");
+        return;
+      }
+
+      setRequestError(
+        error instanceof Error
+          ? error.message
+          : "Could not update this invitation.",
+      );
+    } finally {
+      setRequestActionId("");
+    }
+  };
 
   return (
     <div className="flex h-screen portal-shell dark:bg-background-dark font-sans overflow-hidden">
@@ -197,6 +231,164 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               </button>
             </div>
           )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div className="portal-panel rounded-3xl p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-extrabold tracking-tight dark:text-white">
+                    Pending Invitations
+                  </h3>
+                  <p className="text-sm font-bold text-gray-500">
+                    Accept a client request to start the job.
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-widest">
+                  {pendingInvites.length} pending
+                </span>
+              </div>
+
+              {requestError ? (
+                <p className="mb-4 text-sm font-semibold text-red-600">
+                  {requestError}
+                </p>
+              ) : null}
+
+              {loading ? (
+                <p className="text-sm font-semibold text-gray-500">
+                  Loading invitations...
+                </p>
+              ) : pendingInvites.length ? (
+                <div className="flex flex-col gap-4">
+                  {pendingInvites.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/20 p-5 flex flex-col gap-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-extrabold text-[#120e1b] dark:text-white">
+                            {request.category}
+                          </p>
+                          <p className="text-xs font-semibold text-primary uppercase tracking-widest mt-1">
+                            Client: {request.clientUserId?.name ?? "Client"}
+                          </p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-widest">
+                          Pending
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                        {request.description}
+                      </p>
+                      <div className="flex flex-wrap gap-3 text-xs font-bold text-gray-500">
+                        <span>{request.area}</span>
+                        <span>{request.landmark}</span>
+                        <span>{request.maintenanceLevel}</span>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            void handleWorkerDecision(request.id, "accept");
+                          }}
+                          disabled={requestActionId === request.id}
+                          className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold uppercase tracking-widest disabled:opacity-60"
+                        >
+                          {requestActionId === request.id ? "Saving..." : "Accept"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            void handleWorkerDecision(request.id, "decline");
+                          }}
+                          disabled={requestActionId === request.id}
+                          className="flex-1 h-11 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 text-sm font-bold uppercase tracking-widest disabled:opacity-60"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-6 text-center">
+                  <p className="text-sm font-bold text-[#120e1b] dark:text-white">
+                    No pending invitations
+                  </p>
+                  <p className="text-xs font-medium text-gray-500 mt-1">
+                    New client invites will appear here.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="portal-panel rounded-3xl p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-extrabold tracking-tight dark:text-white">
+                    Active Jobs
+                  </h3>
+                  <p className="text-sm font-bold text-gray-500">
+                    Jobs you already accepted.
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold uppercase tracking-widest">
+                  {activeJobs.length} active
+                </span>
+              </div>
+
+              {loading ? (
+                <p className="text-sm font-semibold text-gray-500">
+                  Loading jobs...
+                </p>
+              ) : activeJobs.length ? (
+                <div className="flex flex-col gap-4">
+                  {activeJobs.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/20 p-5 flex flex-col gap-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-extrabold text-[#120e1b] dark:text-white">
+                            {request.category}
+                          </p>
+                          <p className="text-xs font-semibold text-primary uppercase tracking-widest mt-1">
+                            Client: {request.clientUserId?.name ?? "Client"}
+                          </p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest">
+                          In Progress
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                        {request.description}
+                      </p>
+                      <div className="flex flex-wrap gap-3 text-xs font-bold text-gray-500">
+                        <span>{request.area}</span>
+                        <span>{request.landmark}</span>
+                        <span>{request.maintenanceLevel}</span>
+                      </div>
+                      <button
+                        onClick={() => navigate("/messages")}
+                        className="h-11 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-sm font-bold uppercase tracking-widest transition-all"
+                      >
+                        Open Messages
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-6 text-center">
+                  <p className="text-sm font-bold text-[#120e1b] dark:text-white">
+                    No active jobs
+                  </p>
+                  <p className="text-xs font-medium text-gray-500 mt-1">
+                    Accepted work will move here automatically.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">

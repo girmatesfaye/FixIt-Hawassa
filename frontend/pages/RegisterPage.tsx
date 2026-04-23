@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { saveSession } from "../services/auth";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
 
-const RegisterPage: React.FC = () => {
+interface RegisterPageProps {
+  onRegisterSuccess: (role: "client" | "worker" | "admin") => void;
+}
+
+const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
   const navigate = useNavigate();
   const [role, setRole] = useState<"client" | "worker">("client");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [locationValue, setLocationValue] = useState("");
+  const [locationValue, setLocationValue] = useState(" ");
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
@@ -129,6 +134,15 @@ const RegisterPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      const navigateToRoleHome = (nextRole: "client" | "worker" | "admin") => {
+        if (nextRole === "admin") {
+          navigate("/admin/users");
+        } else if (nextRole === "worker") {
+          navigate("/worker-hub");
+        } else {
+          navigate("/dashboard");
+        }
+      };
       const normalizedPhone = `+251${phoneDigits}`;
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
@@ -148,7 +162,9 @@ const RegisterPage: React.FC = () => {
 
       const result = (await response.json().catch(() => null)) as {
         message?: string;
+        requiresOtp?: boolean;
         sessionId?: string;
+        token?: string;
         user?: { role?: "client" | "worker" | "admin" };
       } | null;
 
@@ -159,12 +175,28 @@ const RegisterPage: React.FC = () => {
         return;
       }
 
-      navigate("/verify", {
-        state: {
-          role: result?.user?.role ?? role,
-          sessionId: result?.sessionId ?? "",
-        },
-      });
+      const resolvedRole = result?.user?.role ?? role;
+      const requiresOtp = result?.requiresOtp ?? true;
+
+      if (requiresOtp) {
+        navigate("/verify", {
+          state: {
+            role: resolvedRole,
+            sessionId: result?.sessionId ?? "",
+          },
+        });
+        return;
+      }
+
+      const token = typeof result?.token === "string" ? result.token : "";
+      if (!token) {
+        setFormError("Registration succeeded, but login token was missing.");
+        return;
+      }
+
+      saveSession(token, resolvedRole);
+      onRegisterSuccess(resolvedRole);
+      navigateToRoleHome(resolvedRole);
     } catch (_error) {
       setFormError(
         `Could not reach backend at ${API_BASE_URL}. Make sure backend is running, then try again.`,

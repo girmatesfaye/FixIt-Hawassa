@@ -254,7 +254,9 @@ const MyRequestsPage: React.FC = () => {
                         <div className="flex items-center gap-3 mr-4">
                           <div className="text-right hidden sm:block">
                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                              Assigned Pro
+                              {req.status === RequestStatus.PENDING
+                                ? "Awaiting Reply"
+                                : "Assigned Pro"}
                             </p>
                             <p className="text-sm font-bold text-[#120e1b] dark:text-white">
                               {req.worker}

@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import Modal from '../components/Modal';
 import { getAuthToken } from '../services/auth';
+import { assignWorkerToRequest } from '../services/clientRequests';
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -11,6 +12,7 @@ const API_BASE_URL =
 const WorkerProfilePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -23,6 +25,8 @@ const WorkerProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [worker, setWorker] = useState<any>(null);
   const [recentReviews, setRecentReviews] = useState<any[]>([]);
+  const existingRequestId =
+    (location.state as { requestId?: string } | null)?.requestId ?? "";
 
   const fetchWorker = async () => {
     try {
@@ -102,6 +106,14 @@ const WorkerProfilePage: React.FC = () => {
         return;
       }
       setIsHiring(true);
+
+      if (existingRequestId && id) {
+        await assignWorkerToRequest(existingRequestId, id);
+        alert("Invitation sent. You can track it in My Requests.");
+        navigate('/my-requests');
+        return;
+      }
+
       const requestDraft = {
         category: worker?.title || "Direct Hire",
         description: `Direct request to hire ${worker?.name}.`,
@@ -112,7 +124,7 @@ const WorkerProfilePage: React.FC = () => {
         createdAt: new Date().toISOString(),
         assignedWorkerId: id
       };
-      
+
       const res = await fetch(`${API_BASE_URL}/requests`, {
         method: "POST",
         headers: {
@@ -122,8 +134,8 @@ const WorkerProfilePage: React.FC = () => {
         body: JSON.stringify(requestDraft)
       });
       if (res.ok) {
-        alert("Worker requested! Check Messages.");
-        navigate('/messages');
+        alert("Invitation sent. You can track it in My Requests.");
+        navigate('/my-requests');
       } else {
         alert("Failed to submit request");
       }
@@ -300,7 +312,7 @@ const WorkerProfilePage: React.FC = () => {
                     className="group relative h-14 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-500/25 active:scale-95 overflow-hidden text-sm"
                   >
                     <span className="material-symbols-outlined relative z-10 text-[20px]">work</span> 
-                    <span className="relative z-10">{isHiring ? "Requesting..." : "Hire Worker Directly"}</span>
+                    <span className="relative z-10">{isHiring ? "Sending..." : "Send Work Request"}</span>
                   </button>
                   
                   <a 

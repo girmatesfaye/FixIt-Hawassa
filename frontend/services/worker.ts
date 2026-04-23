@@ -13,6 +13,7 @@ export interface MyWorkerProfile {
     bio: string;
     area: string;
     skills: string[];
+    isActive: boolean;
     telegramUsername: string;
     tiktokProfile: string;
     avatar: string;

@@ -2,6 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { RequestDraft, WorkerRecommendation } from "../types";
 import {
+  assignWorkerToRequest,
+  ClientRequestItem,
+  fetchClientRequests,
+} from "../services/clientRequests";
+import {
   fetchRecommendations,
   getRecommendationReasons,
   LAST_CREATED_REQUEST_ID_KEY,
@@ -24,6 +29,11 @@ const SearchResultsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalWorkers, setTotalWorkers] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [currentRequest, setCurrentRequest] = useState<ClientRequestItem | null>(
+    null,
+  );
+  const [invitingWorkerId, setInvitingWorkerId] = useState("");
+  const [inviteError, setInviteError] = useState("");
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -50,6 +60,21 @@ const SearchResultsPage: React.FC = () => {
       | undefined) ??
     localStorage.getItem(LAST_CREATED_REQUEST_ID_KEY) ??
     "";
+
+  useEffect(() => {
+    if (!requestId) {
+      setCurrentRequest(null);
+      return;
+    }
+
+    fetchClientRequests()
+      .then((items) => {
+        setCurrentRequest(items.find((item) => item.id === requestId) ?? null);
+      })
+      .catch(() => {
+        setCurrentRequest(null);
+      });
+  }, [requestId]);
 
   useEffect(() => {
     if (!requestDraft || !requestId) {
@@ -124,6 +149,41 @@ const SearchResultsPage: React.FC = () => {
         setIsLoadingMore(false);
       });
   };
+
+  const handleInviteWorker = async (worker: WorkerRecommendation) => {
+    if (!requestId) {
+      setInviteError("Create a request first before inviting a worker.");
+      return;
+    }
+
+    setInvitingWorkerId(String(worker.id));
+    setInviteError("");
+
+    try {
+      const updatedRequest = await assignWorkerToRequest(
+        requestId,
+        String(worker.id),
+      );
+      setCurrentRequest(updatedRequest);
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        navigate("/login");
+        return;
+      }
+
+      setInviteError(
+        error instanceof Error
+          ? error.message
+          : "Could not send the request to this worker.",
+      );
+    } finally {
+      setInvitingWorkerId("");
+    }
+  };
+
+  const assignedWorkerId = currentRequest?.assignedWorkerId?._id ?? "";
+  const isInvitePending = currentRequest?.status === "PENDING";
+  const isWorkInProgress = currentRequest?.status === "IN_PROGRESS";
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -283,6 +343,25 @@ const SearchResultsPage: React.FC = () => {
                 Snapshot: {new Date(snapshotCreatedAt).toLocaleString()}
               </p>
             ) : null}
+            {currentRequest?.status === "PENDING" &&
+            currentRequest.assignedWorkerId ? (
+              <p className="text-xs font-semibold text-amber-600">
+                Waiting for {currentRequest.assignedWorkerId.name ?? "worker"} to
+                accept your request.
+              </p>
+            ) : null}
+            {currentRequest?.status === "IN_PROGRESS" &&
+            currentRequest.assignedWorkerId ? (
+              <p className="text-xs font-semibold text-green-600">
+                {currentRequest.assignedWorkerId.name ?? "Your worker"} accepted
+                the request. Work is now in progress.
+              </p>
+            ) : null}
+            {inviteError ? (
+              <p className="text-xs font-semibold text-red-600">
+                {inviteError}
+              </p>
+            ) : null}
           </div>
 
           {isLoading ? (
@@ -311,6 +390,29 @@ const SearchResultsPage: React.FC = () => {
               {workers.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {workers.map((worker) => (
+                    (() => {
+                      const isAssignedWorker =
+                        assignedWorkerId === String(worker.id);
+                      const inviteLabel =
+                        invitingWorkerId === String(worker.id)
+                          ? "Sending..."
+                          : isWorkInProgress && isAssignedWorker
+                            ? "Accepted"
+                            : isInvitePending && isAssignedWorker
+                              ? "Pending Reply"
+                              : isWorkInProgress
+                                ? "Already Assigned"
+                                : isInvitePending
+                                  ? "Invite Locked"
+                                  : "Invite Worker";
+                      const inviteClassName =
+                        isInvitePending && isAssignedWorker
+                          ? "w-full h-10 bg-amber-500 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm"
+                          : isInvitePending || isWorkInProgress
+                            ? "w-full h-10 bg-gray-200 text-gray-600 rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm disabled:cursor-not-allowed"
+                            : "w-full h-10 bg-primary enabled:hover:bg-primary-dark disabled:bg-gray-300 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm disabled:cursor-not-allowed";
+
+                      return (
                     <div
                       key={worker.id}
                       className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-4 hover:shadow-md hover:border-primary/30 transition-all duration-300"
@@ -368,14 +470,35 @@ const SearchResultsPage: React.FC = () => {
                       </div>
 
                       <div className="mt-2 text-center w-full">
-                        <button
-                          onClick={() => navigate(`/worker/${worker.id}`)}
-                          className="w-full h-10 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm"
-                        >
-                          View Profile
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => {
+                              void handleInviteWorker(worker);
+                            }}
+                            disabled={
+                              Boolean(invitingWorkerId) ||
+                              isWorkInProgress ||
+                              isInvitePending
+                            }
+                            className={inviteClassName}
+                          >
+                            {inviteLabel}
+                          </button>
+                          <button
+                            onClick={() =>
+                              navigate(`/worker/${worker.id}`, {
+                                state: { requestId, requestDraft },
+                              })
+                            }
+                            className="w-full h-10 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm"
+                          >
+                            View Profile
+                          </button>
+                        </div>
                       </div>
                     </div>
+                      );
+                    })()
                   ))}
                 </div>
               ) : (

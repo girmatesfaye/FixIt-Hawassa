@@ -242,6 +242,7 @@ authRouter.post("/register", async (req, res) => {
       });
     }
 
+    const requiresOtp = role !== "client";
     const createdUser = await User.create({
       phone: normalizedPhone,
       fullName: normalizedName,
@@ -249,18 +250,31 @@ authRouter.post("/register", async (req, res) => {
       role,
       area: normalizedArea,
       nationalId: role === "worker" ? normalizedNationalId : "",
-      isVerified: false,
+      isVerified: !requiresOtp,
       status: "active",
     });
-    const sessionId = createOtpSession(
-      createdUser.role,
-      String(createdUser._id),
-      createdUser.phone,
-    );
+    const sessionId = requiresOtp
+      ? createOtpSession(
+          createdUser.role,
+          String(createdUser._id),
+          createdUser.phone,
+        )
+      : undefined;
+    const token = requiresOtp
+      ? undefined
+      : signAccessToken({
+          sub: String(createdUser._id),
+          role: createdUser.role,
+          phone: createdUser.phone,
+        });
 
     return res.status(201).json({
-      message: "Registration successful. OTP sent.",
+      message: requiresOtp
+        ? "Registration successful. OTP sent."
+        : "Registration successful.",
+      requiresOtp,
       sessionId,
+      token,
       user: {
         id: String(createdUser._id),
         name: createdUser.fullName,
@@ -272,7 +286,7 @@ authRouter.post("/register", async (req, res) => {
           createdUser.role === "worker" ? createdUser.nationalId : undefined,
         isVerified: createdUser.isVerified,
       },
-      next: "/auth/verify",
+      next: requiresOtp ? "/auth/verify" : "/dashboard",
       source: "mongodb",
     });
   } catch (error) {

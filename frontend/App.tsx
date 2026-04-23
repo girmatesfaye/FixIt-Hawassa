@@ -162,7 +162,10 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/register"
+          element={<RegisterPage onRegisterSuccess={handleLogin} />}
+        />
         <Route path="/verify" element={<VerifyPage onVerify={handleLogin} />} />
 
         {/* Client & Worker Routes */}
@@ -199,7 +202,8 @@ const App: React.FC = () => {
         <Route
           path="/messages"
           element={
-            isAuthenticated && userRole === "client" ? (
+            isAuthenticated &&
+            (userRole === "client" || userRole === "worker") ? (
               <MessagesPage />
             ) : (
               <Navigate to="/login" />

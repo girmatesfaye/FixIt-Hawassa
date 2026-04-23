@@ -10,9 +10,14 @@ export type ApiRequestStatus =
   | "PENDING"
   | "COMPLETED";
 
+export interface RequestUserRef {
+  _id: string;
+  name: string | null;
+}
+
 export interface ClientRequestItem {
   id: string;
-  clientUserId: string;
+  clientUserId: RequestUserRef | null;
   category: string;
   description: string;
   area: string;
@@ -22,7 +27,7 @@ export interface ClientRequestItem {
   status: ApiRequestStatus;
   createdAt: string;
   updatedAt: string;
-  assignedWorkerId?: { _id: string, name: string };
+  assignedWorkerId: RequestUserRef | null;
 }
 
 export const fetchClientRequests = async (): Promise<ClientRequestItem[]> => {
@@ -52,6 +57,79 @@ export const fetchClientRequests = async (): Promise<ClientRequestItem[]> => {
   }
 
   return Array.isArray(result?.requests) ? result.requests : [];
+};
+
+export const assignWorkerToRequest = async (
+  requestId: string,
+  workerId: string,
+): Promise<ClientRequestItem> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/requests/${requestId}/assign`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ workerId }),
+  });
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+    request?: ClientRequestItem;
+  } | null;
+
+  if (!response.ok || !result?.request) {
+    throw new Error(result?.message ?? "ASSIGN_FAILED");
+  }
+
+  return result.request;
+};
+
+export const respondToWorkerInvite = async (
+  requestId: string,
+  decision: "accept" | "decline",
+): Promise<ClientRequestItem> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/requests/${requestId}/worker-response`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ decision }),
+    },
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+    request?: ClientRequestItem;
+  } | null;
+
+  if (!response.ok || !result?.request) {
+    throw new Error(result?.message ?? "WORKER_RESPONSE_FAILED");
+  }
+
+  return result.request;
 };
 
 export const fetchTopPros = async () => {

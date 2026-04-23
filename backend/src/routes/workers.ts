@@ -1,10 +1,29 @@
 import { Router, Request } from "express";
+import { Types } from "mongoose";
 import { User, WorkerProfile, Review } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 type AuthenticatedRequest = Request & { userId?: string };
 
 const workersRouter = Router();
+
+const resolveWorkerUserId = async (workerId: string): Promise<string | null> => {
+  if (!Types.ObjectId.isValid(workerId)) {
+    return null;
+  }
+
+  const user = await User.findById(workerId).select("_id role").lean();
+  if (user?.role === "worker") {
+    return String(user._id);
+  }
+
+  const profile = await WorkerProfile.findById(workerId).select("userId").lean();
+  if (profile?.userId) {
+    return String(profile.userId);
+  }
+
+  return null;
+};
 
 // Get my own worker profile
 workersRouter.get("/me", requireAuth, async (req, res) => {
@@ -99,15 +118,21 @@ workersRouter.put("/me", requireAuth, async (req, res) => {
 // Get public profile of a worker
 workersRouter.get("/:id", async (req, res) => {
   try {
-    const workerId = req.params.id;
-    const workerUser = await User.findById(workerId).select("-passwordHash -__v").lean();
+    const workerIdRaw = req.params.id;
+    const workerId = Array.isArray(workerIdRaw) ? workerIdRaw[0] : workerIdRaw;
+    const resolvedWorkerUserId = await resolveWorkerUserId(workerId);
+    if (!resolvedWorkerUserId) {
+      return res.status(404).json({ error: "Worker not found" });
+    }
+
+    const workerUser = await User.findById(resolvedWorkerUserId).select("-passwordHash -__v").lean();
     
     if (!workerUser || workerUser.role !== "worker") {
       return res.status(404).json({ error: "Worker not found" });
     }
 
-    const workerProfile = await WorkerProfile.findOne({ userId: workerId }).lean();
-    const reviews = await Review.find({ workerId }).populate("clientId", "fullName").sort({ createdAt: -1 }).lean();
+    const workerProfile = await WorkerProfile.findOne({ userId: resolvedWorkerUserId }).lean();
+    const reviews = await Review.find({ workerId: resolvedWorkerUserId }).populate("clientId", "fullName").sort({ createdAt: -1 }).lean();
 
     return res.json({
       worker: {
@@ -128,7 +153,9 @@ workersRouter.get("/:id", async (req, res) => {
 // Post a review for a worker
 workersRouter.post("/:id/review", requireAuth, async (req, res) => {
   try {
-    const workerId = req.params.id;
+    const workerIdRaw = req.params.id;
+    const workerId = Array.isArray(workerIdRaw) ? workerIdRaw[0] : workerIdRaw;
+    const resolvedWorkerUserId = await resolveWorkerUserId(workerId);
     const clientId = (req as AuthenticatedRequest).userId;
     const { rating, comment } = req.body;
 
@@ -136,8 +163,12 @@ workersRouter.post("/:id/review", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Rating and comment are required" });
     }
 
+    if (!resolvedWorkerUserId) {
+      return res.status(404).json({ error: "Worker not found" });
+    }
+
     const newReview = new Review({
-      workerId,
+      workerId: resolvedWorkerUserId,
       clientId,
       rating,
       comment

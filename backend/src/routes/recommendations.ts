@@ -49,7 +49,7 @@ const loadRankedWorkers = async (
     const workersFromMongo = profiles.map((profile) => {
       const linkedUser = usersById.get(String(profile.userId));
       return {
-        id: String(profile._id),
+        id: String(profile.userId),
         name: linkedUser?.fullName ?? "Worker",
         location: `Hawassa, ${profile.area}`,
         area: profile.area,
@@ -84,6 +84,52 @@ const loadRankedWorkers = async (
       source: "mongodb",
     };
   }
+};
+
+const normalizeSnapshotRecommendations = async (
+  recommendations: Array<
+    WorkerRecommendation & { score: number; reasons: string[] }
+  >,
+): Promise<
+  | Array<WorkerRecommendation & { score: number; reasons: string[] }>
+  | null
+> => {
+  const normalized = await Promise.all(
+    recommendations.map(async (recommendation) => {
+      const rawId = String(recommendation.id);
+      if (!Types.ObjectId.isValid(rawId)) {
+        return null;
+      }
+
+      const user = await User.findById(rawId).select("_id role").lean();
+      if (user?.role === "worker") {
+        return {
+          ...recommendation,
+          id: String(user._id),
+        };
+      }
+
+      const profile = await WorkerProfile.findById(rawId)
+        .select("userId")
+        .lean();
+      if (profile?.userId) {
+        return {
+          ...recommendation,
+          id: String(profile.userId),
+        };
+      }
+
+      return null;
+    }),
+  );
+
+  if (normalized.some((item) => item === null)) {
+    return null;
+  }
+
+  return normalized as Array<
+    WorkerRecommendation & { score: number; reasons: string[] }
+  >;
 };
 
 const paginateRecommendations = (
@@ -240,11 +286,65 @@ recommendationsRouter.get(
       });
     }
 
-    const snapshotRecommendations = Array.isArray(snapshotDoc.recommendations)
+    let snapshotRecommendations = Array.isArray(snapshotDoc.recommendations)
       ? (snapshotDoc.recommendations as Array<
           WorkerRecommendation & { score: number; reasons: string[] }
         >)
       : [];
+
+    const normalizedSnapshotRecommendations =
+      await normalizeSnapshotRecommendations(snapshotRecommendations);
+
+    if (!normalizedSnapshotRecommendations) {
+      const { ranked, source } = await loadRankedWorkers(requestDraft, {
+        maxDistanceKm,
+        minRating,
+        onlyActive,
+      });
+
+      snapshotDoc = await RecommendationSnapshot.findOneAndUpdate(
+        snapshotQuery,
+        {
+          $set: {
+            recommendations: ranked,
+            source,
+            createdAt: new Date(),
+          },
+        },
+        { new: true },
+      ).lean();
+
+      snapshotRecommendations = Array.isArray(snapshotDoc?.recommendations)
+        ? (snapshotDoc.recommendations as Array<
+            WorkerRecommendation & { score: number; reasons: string[] }
+          >)
+        : [];
+    } else {
+      const changed = normalizedSnapshotRecommendations.some(
+        (recommendation, index) =>
+          String(recommendation.id) !== String(snapshotRecommendations[index]?.id),
+      );
+
+      snapshotRecommendations = normalizedSnapshotRecommendations;
+
+      if (changed) {
+        snapshotDoc = await RecommendationSnapshot.findOneAndUpdate(
+          snapshotQuery,
+          {
+            $set: {
+              recommendations: normalizedSnapshotRecommendations,
+            },
+          },
+          { new: true },
+        ).lean();
+      }
+    }
+
+    if (!snapshotDoc) {
+      return res.status(500).json({
+        message: "Failed to refresh recommendation snapshot",
+      });
+    }
 
     const paginated = paginateRecommendations(
       snapshotRecommendations,

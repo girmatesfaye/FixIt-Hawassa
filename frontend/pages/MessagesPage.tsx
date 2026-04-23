@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getAuthToken } from "../services/auth";
+import { getAuthToken, getStoredRole } from "../services/auth";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -12,6 +12,8 @@ const MessagesPage: React.FC = () => {
   const [requests, setRequests] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [me, setMe] = useState<any>(null);
+  const currentRole = getStoredRole();
+  const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
 
   // Fetch current user
   useEffect(() => {
@@ -42,7 +44,9 @@ const MessagesPage: React.FC = () => {
         });
         if (res.ok) {
           const data = await res.json();
-          setRequests(data.requests || []);
+          setRequests(
+            (data.requests || []).filter((request: any) => request.assignedWorkerId),
+          );
         }
       } catch (err) {
         console.error("Failed to fetch requests", err);
@@ -118,7 +122,7 @@ const MessagesPage: React.FC = () => {
       <header className="shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-            <Link to="/dashboard" className="flex items-center gap-2">
+            <Link to={homePath} className="flex items-center gap-2">
               <div className="size-9 bg-primary rounded-lg flex items-center justify-center text-white">
                 <span className="material-symbols-outlined font-bold">
                   handyman
@@ -131,17 +135,19 @@ const MessagesPage: React.FC = () => {
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <Link
-              to="/dashboard"
+              to={homePath}
               className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
             >
-              Home
+              {currentRole === "worker" ? "Worker Hub" : "Home"}
             </Link>
-            <Link
-              to="/my-requests"
-              className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
-            >
-              My Requests
-            </Link>
+            {currentRole === "client" ? (
+              <Link
+                to="/my-requests"
+                className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
+              >
+                My Requests
+              </Link>
+            ) : null}
             <Link to="/messages" className="text-sm font-bold text-primary">
               Messages
             </Link>
