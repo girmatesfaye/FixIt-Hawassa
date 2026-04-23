@@ -8,8 +8,10 @@ import recommendationsRouter from "./routes/recommendations";
 import adminRouter from "./routes/admin";
 import workersRouter from "./routes/workers";
 import messagesRouter from "./routes/messages";
+import uploadRouter from "./routes/upload";
 import { connectToDatabase } from "./config/db";
 import { env } from "./config/env";
+import path from "path";
 
 const app = express();
 const port = env.port;
@@ -28,6 +30,8 @@ app.use("/recommendations", recommendationsRouter);
 app.use("/admin", adminRouter);
 app.use("/workers", workersRouter);
 app.use("/messages", messagesRouter);
+app.use("/upload", uploadRouter);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use(
   (

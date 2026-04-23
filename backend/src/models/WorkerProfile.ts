@@ -12,6 +12,8 @@ const workerProfileSchema = new Schema(
     bio: { type: String, default: "" },
     area: { type: String, required: true, trim: true },
     skills: [{ type: String, trim: true }],
+    telegramUsername: { type: String, default: "" },
+    tiktokProfile: { type: String, default: "" },
     rating: { type: Number, default: 0 },
     reviews: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
@@ -19,6 +21,7 @@ const workerProfileSchema = new Schema(
     responseMinutes: { type: Number, default: 30 },
     distanceKm: { type: Number, default: 99 },
     avatar: { type: String, default: "" },
+    portfolio: [{ type: String }],
   },
   {
     timestamps: true,

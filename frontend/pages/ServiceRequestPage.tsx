@@ -15,15 +15,99 @@ const ServiceRequestPage: React.FC = () => {
   const navigate = useNavigate();
   const [description, setDescription] = useState("");
   const [maintenanceLevel, setMaintenanceLevel] = useState("Medium");
-  const [area, setArea] = useState("Piassa");
+  const [area, setArea] = useState("");
   const [landmark, setLandmark] = useState("");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationHint, setLocationHint] = useState("");
+
+  const reverseGeocodeOpenStreetMap = async (
+    latitude: number,
+    longitude: number,
+  ): Promise<string | null> => {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+    );
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json().catch(() => null)) as {
+      display_name?: string;
+    } | null;
+
+    if (!data?.display_name?.trim()) {
+      return null;
+    }
+
+    return data.display_name.trim();
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setLocationHint(
+        "Geolocation is not supported on this device. Enter location manually.",
+      );
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationHint("");
+    if (formError) {
+      setFormError("");
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const osmAddress = await reverseGeocodeOpenStreetMap(
+            latitude,
+            longitude,
+          );
+
+          if (osmAddress) {
+            setArea(osmAddress);
+            setLocationHint("Location detected and filled from OpenStreetMap.");
+            return;
+          }
+
+          setArea(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          setLocationHint(
+            "Exact coordinates detected. You can keep this or type neighborhood manually.",
+          );
+        } catch (_error) {
+          setLocationHint(
+            "Location detected, but address lookup failed. Enter neighborhood manually if needed.",
+          );
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (_error) => {
+        setIsLocating(false);
+        setLocationHint(
+          "Location permission was denied. Please type your neighborhood manually.",
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      },
+    );
+  };
 
   const handleBack = () => navigate("/dashboard");
   const handleFindWorkers = async () => {
     if (description.trim().length < 20) {
       setFormError("Please describe the issue with at least 20 characters.");
+      return;
+    }
+
+    if (area.trim().length < 2) {
+      setFormError("Please enter your neighborhood or area.");
       return;
     }
 
@@ -236,23 +320,40 @@ const ServiceRequestPage: React.FC = () => {
               Location
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-gray-400">
-                  domain
-                </span>
-                <select
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-primary dark:text-white text-sm appearance-none"
+              <div className="flex flex-col gap-2">
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-gray-400">
+                    domain
+                  </span>
+                  <input
+                    type="text"
+                    value={area}
+                    onChange={(e) => {
+                      setArea(e.target.value);
+                      if (formError) setFormError("");
+                    }}
+                    placeholder="Neighborhood / Area"
+                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-primary dark:text-white text-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={isLocating}
+                  className="self-start mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary disabled:text-gray-400"
                 >
-                  <option>Piassa</option>
-                  <option>Tabor</option>
-                  <option>Millennium</option>
-                  <option>Gudumale</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  expand_more
-                </span>
+                  <span className="material-symbols-outlined text-[18px]">
+                    my_location
+                  </span>
+                  {isLocating
+                    ? "Detecting location..."
+                    : "Use current location"}
+                </button>
+                {locationHint ? (
+                  <p className="text-xs text-[#4c669a] dark:text-gray-400">
+                    {locationHint}
+                  </p>
+                ) : null}
               </div>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-gray-400">

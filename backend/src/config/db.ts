@@ -20,7 +20,7 @@ export const connectToDatabase = async (): Promise<void> => {
     });
     dbConnected = true;
     dbMode = "mongodb";
-    console.log("[db] Connected to MongoDB");
+    console.log(" Connected to MongoDB ✅");
   } catch (error) {
     dbConnected = false;
     dbMode = "mock";
