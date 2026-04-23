@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getAuthToken, getStoredRole } from "../services/auth";
 
 const API_BASE_URL =
@@ -7,6 +7,7 @@ const API_BASE_URL =
   "http://localhost:4000";
 
 const MessagesPage: React.FC = () => {
+  const location = useLocation();
   const [selectedContact, setSelectedContact] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
@@ -14,6 +15,8 @@ const MessagesPage: React.FC = () => {
   const [me, setMe] = useState<any>(null);
   const currentRole = getStoredRole();
   const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
+  const requestedThreadId =
+    (location.state as { requestId?: string } | null)?.requestId ?? "";
 
   // Fetch current user
   useEffect(() => {
@@ -54,6 +57,19 @@ const MessagesPage: React.FC = () => {
     };
     fetchRequests();
   }, []);
+
+  useEffect(() => {
+    if (!requestedThreadId || !requests.length) {
+      return;
+    }
+
+    const requestedIndex = requests.findIndex(
+      (request) => request.id === requestedThreadId,
+    );
+    if (requestedIndex >= 0) {
+      setSelectedContact(requestedIndex);
+    }
+  }, [requestedThreadId, requests]);
 
   // Fetch specific thread messages
   const fetchMessages = async (requestId: string) => {

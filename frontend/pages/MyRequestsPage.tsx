@@ -16,6 +16,7 @@ type RequestCard = {
   worker: string | null;
   avatar?: string;
   cost: string;
+  hasMessagesAccess: boolean;
 };
 
 const mapStatus = (status: ApiRequestStatus): RequestStatus => {
@@ -48,6 +49,7 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
     worker: request.assignedWorkerId ? request.assignedWorkerId.name : null,
     avatar: request.assignedWorkerId ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.assignedWorkerId._id}` : undefined,
     cost: "Pending Quotes",
+    hasMessagesAccess: Boolean(request.assignedWorkerId),
   };
 };
 
@@ -278,8 +280,17 @@ const MyRequestsPage: React.FC = () => {
                           </p>
                         </div>
                       )}
-                      <button className="flex-1 md:flex-none h-11 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
-                        Track Order
+                      <button
+                        onClick={() =>
+                          req.hasMessagesAccess
+                            ? navigate("/messages", {
+                                state: { requestId: req.id },
+                              })
+                            : navigate("/search-results")
+                        }
+                        className="flex-1 md:flex-none h-11 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+                      >
+                        {req.hasMessagesAccess ? "Open Chat" : "Track Order"}
                       </button>
                       <button className="size-11 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary transition-colors">
                         <span className="material-symbols-outlined">

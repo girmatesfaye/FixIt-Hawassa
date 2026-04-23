@@ -6,6 +6,7 @@ import {
   LAST_REQUEST_KEY,
 } from "../services/recommendation";
 import { clearSession, getAuthToken } from "../services/auth";
+import { getUploadedImageUrl, uploadImage } from "../services/upload";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -21,6 +22,8 @@ const ServiceRequestPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationHint, setLocationHint] = useState("");
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
 
   const reverseGeocodeOpenStreetMap = async (
     latitude: number,
@@ -100,6 +103,42 @@ const ServiceRequestPage: React.FC = () => {
   };
 
   const handleBack = () => navigate("/dashboard");
+
+  const handlePhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = e.target.files;
+    if (!files?.length) {
+      return;
+    }
+
+    setIsUploadingPhotos(true);
+    if (formError) {
+      setFormError("");
+    }
+
+    try {
+      const uploaded: string[] = [];
+      const remainingSlots = Math.max(0, 3 - photoUrls.length);
+      const selectedFiles = Array.from(files).slice(0, remainingSlots);
+
+      for (const file of selectedFiles) {
+        uploaded.push(await uploadImage(file));
+      }
+
+      setPhotoUrls((current) => [...current, ...uploaded].slice(0, 3));
+    } catch (_error) {
+      setFormError("Could not upload one of the images. Please try again.");
+    } finally {
+      setIsUploadingPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const removePhoto = (photoUrl: string) => {
+    setPhotoUrls((current) => current.filter((url) => url !== photoUrl));
+  };
+
   const handleFindWorkers = async () => {
     if (description.trim().length < 20) {
       setFormError("Please describe the issue with at least 20 characters.");
@@ -122,7 +161,8 @@ const ServiceRequestPage: React.FC = () => {
       area,
       landmark: landmark.trim(),
       maintenanceLevel: maintenanceLevel as "New" | "Medium" | "Old",
-      hasPhotos: true,
+      hasPhotos: photoUrls.length > 0,
+      photoUrls,
       createdAt: new Date().toISOString(),
     };
 
@@ -291,26 +331,55 @@ const ServiceRequestPage: React.FC = () => {
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="sm:col-span-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center p-8 gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <label className="sm:col-span-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center p-8 gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                  disabled={isUploadingPhotos || photoUrls.length >= 3}
+                />
                 <span className="material-symbols-outlined text-gray-400 text-3xl">
-                  add_a_photo
+                  {isUploadingPhotos ? "hourglass_empty" : "add_a_photo"}
                 </span>
                 <p className="text-xs font-bold text-gray-500">
-                  Click to upload or drag and drop
+                  {isUploadingPhotos
+                    ? "Uploading images..."
+                    : photoUrls.length >= 3
+                      ? "Maximum 3 images uploaded"
+                      : "Click to upload service images"}
                 </p>
-              </div>
-              <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 group">
-                <img
-                  src="https://picsum.photos/id/122/200/200"
-                  alt="Thumbnail"
-                  className="w-full h-full object-cover"
-                />
-                <button className="absolute top-1.5 right-1.5 size-6 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black transition-colors">
-                  <span className="material-symbols-outlined text-sm">
-                    close
+              </label>
+              {photoUrls.length ? (
+                photoUrls.map((photoUrl) => (
+                  <div
+                    key={photoUrl}
+                    className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 group"
+                  >
+                    <img
+                      src={getUploadedImageUrl(photoUrl)}
+                      alt="Service request"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(photoUrl)}
+                      className="absolute top-1.5 right-1.5 size-6 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        close
+                      </span>
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="relative aspect-square rounded-xl overflow-hidden border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-300">
+                  <span className="material-symbols-outlined text-3xl">
+                    image
                   </span>
-                </button>
-              </div>
+                </div>
+              )}
             </div>
           </div>
 

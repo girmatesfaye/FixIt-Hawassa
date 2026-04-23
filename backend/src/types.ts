@@ -7,6 +7,7 @@ export interface RequestDraft {
   landmark: string;
   maintenanceLevel: "New" | "Medium" | "Old";
   hasPhotos: boolean;
+  photoUrls?: string[];
   createdAt: string;
 }
 

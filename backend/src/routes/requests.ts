@@ -20,6 +20,7 @@ const requestDraftSchema = z.object({
   landmark: z.string().min(2),
   maintenanceLevel: z.enum(["New", "Medium", "Old"]),
   hasPhotos: z.boolean(),
+  photoUrls: z.array(z.string().min(1)).max(3).optional().default([]),
   createdAt: z.string(),
   assignedWorkerId: z.string().optional(),
 });
@@ -83,6 +84,7 @@ const mapRequestResponse = (
     landmark: string;
     maintenanceLevel: "New" | "Medium" | "Old";
     hasPhotos: boolean;
+    photoUrls?: string[];
     status: "SEARCHING" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
     createdAt: Date | string;
     updatedAt: Date | string;
@@ -97,6 +99,7 @@ const mapRequestResponse = (
   landmark: request.landmark,
   maintenanceLevel: request.maintenanceLevel,
   hasPhotos: request.hasPhotos,
+  photoUrls: Array.isArray(request.photoUrls) ? request.photoUrls : [],
   status: request.status,
   createdAt:
     request.createdAt instanceof Date
@@ -189,7 +192,9 @@ requestsRouter.post("/", requireRole("client"), async (req, res) => {
       area: parsed.data.area,
       landmark: parsed.data.landmark,
       maintenanceLevel: parsed.data.maintenanceLevel,
-      hasPhotos: parsed.data.hasPhotos,
+      hasPhotos:
+        parsed.data.hasPhotos || parsed.data.photoUrls.length > 0,
+      photoUrls: parsed.data.photoUrls,
       status: normalizedAssignedWorkerId ? "PENDING" : "SEARCHING",
       assignedWorkerId: normalizedAssignedWorkerId
         ? new Types.ObjectId(normalizedAssignedWorkerId)

@@ -5,6 +5,7 @@ import {
   fetchClientRequests,
   respondToWorkerInvite,
 } from "../services/clientRequests";
+import { getUploadedImageUrl } from "../services/upload";
 import { getMyWorkerProfile } from "../services/worker";
 
 interface WorkerHubPageProps {
@@ -281,6 +282,18 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                         {request.description}
                       </p>
+                      {request.photoUrls.length ? (
+                        <div className="flex gap-2 overflow-x-auto">
+                          {request.photoUrls.slice(0, 3).map((photoUrl) => (
+                            <img
+                              key={photoUrl}
+                              src={getUploadedImageUrl(photoUrl)}
+                              alt="Service request"
+                              className="size-16 rounded-xl object-cover border border-gray-100 dark:border-gray-700"
+                            />
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="flex flex-wrap gap-3 text-xs font-bold text-gray-500">
                         <span>{request.area}</span>
                         <span>{request.landmark}</span>
@@ -363,13 +376,29 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                         {request.description}
                       </p>
+                      {request.photoUrls.length ? (
+                        <div className="flex gap-2 overflow-x-auto">
+                          {request.photoUrls.slice(0, 3).map((photoUrl) => (
+                            <img
+                              key={photoUrl}
+                              src={getUploadedImageUrl(photoUrl)}
+                              alt="Service request"
+                              className="size-16 rounded-xl object-cover border border-gray-100 dark:border-gray-700"
+                            />
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="flex flex-wrap gap-3 text-xs font-bold text-gray-500">
                         <span>{request.area}</span>
                         <span>{request.landmark}</span>
                         <span>{request.maintenanceLevel}</span>
                       </div>
                       <button
-                        onClick={() => navigate("/messages")}
+                        onClick={() =>
+                          navigate("/messages", {
+                            state: { requestId: request.id },
+                          })
+                        }
                         className="h-11 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-sm font-bold uppercase tracking-widest transition-all"
                       >
                         Open Messages

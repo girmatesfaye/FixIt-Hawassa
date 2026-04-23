@@ -13,6 +13,7 @@ const serviceRequestSchema = new Schema(
       required: true,
     },
     hasPhotos: { type: Boolean, default: false },
+    photoUrls: [{ type: String, trim: true }],
     status: {
       type: String,
       enum: ["SEARCHING", "IN_PROGRESS", "PENDING", "COMPLETED"],
