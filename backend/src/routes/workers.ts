@@ -1,13 +1,15 @@
 import { Router, Request } from "express";
 import { Types } from "mongoose";
-import { User, WorkerProfile, Review } from "../models";
-import { requireAuth } from "../middleware/auth";
+import { User, WorkerProfile, Review, ServiceRequest, Report } from "../models";
+import { requireAuth, requireRole } from "../middleware/auth";
 
 type AuthenticatedRequest = Request & { userId?: string };
 
 const workersRouter = Router();
 
-const resolveWorkerUserId = async (workerId: string): Promise<string | null> => {
+const resolveWorkerUserId = async (
+  workerId: string,
+): Promise<string | null> => {
   if (!Types.ObjectId.isValid(workerId)) {
     return null;
   }
@@ -17,7 +19,9 @@ const resolveWorkerUserId = async (workerId: string): Promise<string | null> => 
     return String(user._id);
   }
 
-  const profile = await WorkerProfile.findById(workerId).select("userId").lean();
+  const profile = await WorkerProfile.findById(workerId)
+    .select("userId")
+    .lean();
   if (profile?.userId) {
     return String(profile.userId);
   }
@@ -31,7 +35,9 @@ workersRouter.get("/me", requireAuth, async (req, res) => {
     const userId = (req as AuthenticatedRequest).userId;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const workerUser = await User.findById(userId).select("-passwordHash -__v").lean();
+    const workerUser = await User.findById(userId)
+      .select("-passwordHash -__v")
+      .lean();
     if (!workerUser || workerUser.role !== "worker") {
       return res.status(403).json({ error: "Only workers can access this" });
     }
@@ -51,7 +57,7 @@ workersRouter.get("/me", requireAuth, async (req, res) => {
         name: workerUser.fullName,
         phone: workerUser.phone,
         profile: workerProfile,
-      }
+      },
     });
   } catch (error) {
     console.error("[workers] Failed to fetch my profile", error);
@@ -70,7 +76,17 @@ workersRouter.put("/me", requireAuth, async (req, res) => {
       return res.status(403).json({ error: "Only workers can access this" });
     }
 
-    const { name, phone, area, telegramUsername, tiktokProfile, bio, skills, avatar, portfolio } = req.body;
+    const {
+      name,
+      phone,
+      area,
+      telegramUsername,
+      tiktokProfile,
+      bio,
+      skills,
+      avatar,
+      portfolio,
+    } = req.body;
 
     if (name !== undefined) workerUser.fullName = name;
     if (phone !== undefined) workerUser.phone = phone;
@@ -79,12 +95,16 @@ workersRouter.put("/me", requireAuth, async (req, res) => {
     const workerProfile = await WorkerProfile.findOne({ userId });
     if (workerProfile) {
       if (area !== undefined) workerProfile.area = area;
-      if (telegramUsername !== undefined) workerProfile.telegramUsername = telegramUsername;
-      if (tiktokProfile !== undefined) workerProfile.tiktokProfile = tiktokProfile;
+      if (telegramUsername !== undefined)
+        workerProfile.telegramUsername = telegramUsername;
+      if (tiktokProfile !== undefined)
+        workerProfile.tiktokProfile = tiktokProfile;
       if (bio !== undefined) workerProfile.bio = bio;
-      if (skills !== undefined && Array.isArray(skills)) workerProfile.skills = skills;
+      if (skills !== undefined && Array.isArray(skills))
+        workerProfile.skills = skills;
       if (avatar !== undefined) workerProfile.avatar = avatar;
-      if (portfolio !== undefined && Array.isArray(portfolio)) workerProfile.portfolio = portfolio;
+      if (portfolio !== undefined && Array.isArray(portfolio))
+        workerProfile.portfolio = portfolio;
       await workerProfile.save();
     } else {
       await WorkerProfile.create({
@@ -107,7 +127,7 @@ workersRouter.put("/me", requireAuth, async (req, res) => {
         name: workerUser.fullName,
         phone: workerUser.phone,
         profile: updatedProfile,
-      }
+      },
     });
   } catch (error) {
     console.error("[workers] Failed to update my profile", error);
@@ -125,14 +145,21 @@ workersRouter.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Worker not found" });
     }
 
-    const workerUser = await User.findById(resolvedWorkerUserId).select("-passwordHash -__v").lean();
-    
+    const workerUser = await User.findById(resolvedWorkerUserId)
+      .select("-passwordHash -__v")
+      .lean();
+
     if (!workerUser || workerUser.role !== "worker") {
       return res.status(404).json({ error: "Worker not found" });
     }
 
-    const workerProfile = await WorkerProfile.findOne({ userId: resolvedWorkerUserId }).lean();
-    const reviews = await Review.find({ workerId: resolvedWorkerUserId }).populate("clientId", "fullName").sort({ createdAt: -1 }).lean();
+    const workerProfile = await WorkerProfile.findOne({
+      userId: resolvedWorkerUserId,
+    }).lean();
+    const reviews = await Review.find({ workerId: resolvedWorkerUserId })
+      .populate("clientId", "fullName")
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.json({
       worker: {
@@ -140,10 +167,9 @@ workersRouter.get("/:id", async (req, res) => {
         name: workerUser.fullName,
         phone: workerUser.phone,
         profile: workerProfile,
-        reviews
-      }
+        reviews,
+      },
     });
-
   } catch (error) {
     console.error("[workers] Failed to fetch worker", error);
     return res.status(500).json({ error: "Failed to fetch worker" });
@@ -151,35 +177,169 @@ workersRouter.get("/:id", async (req, res) => {
 });
 
 // Post a review for a worker
-workersRouter.post("/:id/review", requireAuth, async (req, res) => {
+workersRouter.post("/:id/review", requireRole("client"), async (req, res) => {
   try {
     const workerIdRaw = req.params.id;
     const workerId = Array.isArray(workerIdRaw) ? workerIdRaw[0] : workerIdRaw;
     const resolvedWorkerUserId = await resolveWorkerUserId(workerId);
     const clientId = (req as AuthenticatedRequest).userId;
-    const { rating, comment } = req.body;
+    const { rating, comment, requestId } = req.body as {
+      rating?: number;
+      comment?: string;
+      requestId?: string;
+    };
 
-    if (!rating || !comment) {
-      return res.status(400).json({ error: "Rating and comment are required" });
+    if (!rating || !comment || !requestId) {
+      return res
+        .status(400)
+        .json({ error: "Rating, comment and requestId are required" });
     }
 
     if (!resolvedWorkerUserId) {
       return res.status(404).json({ error: "Worker not found" });
     }
 
+    if (!clientId || !Types.ObjectId.isValid(requestId)) {
+      return res.status(400).json({ error: "Invalid request ID" });
+    }
+
+    const matchedRequest = await ServiceRequest.findOne({
+      _id: new Types.ObjectId(requestId),
+      clientUserId: new Types.ObjectId(clientId),
+      assignedWorkerId: new Types.ObjectId(resolvedWorkerUserId),
+      status: "COMPLETED",
+      clientConfirmedCompleteAt: { $ne: null },
+    })
+      .select("_id")
+      .lean();
+
+    if (!matchedRequest) {
+      return res.status(403).json({
+        error:
+          "You can only review workers who completed and were confirmed on your request",
+      });
+    }
+
+    const alreadyReviewed = await Review.findOne({
+      requestId: new Types.ObjectId(requestId),
+      workerId: new Types.ObjectId(resolvedWorkerUserId),
+      clientId: new Types.ObjectId(clientId),
+    })
+      .select("_id")
+      .lean();
+
+    if (alreadyReviewed) {
+      return res.status(409).json({
+        error: "You already reviewed this completed request",
+      });
+    }
+
     const newReview = new Review({
+      requestId: new Types.ObjectId(requestId),
       workerId: resolvedWorkerUserId,
       clientId,
       rating,
-      comment
+      comment,
     });
 
     await newReview.save();
+
+    const aggregateResult = await Review.aggregate<
+      [{ avgRating: number; count: number }]
+    >([
+      { $match: { workerId: new Types.ObjectId(resolvedWorkerUserId) } },
+      {
+        $group: {
+          _id: "$workerId",
+          avgRating: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          avgRating: 1,
+          count: 1,
+        },
+      },
+    ]);
+
+    const reviewStats = aggregateResult[0];
+    if (reviewStats) {
+      await WorkerProfile.findOneAndUpdate(
+        { userId: new Types.ObjectId(resolvedWorkerUserId) },
+        {
+          $set: {
+            rating: Number(reviewStats.avgRating.toFixed(2)),
+            reviews: reviewStats.count,
+          },
+        },
+      );
+    }
 
     return res.status(201).json({ review: newReview });
   } catch (error) {
     console.error("[workers] Failed to submit review", error);
     return res.status(500).json({ error: "Failed to submit review" });
+  }
+});
+
+workersRouter.post("/:id/report", requireRole("client"), async (req, res) => {
+  try {
+    const workerIdRaw = req.params.id;
+    const workerId = Array.isArray(workerIdRaw) ? workerIdRaw[0] : workerIdRaw;
+    const resolvedWorkerUserId = await resolveWorkerUserId(workerId);
+    const reporterUserId = (req as AuthenticatedRequest).userId;
+    const { type, text, requestId } = req.body as {
+      type?: string;
+      text?: string;
+      requestId?: string;
+    };
+
+    if (!type?.trim() || !text?.trim() || !requestId) {
+      return res.status(400).json({
+        error: "type, text and requestId are required",
+      });
+    }
+
+    if (!resolvedWorkerUserId) {
+      return res.status(404).json({ error: "Worker not found" });
+    }
+
+    if (!reporterUserId || !Types.ObjectId.isValid(requestId)) {
+      return res.status(400).json({ error: "Invalid request ID" });
+    }
+
+    const matchedRequest = await ServiceRequest.findOne({
+      _id: new Types.ObjectId(requestId),
+      clientUserId: new Types.ObjectId(reporterUserId),
+      assignedWorkerId: new Types.ObjectId(resolvedWorkerUserId),
+      status: "COMPLETED",
+      clientConfirmedCompleteAt: { $ne: null },
+    })
+      .select("_id")
+      .lean();
+
+    if (!matchedRequest) {
+      return res.status(403).json({
+        error:
+          "You can only report workers who completed and were confirmed on your request",
+      });
+    }
+
+    const newReport = await Report.create({
+      type: type.trim(),
+      text: text.trim(),
+      requestId: new Types.ObjectId(requestId),
+      reportedUserId: new Types.ObjectId(resolvedWorkerUserId),
+      reporterUserId: new Types.ObjectId(reporterUserId),
+      status: "pending",
+    });
+
+    return res.status(201).json({ report: newReport });
+  } catch (error) {
+    console.error("[workers] Failed to submit report", error);
+    return res.status(500).json({ error: "Failed to submit report" });
   }
 });
 

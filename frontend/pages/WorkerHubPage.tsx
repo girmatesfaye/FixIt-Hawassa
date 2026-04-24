@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   ClientRequestItem,
   fetchClientRequests,
+  markRequestCompleteByWorker,
   respondToWorkerInvite,
 } from "../services/clientRequests";
 import { getUploadedImageUrl } from "../services/upload";
@@ -62,7 +63,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         setWorkerName(profile.name || "Worker Profile");
         setWorkerTitle(
           workerProfile.title ||
-            (nextSkills[0] ? `${nextSkills[0]} Specialist` : "Worker Professional"),
+            (nextSkills[0]
+              ? `${nextSkills[0]} Specialist`
+              : "Worker Professional"),
         );
         setBio(workerProfile.bio || "Update your profile to set a bio.");
         setArea(workerProfile.area || "Hawassa");
@@ -76,9 +79,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         setIsProfileComplete(
           Boolean(
             workerProfile.bio ||
-              nextSkills.length ||
-              workerProfile.avatar ||
-              nextPortfolio.length,
+            nextSkills.length ||
+            workerProfile.avatar ||
+            nextPortfolio.length,
           ),
         );
         setRequests(workerRequests);
@@ -92,8 +95,12 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
     fetchWorkerData();
   }, []);
 
-  const pendingInvites = requests.filter((request) => request.status === "PENDING");
-  const activeJobs = requests.filter((request) => request.status === "IN_PROGRESS");
+  const pendingInvites = requests.filter(
+    (request) => request.status === "PENDING",
+  );
+  const activeJobs = requests.filter(
+    (request) => request.status === "IN_PROGRESS",
+  );
 
   const handleWorkerDecision = async (
     requestId: string,
@@ -124,6 +131,34 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         error instanceof Error
           ? error.message
           : "Could not update this invitation.",
+      );
+    } finally {
+      setRequestActionId("");
+    }
+  };
+
+  const handleMarkCompleted = async (requestId: string) => {
+    setRequestActionId(requestId);
+    setRequestError("");
+
+    try {
+      const updatedRequest = await markRequestCompleteByWorker(requestId);
+      setRequests((current) =>
+        current.map((request) =>
+          request.id === requestId ? updatedRequest : request,
+        ),
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        onLogout();
+        navigate("/login");
+        return;
+      }
+
+      setRequestError(
+        error instanceof Error
+          ? error.message
+          : "Could not mark this job as completed.",
       );
     } finally {
       setRequestActionId("");
@@ -344,7 +379,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                           disabled={requestActionId === request.id}
                           className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold uppercase tracking-widest disabled:opacity-60"
                         >
-                          {requestActionId === request.id ? "Saving..." : "Accept"}
+                          {requestActionId === request.id
+                            ? "Saving..."
+                            : "Accept"}
                         </button>
                         <button
                           onClick={() => {
@@ -439,6 +476,22 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                         className="h-11 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-sm font-bold uppercase tracking-widest transition-all"
                       >
                         Open Messages
+                      </button>
+                      <button
+                        onClick={() => {
+                          void handleMarkCompleted(request.id);
+                        }}
+                        disabled={
+                          requestActionId === request.id ||
+                          Boolean(request.workerMarkedCompleteAt)
+                        }
+                        className="h-11 rounded-xl bg-green-100 hover:bg-green-600 text-green-700 hover:text-white text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {request.workerMarkedCompleteAt
+                          ? "Waiting Client Confirm"
+                          : requestActionId === request.id
+                            ? "Saving..."
+                            : "Mark as Completed"}
                       </button>
                     </div>
                   ))}
@@ -609,7 +662,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       Telegram
                     </p>
                     <p className="text-base font-bold tracking-tight">
-                      {telegramUsername ? `@${telegramUsername.replace(/^@+/, "")}` : "Add your Telegram username"}
+                      {telegramUsername
+                        ? `@${telegramUsername.replace(/^@+/, "")}`
+                        : "Add your Telegram username"}
                     </p>
                   </div>
                   <div className="p-5 bg-white/5 rounded-2xl">

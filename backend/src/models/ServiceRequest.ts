@@ -24,6 +24,23 @@ const serviceRequestSchema = new Schema(
       ref: "User",
       default: null,
     },
+    lastDeclinedWorkerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    lastDeclinedAt: {
+      type: Date,
+      default: null,
+    },
+    workerMarkedCompleteAt: {
+      type: Date,
+      default: null,
+    },
+    clientConfirmedCompleteAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

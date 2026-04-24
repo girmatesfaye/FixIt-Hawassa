@@ -18,6 +18,10 @@ export interface RequestUserRef {
 export interface ClientRequestItem {
   id: string;
   clientUserId: RequestUserRef | null;
+  lastDeclinedWorkerId?: RequestUserRef | null;
+  lastDeclinedAt?: string | null;
+  workerMarkedCompleteAt?: string | null;
+  clientConfirmedCompleteAt?: string | null;
   category: string;
   description: string;
   area: string;
@@ -131,6 +135,162 @@ export const respondToWorkerInvite = async (
   }
 
   return result.request;
+};
+
+export const markRequestCompleteByWorker = async (
+  requestId: string,
+): Promise<ClientRequestItem> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/requests/${requestId}/worker-complete`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action: "worker_complete" }),
+    },
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+    request?: ClientRequestItem;
+  } | null;
+
+  if (!response.ok || !result?.request) {
+    throw new Error(result?.message ?? "WORKER_COMPLETE_FAILED");
+  }
+
+  return result.request;
+};
+
+export const confirmRequestCompletion = async (
+  requestId: string,
+): Promise<ClientRequestItem> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/requests/${requestId}/client-confirm-completion`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action: "client_confirm" }),
+    },
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+    request?: ClientRequestItem;
+  } | null;
+
+  if (!response.ok || !result?.request) {
+    throw new Error(result?.message ?? "CLIENT_CONFIRM_FAILED");
+  }
+
+  return result.request;
+};
+
+export const submitWorkerReview = async (payload: {
+  workerId: string;
+  requestId: string;
+  rating: number;
+  comment: string;
+}) => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/workers/${payload.workerId}/review`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        requestId: payload.requestId,
+        rating: payload.rating,
+        comment: payload.comment,
+      }),
+    },
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    error?: string;
+  } | null;
+
+  if (!response.ok) {
+    throw new Error(result?.error ?? "REVIEW_FAILED");
+  }
+};
+
+export const submitWorkerReport = async (payload: {
+  workerId: string;
+  requestId: string;
+  type: string;
+  text: string;
+}) => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/workers/${payload.workerId}/report`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        requestId: payload.requestId,
+        type: payload.type,
+        text: payload.text,
+      }),
+    },
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    error?: string;
+  } | null;
+
+  if (!response.ok) {
+    throw new Error(result?.error ?? "REPORT_FAILED");
+  }
 };
 
 export const fetchTopPros = async () => {

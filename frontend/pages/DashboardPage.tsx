@@ -2,11 +2,21 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Modal from "../components/Modal";
 import { RequestStatus, ReportStatus, ServiceRequest, Report } from "../types";
-import { fetchClientRequests, fetchTopPros } from "../services/clientRequests";
+import {
+  ApiRequestStatus,
+  ClientRequestItem,
+  fetchClientRequests,
+} from "../services/clientRequests";
+import { getAuthToken } from "../services/auth";
 
 interface DashboardPageProps {
   onLogout: () => void;
 }
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -14,42 +24,188 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [activeRequestsCount, setActiveRequestsCount] = useState(0);
-  const [topPros, setTopPros] = useState<
-    Array<{
-      id: string | number;
-      name: string;
-      location: string;
-      area: string;
-      rating: number;
-      reviews: number;
-      avatar: string;
-    }>
+  const [myRequestsPreview, setMyRequestsPreview] = useState<
+    ClientRequestItem[]
   >([]);
+  const [allClientRequests, setAllClientRequests] = useState<
+    ClientRequestItem[]
+  >([]);
+  const [myUserId, setMyUserId] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const formatStatus = (status: ApiRequestStatus): RequestStatus => {
+    if (status === "IN_PROGRESS") return RequestStatus.IN_PROGRESS;
+    if (status === "PENDING") return RequestStatus.PENDING;
+    if (status === "COMPLETED") return RequestStatus.COMPLETED;
+    return RequestStatus.SEARCHING;
+  };
 
   const handleServiceClick = () => {
     navigate("/request-service");
   };
 
-  useEffect(() => {
+  const refreshRequests = () => {
     fetchClientRequests()
       .then((items) => {
         const count = items.filter(
           (item) => item.status !== "COMPLETED",
         ).length;
         setActiveRequestsCount(count);
+        setAllClientRequests(items);
+        setMyRequestsPreview(items.slice(0, 5));
       })
       .catch(() => {
         setActiveRequestsCount(0);
+        setAllClientRequests([]);
+        setMyRequestsPreview([]);
       });
+  };
 
-    fetchTopPros()
-      .then((pros) => {
-        setTopPros(pros);
+  useEffect(() => {
+    refreshRequests();
+
+    const intervalId = window.setInterval(refreshRequests, 5000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) {
+      setMyUserId("");
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("UNAUTHORIZED");
+        }
+
+        const result = (await response.json().catch(() => null)) as {
+          user?: { id?: string };
+        } | null;
+
+        if (!result?.user?.id) {
+          throw new Error("UNAUTHORIZED");
+        }
+
+        setMyUserId(result.user.id);
       })
       .catch(() => {
-        setTopPros([]);
+        setMyUserId("");
       });
   }, []);
+
+  useEffect(() => {
+    if (!myUserId) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const requestsWithChat = allClientRequests.filter((request) =>
+      Boolean(request.assignedWorkerId),
+    );
+
+    if (!requestsWithChat.length) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const refreshUnreadCount = async () => {
+      const token = getAuthToken();
+      if (!token) {
+        setUnreadCount(0);
+        return;
+      }
+
+      try {
+        const unreadTotals = await Promise.all(
+          requestsWithChat.slice(0, 10).map(async (request) => {
+            const markerKey = `${UNREAD_MARKER_PREFIX}${request.id}`;
+            const lastSeenAt = localStorage.getItem(markerKey);
+
+            const response = await fetch(
+              `${API_BASE_URL}/messages/${request.id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
+
+            if (!response.ok) {
+              return 0;
+            }
+
+            const result = (await response.json().catch(() => null)) as {
+              messages?: Array<{
+                senderId?: string;
+                createdAt?: string;
+              }>;
+            } | null;
+
+            const messages = Array.isArray(result?.messages)
+              ? result.messages
+              : [];
+
+            return messages.filter((message) => {
+              if (!message?.createdAt || !message?.senderId) {
+                return false;
+              }
+
+              if (message.senderId === myUserId) {
+                return false;
+              }
+
+              if (!lastSeenAt) {
+                return true;
+              }
+
+              return (
+                new Date(message.createdAt).getTime() >
+                new Date(lastSeenAt).getTime()
+              );
+            }).length;
+          }),
+        );
+
+        setUnreadCount(unreadTotals.reduce((sum, count) => sum + count, 0));
+      } catch {
+        setUnreadCount(0);
+      }
+    };
+
+    void refreshUnreadCount();
+    const intervalId = window.setInterval(() => {
+      void refreshUnreadCount();
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [allClientRequests, myUserId]);
+
+  const handleOpenNotifications = () => {
+    const requestsWithChat = allClientRequests.filter((request) =>
+      Boolean(request.assignedWorkerId),
+    );
+    const now = new Date().toISOString();
+
+    requestsWithChat.forEach((request) => {
+      localStorage.setItem(`${UNREAD_MARKER_PREFIX}${request.id}`, now);
+    });
+
+    setUnreadCount(0);
+
+    if (requestsWithChat.length) {
+      navigate("/messages", { state: { requestId: requestsWithChat[0].id } });
+      return;
+    }
+
+    navigate("/messages");
+  };
 
   const myReports: Report[] = [
     {
@@ -115,13 +271,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 Switch to Worker
               </button>
               <button
+                type="button"
+                onClick={handleOpenNotifications}
                 aria-label="Open notifications"
                 className="relative size-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-surface-dark dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors"
               >
                 <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">
                   notifications
                 </span>
-                <span className="absolute top-2 right-2 size-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-surface-dark"></span>
+                {unreadCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                ) : null}
               </button>
               <button
                 onClick={onLogout}
@@ -249,58 +411,75 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               </div>
             </div>
 
-            {/* Recommendations Section */}
+            {/* My Requests Preview */}
             <div className="space-y-5">
-              <div className="flex flex-col">
-                <h3 className="text-lg font-semibold dark:text-white tracking-tight">
-                  Top Rated Near You
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  Based on your location in Hawassa
-                </p>
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <h3 className="text-lg font-semibold dark:text-white tracking-tight">
+                    My Recent Requests
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    Live request data from your request history
+                  </p>
+                </div>
+                <Link
+                  to="/my-requests"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  View All
+                </Link>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                {topPros.length ? (
-                  topPros.map((pro) => (
+                {myRequestsPreview.length ? (
+                  myRequestsPreview.map((request) => (
                     <div
-                      key={pro.id}
-                      className="min-w-[260px] portal-panel p-4 flex items-center gap-3 group cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
+                      key={request.id}
+                      className="min-w-[280px] portal-panel p-4 flex flex-col gap-3 hover:shadow-md hover:border-primary/30 transition-all"
                     >
-                      <img
-                        src={pro.avatar}
-                        className="size-14 rounded-xl object-cover shadow-sm"
-                        alt=""
-                      />
-                      <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-3">
                         <h4 className="text-sm font-semibold text-[#120e1b] dark:text-white truncate">
-                          {pro.name}
+                          {request.category}
                         </h4>
-                        <p className="text-xs text-primary font-medium mb-1.5 truncate">
-                          {pro.location}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/10 rounded border border-amber-100 dark:border-amber-900/30">
-                            <span className="material-symbols-outlined text-amber-500 text-[12px] fill-current">
-                              star
-                            </span>
-                            <span className="text-xs font-semibold">
-                              {pro.rating}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            ({pro.reviews})
-                          </span>
-                        </div>
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                            request.status === "IN_PROGRESS"
+                              ? "bg-blue-100 text-blue-700"
+                              : request.status === "PENDING"
+                                ? "bg-purple-100 text-purple-700"
+                                : request.status === "COMPLETED"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {formatStatus(request.status)}
+                        </span>
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                        {request.description}
+                      </p>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-primary font-medium truncate">
+                          {request.area}
+                        </span>
+                        <span className="text-gray-400">
+                          {new Date(request.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => navigate("/my-requests")}
+                        className="h-9 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-semibold transition-all"
+                      >
+                        Open My Requests
+                      </button>
                     </div>
                   ))
                 ) : (
                   <div className="portal-panel p-6 w-full text-center">
                     <p className="text-sm font-semibold text-[#120e1b] dark:text-white">
-                      No recommendations yet
+                      No requests yet
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Submit a service request to get nearby pros.
+                      Submit a service request to see your requests here.
                     </p>
                   </div>
                 )}

@@ -4,19 +4,24 @@ import { RequestStatus } from "../types";
 import {
   ApiRequestStatus,
   ClientRequestItem,
+  confirmRequestCompletion,
   fetchClientRequests,
 } from "../services/clientRequests";
 
 type RequestCard = {
   id: string;
+  apiStatus: ApiRequestStatus;
   title: string;
   category: string;
   status: RequestStatus;
   date: string;
   worker: string | null;
+  lastDeclinedWorker: string | null;
+  lastDeclinedAt: string | null;
   avatar?: string;
   cost: string;
   hasMessagesAccess: boolean;
+  workerMarkedCompleteAt: string | null;
 };
 
 const mapStatus = (status: ApiRequestStatus): RequestStatus => {
@@ -42,14 +47,20 @@ const formatDate = (isoDate: string): string => {
 const toRequestCard = (request: ClientRequestItem): RequestCard => {
   return {
     id: request.id,
+    apiStatus: request.status,
     title: `${request.category} Request`,
     category: request.category,
     status: mapStatus(request.status),
     date: formatDate(request.createdAt),
     worker: request.assignedWorkerId ? request.assignedWorkerId.name : null,
-    avatar: request.assignedWorkerId ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.assignedWorkerId._id}` : undefined,
+    lastDeclinedWorker: request.lastDeclinedWorkerId?.name ?? null,
+    lastDeclinedAt: request.lastDeclinedAt ?? null,
+    avatar: request.assignedWorkerId
+      ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.assignedWorkerId._id}`
+      : undefined,
     cost: "Pending Quotes",
     hasMessagesAccess: Boolean(request.assignedWorkerId),
+    workerMarkedCompleteAt: request.workerMarkedCompleteAt ?? null,
   };
 };
 
@@ -59,6 +70,7 @@ const MyRequestsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [requests, setRequests] = useState<RequestCard[]>([]);
+  const [confirmingRequestId, setConfirmingRequestId] = useState("");
 
   const loadRequests = async () => {
     setIsLoading(true);
@@ -81,6 +93,29 @@ const MyRequestsPage: React.FC = () => {
   useEffect(() => {
     void loadRequests();
   }, []);
+
+  const handleConfirmCompletion = async (requestId: string) => {
+    setConfirmingRequestId(requestId);
+    setLoadError("");
+
+    try {
+      await confirmRequestCompletion(requestId);
+      await loadRequests();
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        navigate("/login");
+        return;
+      }
+
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "Could not confirm completion.",
+      );
+    } finally {
+      setConfirmingRequestId("");
+    }
+  };
 
   const filteredRequests = useMemo(() => {
     if (activeTab === "Active") {
@@ -272,12 +307,27 @@ const MyRequestsPage: React.FC = () => {
                         </div>
                       ) : (
                         <div className="mr-8">
-                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px] animate-pulse">
-                              info
-                            </span>
-                            Searching for pros
-                          </p>
+                          {req.lastDeclinedWorker &&
+                          req.status === RequestStatus.SEARCHING ? (
+                            <div>
+                              <p className="text-[10px] font-semibold text-red-600 uppercase tracking-widest flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">
+                                  warning
+                                </span>
+                                Last invite declined
+                              </p>
+                              <p className="text-xs font-semibold text-gray-500 mt-1">
+                                {req.lastDeclinedWorker} declined your request.
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px] animate-pulse">
+                                info
+                              </span>
+                              Searching for pros
+                            </p>
+                          )}
                         </div>
                       )}
                       <button
@@ -292,6 +342,20 @@ const MyRequestsPage: React.FC = () => {
                       >
                         {req.hasMessagesAccess ? "Open Chat" : "Track Order"}
                       </button>
+                      {req.apiStatus === "IN_PROGRESS" &&
+                      req.workerMarkedCompleteAt ? (
+                        <button
+                          onClick={() => {
+                            void handleConfirmCompletion(req.id);
+                          }}
+                          disabled={confirmingRequestId === req.id}
+                          className="h-11 px-5 bg-green-100 hover:bg-green-600 text-green-700 hover:text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-60"
+                        >
+                          {confirmingRequestId === req.id
+                            ? "Confirming..."
+                            : "Confirm Complete"}
+                        </button>
+                      ) : null}
                       <button className="size-11 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary transition-colors">
                         <span className="material-symbols-outlined">
                           more_vert

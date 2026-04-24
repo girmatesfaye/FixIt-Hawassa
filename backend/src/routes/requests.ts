@@ -55,6 +55,10 @@ const workerDecisionSchema = z.object({
   decision: z.enum(["accept", "decline"]),
 });
 
+const completionActionSchema = z.object({
+  action: z.enum(["worker_complete", "client_confirm"]).optional(),
+});
+
 const mapUserRef = (
   value: unknown,
 ): { _id: string; name: string | null } | null => {
@@ -73,26 +77,44 @@ const mapUserRef = (
   };
 };
 
-const mapRequestResponse = (
-  request: {
-    _id: unknown;
-    clientUserId: unknown;
-    assignedWorkerId?: unknown;
-    category: string;
-    description: string;
-    area: string;
-    landmark: string;
-    maintenanceLevel: "New" | "Medium" | "Old";
-    hasPhotos: boolean;
-    photoUrls?: string[];
-    status: "SEARCHING" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
-    createdAt: Date | string;
-    updatedAt: Date | string;
-  },
-) => ({
+const mapRequestResponse = (request: {
+  _id: unknown;
+  clientUserId: unknown;
+  assignedWorkerId?: unknown;
+  lastDeclinedWorkerId?: unknown;
+  lastDeclinedAt?: Date | string | null;
+  workerMarkedCompleteAt?: Date | string | null;
+  clientConfirmedCompleteAt?: Date | string | null;
+  category: string;
+  description: string;
+  area: string;
+  landmark: string;
+  maintenanceLevel: "New" | "Medium" | "Old";
+  hasPhotos: boolean;
+  photoUrls?: string[];
+  status: "SEARCHING" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}) => ({
   id: String(request._id),
   clientUserId: mapUserRef(request.clientUserId),
   assignedWorkerId: mapUserRef(request.assignedWorkerId),
+  lastDeclinedWorkerId: mapUserRef(request.lastDeclinedWorkerId),
+  lastDeclinedAt: request.lastDeclinedAt
+    ? request.lastDeclinedAt instanceof Date
+      ? request.lastDeclinedAt.toISOString()
+      : new Date(request.lastDeclinedAt).toISOString()
+    : null,
+  workerMarkedCompleteAt: request.workerMarkedCompleteAt
+    ? request.workerMarkedCompleteAt instanceof Date
+      ? request.workerMarkedCompleteAt.toISOString()
+      : new Date(request.workerMarkedCompleteAt).toISOString()
+    : null,
+  clientConfirmedCompleteAt: request.clientConfirmedCompleteAt
+    ? request.clientConfirmedCompleteAt instanceof Date
+      ? request.clientConfirmedCompleteAt.toISOString()
+      : new Date(request.clientConfirmedCompleteAt).toISOString()
+    : null,
   category: request.category,
   description: request.description,
   area: request.area,
@@ -122,8 +144,6 @@ requestsRouter.get("/mine", requireAuth, async (req, res) => {
     });
   }
 
-
-
   try {
     const requests = await ServiceRequest.find({
       $or: [
@@ -133,6 +153,7 @@ requestsRouter.get("/mine", requireAuth, async (req, res) => {
     })
       .populate("clientUserId", "fullName")
       .populate("assignedWorkerId", "fullName")
+      .populate("lastDeclinedWorkerId", "fullName")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -192,8 +213,7 @@ requestsRouter.post("/", requireRole("client"), async (req, res) => {
       area: parsed.data.area,
       landmark: parsed.data.landmark,
       maintenanceLevel: parsed.data.maintenanceLevel,
-      hasPhotos:
-        parsed.data.hasPhotos || parsed.data.photoUrls.length > 0,
+      hasPhotos: parsed.data.hasPhotos || parsed.data.photoUrls.length > 0,
       photoUrls: parsed.data.photoUrls,
       status: normalizedAssignedWorkerId ? "PENDING" : "SEARCHING",
       assignedWorkerId: normalizedAssignedWorkerId
@@ -202,16 +222,13 @@ requestsRouter.post("/", requireRole("client"), async (req, res) => {
     });
 
     return res.status(201).json({
-        id: String(created._id),
-        status: created.status,
-        request: parsed.data,
-        source: "mongodb",
+      id: String(created._id),
+      status: created.status,
+      request: parsed.data,
+      source: "mongodb",
     });
   } catch (error) {
-    console.error(
-      "[requests] Failed to persist request in MongoDB",
-      error,
-    );
+    console.error("[requests] Failed to persist request in MongoDB", error);
     return res.status(500).json({
       message: "Failed to persist request",
     });
@@ -232,7 +249,9 @@ requestsRouter.patch(
 
     const authenticatedUserId = (req as AuthenticatedRequest).userId;
     const requestIdRaw = req.params.requestId;
-    const requestId = Array.isArray(requestIdRaw) ? requestIdRaw[0] : requestIdRaw;
+    const requestId = Array.isArray(requestIdRaw)
+      ? requestIdRaw[0]
+      : requestIdRaw;
 
     if (
       typeof authenticatedUserId !== "string" ||
@@ -254,7 +273,9 @@ requestsRouter.patch(
       }
 
       if (String(request.clientUserId) !== authenticatedUserId) {
-        return res.status(403).json({ message: "Forbidden: request access denied" });
+        return res
+          .status(403)
+          .json({ message: "Forbidden: request access denied" });
       }
 
       if (request.status === "IN_PROGRESS") {
@@ -263,7 +284,9 @@ requestsRouter.patch(
         });
       }
 
-      const resolvedWorkerUserId = await resolveWorkerUserId(parsed.data.workerId);
+      const resolvedWorkerUserId = await resolveWorkerUserId(
+        parsed.data.workerId,
+      );
       if (!resolvedWorkerUserId) {
         return res.status(404).json({ message: "Worker not found" });
       }
@@ -288,11 +311,16 @@ requestsRouter.patch(
 
       request.assignedWorkerId = new Types.ObjectId(resolvedWorkerUserId);
       request.status = "PENDING";
+      request.lastDeclinedWorkerId = null;
+      request.lastDeclinedAt = null;
+      request.workerMarkedCompleteAt = null;
+      request.clientConfirmedCompleteAt = null;
       await request.save();
 
       const updatedRequest = await ServiceRequest.findById(request._id)
         .populate("clientUserId", "fullName")
         .populate("assignedWorkerId", "fullName")
+        .populate("lastDeclinedWorkerId", "fullName")
         .lean();
 
       if (!updatedRequest) {
@@ -328,7 +356,9 @@ requestsRouter.patch(
 
     const authenticatedUserId = (req as AuthenticatedRequest).userId;
     const requestIdRaw = req.params.requestId;
-    const requestId = Array.isArray(requestIdRaw) ? requestIdRaw[0] : requestIdRaw;
+    const requestId = Array.isArray(requestIdRaw)
+      ? requestIdRaw[0]
+      : requestIdRaw;
 
     if (
       typeof authenticatedUserId !== "string" ||
@@ -366,8 +396,16 @@ requestsRouter.patch(
 
       if (parsed.data.decision === "accept") {
         request.status = "IN_PROGRESS";
+        request.lastDeclinedWorkerId = null;
+        request.lastDeclinedAt = null;
+        request.workerMarkedCompleteAt = null;
+        request.clientConfirmedCompleteAt = null;
       } else {
         request.status = "SEARCHING";
+        request.lastDeclinedWorkerId = request.assignedWorkerId;
+        request.lastDeclinedAt = new Date();
+        request.workerMarkedCompleteAt = null;
+        request.clientConfirmedCompleteAt = null;
         request.assignedWorkerId = null;
       }
 
@@ -376,6 +414,7 @@ requestsRouter.patch(
       const updatedRequest = await ServiceRequest.findById(request._id)
         .populate("clientUserId", "fullName")
         .populate("assignedWorkerId", "fullName")
+        .populate("lastDeclinedWorkerId", "fullName")
         .lean();
 
       if (!updatedRequest) {
@@ -395,6 +434,170 @@ requestsRouter.patch(
       console.error("[requests] Failed to process worker response", error);
       return res.status(500).json({
         message: "Failed to process worker response",
+      });
+    }
+  },
+);
+
+requestsRouter.patch(
+  "/:requestId/worker-complete",
+  requireRole("worker"),
+  async (req, res) => {
+    const parsed = completionActionSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Invalid completion payload",
+        errors: parsed.error.flatten(),
+      });
+    }
+
+    const authenticatedUserId = (req as AuthenticatedRequest).userId;
+    const requestIdRaw = req.params.requestId;
+    const requestId = Array.isArray(requestIdRaw)
+      ? requestIdRaw[0]
+      : requestIdRaw;
+
+    if (
+      typeof authenticatedUserId !== "string" ||
+      !Types.ObjectId.isValid(authenticatedUserId)
+    ) {
+      return res.status(401).json({
+        message: "Unauthorized: valid user token required",
+      });
+    }
+
+    if (!Types.ObjectId.isValid(requestId)) {
+      return res.status(400).json({ message: "Invalid request ID" });
+    }
+
+    try {
+      const request = await ServiceRequest.findById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      if (
+        !request.assignedWorkerId ||
+        String(request.assignedWorkerId) !== authenticatedUserId
+      ) {
+        return res.status(403).json({
+          message: "Forbidden: request access denied",
+        });
+      }
+
+      if (request.status !== "IN_PROGRESS") {
+        return res.status(409).json({
+          message: "Only in-progress requests can be marked complete",
+        });
+      }
+
+      request.workerMarkedCompleteAt = new Date();
+      await request.save();
+
+      const updatedRequest = await ServiceRequest.findById(request._id)
+        .populate("clientUserId", "fullName")
+        .populate("assignedWorkerId", "fullName")
+        .populate("lastDeclinedWorkerId", "fullName")
+        .lean();
+
+      if (!updatedRequest) {
+        return res.status(500).json({
+          message: "Failed to load updated request",
+        });
+      }
+
+      return res.json({
+        message: "Marked complete. Waiting for client confirmation.",
+        request: mapRequestResponse(updatedRequest),
+      });
+    } catch (error) {
+      console.error("[requests] Failed to mark request complete", error);
+      return res.status(500).json({
+        message: "Failed to mark request complete",
+      });
+    }
+  },
+);
+
+requestsRouter.patch(
+  "/:requestId/client-confirm-completion",
+  requireRole("client"),
+  async (req, res) => {
+    const parsed = completionActionSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Invalid completion payload",
+        errors: parsed.error.flatten(),
+      });
+    }
+
+    const authenticatedUserId = (req as AuthenticatedRequest).userId;
+    const requestIdRaw = req.params.requestId;
+    const requestId = Array.isArray(requestIdRaw)
+      ? requestIdRaw[0]
+      : requestIdRaw;
+
+    if (
+      typeof authenticatedUserId !== "string" ||
+      !Types.ObjectId.isValid(authenticatedUserId)
+    ) {
+      return res.status(401).json({
+        message: "Unauthorized: valid user token required",
+      });
+    }
+
+    if (!Types.ObjectId.isValid(requestId)) {
+      return res.status(400).json({ message: "Invalid request ID" });
+    }
+
+    try {
+      const request = await ServiceRequest.findById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      if (String(request.clientUserId) !== authenticatedUserId) {
+        return res.status(403).json({
+          message: "Forbidden: request access denied",
+        });
+      }
+
+      if (request.status !== "IN_PROGRESS") {
+        return res.status(409).json({
+          message: "Only in-progress requests can be confirmed complete",
+        });
+      }
+
+      if (!request.workerMarkedCompleteAt) {
+        return res.status(409).json({
+          message: "Worker has not marked this service as complete yet",
+        });
+      }
+
+      request.clientConfirmedCompleteAt = new Date();
+      request.status = "COMPLETED";
+      await request.save();
+
+      const updatedRequest = await ServiceRequest.findById(request._id)
+        .populate("clientUserId", "fullName")
+        .populate("assignedWorkerId", "fullName")
+        .populate("lastDeclinedWorkerId", "fullName")
+        .lean();
+
+      if (!updatedRequest) {
+        return res.status(500).json({
+          message: "Failed to load updated request",
+        });
+      }
+
+      return res.json({
+        message: "Service marked as completed",
+        request: mapRequestResponse(updatedRequest),
+      });
+    } catch (error) {
+      console.error("[requests] Failed to confirm request completion", error);
+      return res.status(500).json({
+        message: "Failed to confirm request completion",
       });
     }
   },

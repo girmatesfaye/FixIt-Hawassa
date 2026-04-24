@@ -39,6 +39,7 @@ const SearchResultsPage: React.FC = () => {
     useState<ClientRequestItem | null>(null);
   const [invitingWorkerId, setInvitingWorkerId] = useState("");
   const [inviteError, setInviteError] = useState("");
+  const [statusNotice, setStatusNotice] = useState("");
   const [myUserId, setMyUserId] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -71,16 +72,42 @@ const SearchResultsPage: React.FC = () => {
   useEffect(() => {
     if (!requestId) {
       setCurrentRequest(null);
+      setStatusNotice("");
       return;
     }
 
-    fetchClientRequests()
-      .then((items) => {
-        setCurrentRequest(items.find((item) => item.id === requestId) ?? null);
-      })
-      .catch(() => {
-        setCurrentRequest(null);
-      });
+    const refreshCurrentRequest = () => {
+      fetchClientRequests()
+        .then((items) => {
+          const latest = items.find((item) => item.id === requestId) ?? null;
+
+          setCurrentRequest((previous) => {
+            const wasPending =
+              previous?.status === "PENDING" &&
+              Boolean(previous.assignedWorkerId);
+            const becameSearching =
+              latest?.status === "SEARCHING" && !latest.assignedWorkerId;
+
+            if (wasPending && becameSearching && latest?.lastDeclinedWorkerId) {
+              setStatusNotice(
+                `${latest.lastDeclinedWorkerId.name ?? "The worker"} declined your request. You can invite another worker now.`,
+              );
+            }
+
+            return latest;
+          });
+        })
+        .catch(() => {
+          setCurrentRequest(null);
+        });
+    };
+
+    refreshCurrentRequest();
+    const intervalId = window.setInterval(refreshCurrentRequest, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, [requestId]);
 
   useEffect(() => {
@@ -272,6 +299,7 @@ const SearchResultsPage: React.FC = () => {
         String(worker.id),
       );
       setCurrentRequest(updatedRequest);
+      setStatusNotice("");
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         navigate("/login");
@@ -484,6 +512,18 @@ const SearchResultsPage: React.FC = () => {
               <p className="text-xs font-semibold text-green-600">
                 {currentRequest.assignedWorkerId.name ?? "Your worker"} accepted
                 the request. Work is now in progress.
+              </p>
+            ) : null}
+            {currentRequest?.status === "SEARCHING" &&
+            currentRequest.lastDeclinedWorkerId ? (
+              <p className="text-xs font-semibold text-red-600">
+                {currentRequest.lastDeclinedWorkerId.name ?? "The worker"}{" "}
+                declined your request. Invite another worker.
+              </p>
+            ) : null}
+            {statusNotice ? (
+              <p className="text-xs font-semibold text-red-600">
+                {statusNotice}
               </p>
             ) : null}
             {inviteError ? (
