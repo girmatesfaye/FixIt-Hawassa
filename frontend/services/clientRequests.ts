@@ -162,13 +162,27 @@ export const markRequestCompleteByWorker = async (
     throw new Error("UNAUTHORIZED");
   }
 
-  const result = (await response.json().catch(() => null)) as {
-    message?: string;
-    request?: ClientRequestItem;
-  } | null;
+  const rawText = await response.text();
+  let result: { message?: string; request?: ClientRequestItem } | null = null;
+  let hasJsonBody = false;
+
+  if (rawText) {
+    try {
+      result = JSON.parse(rawText) as {
+        message?: string;
+        request?: ClientRequestItem;
+      };
+      hasJsonBody = true;
+    } catch {
+      result = null;
+    }
+  }
 
   if (!response.ok || !result?.request) {
-    throw new Error(result?.message ?? "WORKER_COMPLETE_FAILED");
+    throw new Error(
+      result?.message ??
+        `WORKER_COMPLETE_FAILED (${response.status})${rawText && !hasJsonBody ? `: ${rawText.slice(0, 120)}` : ""}`,
+    );
   }
 
   return result.request;

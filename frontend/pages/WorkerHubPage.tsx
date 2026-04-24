@@ -157,7 +157,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
 
       setRequestError(
         error instanceof Error
-          ? error.message
+          ? error.message.includes("WORKER_COMPLETE_FAILED (404)")
+            ? "Completion endpoint not found. Restart backend so latest routes are loaded."
+            : error.message
           : "Could not mark this job as completed.",
       );
     } finally {
