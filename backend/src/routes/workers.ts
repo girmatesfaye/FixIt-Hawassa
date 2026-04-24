@@ -72,8 +72,8 @@ workersRouter.put("/me", requireAuth, async (req, res) => {
 
     const { name, phone, area, telegramUsername, tiktokProfile, bio, skills, avatar, portfolio } = req.body;
 
-    if (name) workerUser.fullName = name;
-    if (phone) workerUser.phone = phone;
+    if (name !== undefined) workerUser.fullName = name;
+    if (phone !== undefined) workerUser.phone = phone;
     await workerUser.save();
 
     const workerProfile = await WorkerProfile.findOne({ userId });

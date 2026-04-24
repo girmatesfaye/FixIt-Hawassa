@@ -6,6 +6,7 @@ import {
   ClientRequestItem,
   fetchClientRequests,
 } from "../services/clientRequests";
+import { getAuthToken } from "../services/auth";
 import {
   fetchRecommendations,
   getRecommendationReasons,
@@ -13,10 +14,15 @@ import {
   LAST_REQUEST_KEY,
 } from "../services/recommendation";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+
 const SearchResultsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const PAGE_SIZE = 12;
+  const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
   const [distance, setDistance] = useState(5);
   const [minRating, setMinRating] = useState(4.4);
   const [onlyActive, setOnlyActive] = useState(true);
@@ -29,11 +35,12 @@ const SearchResultsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalWorkers, setTotalWorkers] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [currentRequest, setCurrentRequest] = useState<ClientRequestItem | null>(
-    null,
-  );
+  const [currentRequest, setCurrentRequest] =
+    useState<ClientRequestItem | null>(null);
   const [invitingWorkerId, setInvitingWorkerId] = useState("");
   const [inviteError, setInviteError] = useState("");
+  const [myUserId, setMyUserId] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -75,6 +82,106 @@ const SearchResultsPage: React.FC = () => {
         setCurrentRequest(null);
       });
   }, [requestId]);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) {
+      setMyUserId("");
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("UNAUTHORIZED");
+        }
+
+        const result = (await response.json().catch(() => null)) as {
+          user?: { id?: string };
+        } | null;
+
+        if (!result?.user?.id) {
+          throw new Error("UNAUTHORIZED");
+        }
+
+        setMyUserId(result.user.id);
+      })
+      .catch(() => {
+        setMyUserId("");
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!currentRequest?.id || !myUserId) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const markerKey = `${UNREAD_MARKER_PREFIX}${currentRequest.id}`;
+
+    const refreshUnreadCount = () => {
+      const token = getAuthToken();
+      if (!token) {
+        setUnreadCount(0);
+        return;
+      }
+
+      const lastSeenAt = localStorage.getItem(markerKey);
+
+      fetch(`${API_BASE_URL}/messages/${currentRequest.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error("LOAD_FAILED");
+          }
+
+          const result = (await response.json().catch(() => null)) as {
+            messages?: Array<{
+              senderId?: string;
+              createdAt?: string;
+            }>;
+          } | null;
+
+          const messages = Array.isArray(result?.messages)
+            ? result.messages
+            : [];
+
+          const unreadMessages = messages.filter((message) => {
+            if (!message?.createdAt || !message?.senderId) {
+              return false;
+            }
+
+            if (message.senderId === myUserId) {
+              return false;
+            }
+
+            if (!lastSeenAt) {
+              return true;
+            }
+
+            return (
+              new Date(message.createdAt).getTime() >
+              new Date(lastSeenAt).getTime()
+            );
+          });
+
+          setUnreadCount(unreadMessages.length);
+        })
+        .catch(() => {
+          setUnreadCount(0);
+        });
+    };
+
+    refreshUnreadCount();
+    const intervalId = window.setInterval(refreshUnreadCount, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [currentRequest?.id, myUserId]);
 
   useEffect(() => {
     if (!requestDraft || !requestId) {
@@ -185,6 +292,20 @@ const SearchResultsPage: React.FC = () => {
   const isInvitePending = currentRequest?.status === "PENDING";
   const isWorkInProgress = currentRequest?.status === "IN_PROGRESS";
 
+  const handleOpenMessages = () => {
+    if (!currentRequest?.id) {
+      navigate("/messages");
+      return;
+    }
+
+    localStorage.setItem(
+      `${UNREAD_MARKER_PREFIX}${currentRequest.id}`,
+      new Date().toISOString(),
+    );
+    setUnreadCount(0);
+    navigate("/messages", { state: { requestId: currentRequest.id } });
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
       {/* Navbar */}
@@ -221,13 +342,21 @@ const SearchResultsPage: React.FC = () => {
             >
               New Request
             </button>
-            <div className="size-9 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-100">
-              <img
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&h=100&auto=format&fit=crop"
-                alt="User"
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={handleOpenMessages}
+              className="relative size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-200 hover:text-primary hover:border-primary transition-colors flex items-center justify-center"
+              aria-label="Open chat notifications"
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                notifications
+              </span>
+              {unreadCount > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
+            </button>
           </div>
         </div>
       </header>
@@ -346,8 +475,8 @@ const SearchResultsPage: React.FC = () => {
             {currentRequest?.status === "PENDING" &&
             currentRequest.assignedWorkerId ? (
               <p className="text-xs font-semibold text-amber-600">
-                Waiting for {currentRequest.assignedWorkerId.name ?? "worker"} to
-                accept your request.
+                Waiting for {currentRequest.assignedWorkerId.name ?? "worker"}{" "}
+                to accept your request.
               </p>
             ) : null}
             {currentRequest?.status === "IN_PROGRESS" &&
@@ -389,7 +518,7 @@ const SearchResultsPage: React.FC = () => {
               {/* Simplified Workers Grid */}
               {workers.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {workers.map((worker) => (
+                  {workers.map((worker) =>
                     (() => {
                       const isAssignedWorker =
                         assignedWorkerId === String(worker.id);
@@ -413,93 +542,94 @@ const SearchResultsPage: React.FC = () => {
                             : "w-full h-10 bg-primary enabled:hover:bg-primary-dark disabled:bg-gray-300 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm disabled:cursor-not-allowed";
 
                       return (
-                    <div
-                      key={worker.id}
-                      className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-4 hover:shadow-md hover:border-primary/30 transition-all duration-300"
-                    >
-                      <div className="flex flex-col items-center gap-3 text-center">
-                        <div className="relative">
-                          <img
-                            src={worker.avatar}
-                            className="size-20 rounded-2xl object-cover shadow-sm border-2 border-white dark:border-gray-700"
-                            alt={worker.name}
-                          />
-                          <div className="absolute -bottom-1 -right-1 size-6 bg-green-500 text-white rounded-full flex items-center justify-center border-2 border-white dark:border-surface-dark shadow-sm">
-                            <span className="material-symbols-outlined text-[12px] font-bold">
-                              verified
-                            </span>
-                          </div>
-                        </div>
+                        <div
+                          key={worker.id}
+                          className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-4 hover:shadow-md hover:border-primary/30 transition-all duration-300"
+                        >
+                          <div className="flex flex-col items-center gap-3 text-center">
+                            <div className="relative">
+                              <img
+                                src={worker.avatar}
+                                className="size-20 rounded-2xl object-cover shadow-sm border-2 border-white dark:border-gray-700"
+                                alt={worker.name}
+                              />
+                              <div className="absolute -bottom-1 -right-1 size-6 bg-green-500 text-white rounded-full flex items-center justify-center border-2 border-white dark:border-surface-dark shadow-sm">
+                                <span className="material-symbols-outlined text-[12px] font-bold">
+                                  verified
+                                </span>
+                              </div>
+                            </div>
 
-                        <div className="space-y-0.5">
-                          <h3 className="text-base font-semibold text-[#120e1b] dark:text-white truncate">
-                            {worker.name}
-                          </h3>
-                          <div className="flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="material-symbols-outlined text-primary text-[14px]">
-                              location_on
-                            </span>
-                            {worker.location}
-                          </div>
-                          <p className="text-[11px] text-gray-400">
-                            {worker.distanceKm.toFixed(1)} km away
-                          </p>
-                        </div>
+                            <div className="space-y-0.5">
+                              <h3 className="text-base font-semibold text-[#120e1b] dark:text-white truncate">
+                                {worker.name}
+                              </h3>
+                              <div className="flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                <span className="material-symbols-outlined text-primary text-[14px]">
+                                  location_on
+                                </span>
+                                {worker.location}
+                              </div>
+                              <p className="text-[11px] text-gray-400">
+                                {worker.distanceKm.toFixed(1)} km away
+                              </p>
+                            </div>
 
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                          <span className="material-symbols-outlined text-amber-400 text-sm fill-current">
-                            star
-                          </span>
-                          <span className="text-sm font-medium text-[#120e1b] dark:text-white">
-                            {worker.rating} ({worker.reviews})
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-center gap-1">
-                          {getRecommendationReasons(worker, requestDraft).map(
-                            (reason) => (
-                              <span
-                                key={`${worker.id}-${reason}`}
-                                className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
-                              >
-                                {reason}
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                              <span className="material-symbols-outlined text-amber-400 text-sm fill-current">
+                                star
                               </span>
-                            ),
-                          )}
-                        </div>
-                      </div>
+                              <span className="text-sm font-medium text-[#120e1b] dark:text-white">
+                                {worker.rating} ({worker.reviews})
+                              </span>
+                            </div>
 
-                      <div className="mt-2 text-center w-full">
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={() => {
-                              void handleInviteWorker(worker);
-                            }}
-                            disabled={
-                              Boolean(invitingWorkerId) ||
-                              isWorkInProgress ||
-                              isInvitePending
-                            }
-                            className={inviteClassName}
-                          >
-                            {inviteLabel}
-                          </button>
-                          <button
-                            onClick={() =>
-                              navigate(`/worker/${worker.id}`, {
-                                state: { requestId, requestDraft },
-                              })
-                            }
-                            className="w-full h-10 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm"
-                          >
-                            View Profile
-                          </button>
+                            <div className="flex flex-wrap items-center justify-center gap-1">
+                              {getRecommendationReasons(
+                                worker,
+                                requestDraft,
+                              ).map((reason) => (
+                                <span
+                                  key={`${worker.id}-${reason}`}
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
+                                >
+                                  {reason}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="mt-2 text-center w-full">
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={() => {
+                                  void handleInviteWorker(worker);
+                                }}
+                                disabled={
+                                  Boolean(invitingWorkerId) ||
+                                  isWorkInProgress ||
+                                  isInvitePending
+                                }
+                                className={inviteClassName}
+                              >
+                                {inviteLabel}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  navigate(`/worker/${worker.id}`, {
+                                    state: { requestId, requestDraft },
+                                  })
+                                }
+                                className="w-full h-10 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 text-sm"
+                              >
+                                View Profile
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
                       );
-                    })()
-                  ))}
+                    })(),
+                  )}
                 </div>
               ) : (
                 <div className="bg-white dark:bg-surface-dark rounded-2xl p-10 border border-gray-100 dark:border-gray-800 text-center">

@@ -18,11 +18,21 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const [skills, setSkills] = useState(["Plumbing", "Pipe Repair"]);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [workerName, setWorkerName] = useState("Worker Profile");
+  const [workerTitle, setWorkerTitle] = useState("Worker Professional");
   const [bio, setBio] = useState("Update your profile to set a bio.");
+  const [area, setArea] = useState("Hawassa");
+  const [phone, setPhone] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
+  const [tiktokProfile, setTiktokProfile] = useState("");
+  const [avatar, setAvatar] = useState("");
+  const [portfolio, setPortfolio] = useState<string[]>([]);
   const [requests, setRequests] = useState<ClientRequestItem[]>([]);
   const [requestActionId, setRequestActionId] = useState("");
   const [requestError, setRequestError] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const profileAvatar =
+    getUploadedImageUrl(avatar) || "https://picsum.photos/id/64/200/200";
 
   useEffect(() => {
     const fetchWorkerData = async () => {
@@ -31,17 +41,44 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           getMyWorkerProfile(),
           fetchClientRequests(),
         ]);
+        const workerProfile = profile.profile ?? {
+          title: "",
+          bio: "",
+          area: "Hawassa",
+          skills: [],
+          isActive: true,
+          telegramUsername: "",
+          tiktokProfile: "",
+          avatar: "",
+          portfolio: [],
+        };
+        const nextSkills = Array.isArray(workerProfile.skills)
+          ? workerProfile.skills
+          : [];
+        const nextPortfolio = Array.isArray(workerProfile.portfolio)
+          ? workerProfile.portfolio
+          : [];
 
         setWorkerName(profile.name || "Worker Profile");
-        setBio(profile.profile.bio || "Update your profile to set a bio.");
-        setSkills(profile.profile.skills || []);
-        setIsAvailable(profile.profile.isActive ?? true);
+        setWorkerTitle(
+          workerProfile.title ||
+            (nextSkills[0] ? `${nextSkills[0]} Specialist` : "Worker Professional"),
+        );
+        setBio(workerProfile.bio || "Update your profile to set a bio.");
+        setArea(workerProfile.area || "Hawassa");
+        setPhone(profile.phone || "");
+        setTelegramUsername(workerProfile.telegramUsername || "");
+        setTiktokProfile(workerProfile.tiktokProfile || "");
+        setAvatar(workerProfile.avatar || "");
+        setPortfolio(nextPortfolio);
+        setSkills(nextSkills);
+        setIsAvailable(workerProfile.isActive ?? true);
         setIsProfileComplete(
           Boolean(
-            profile.profile.bio ||
-              profile.profile.skills.length ||
-              profile.profile.avatar ||
-              profile.profile.portfolio.length,
+            workerProfile.bio ||
+              nextSkills.length ||
+              workerProfile.avatar ||
+              nextPortfolio.length,
           ),
         );
         setRequests(workerRequests);
@@ -426,8 +463,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                 <div className="flex items-start gap-8 mb-8">
                   <div className="size-24 rounded-3xl overflow-hidden shadow-lg border-2 border-white dark:border-gray-700">
                     <img
-                      src="https://picsum.photos/id/64/200/200"
-                      alt=""
+                      src={profileAvatar}
+                      alt={workerName}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -441,7 +478,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       </span>
                     </div>
                     <p className="text-sm font-bold text-primary mb-4">
-                      Master Plumber
+                      {workerTitle}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {skills.map((skill) => (
@@ -452,6 +489,16 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                           {skill}
                         </span>
                       ))}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-gray-500">
+                      <span className="px-3 py-1 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        {area}
+                      </span>
+                      {phone ? (
+                        <span className="px-3 py-1 rounded-lg bg-gray-50 dark:bg-gray-800">
+                          {phone}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -471,27 +518,41 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                   <h3 className="text-xl font-extrabold tracking-tight dark:text-white">
                     Service Gallery
                   </h3>
-                  <button className="text-sm font-bold text-primary">
-                    View All
+                  <button
+                    onClick={() => navigate("/worker/edit-profile")}
+                    className="text-sm font-bold text-primary"
+                  >
+                    Update Gallery
                   </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
+                  {portfolio.map((imageUrl, index) => (
                     <div
-                      key={i}
+                      key={`${imageUrl}-${index}`}
                       className="aspect-square rounded-3xl overflow-hidden bg-gray-100 group relative"
                     >
                       <img
-                        src={`https://picsum.photos/id/${10 + i}/400/400`}
-                        alt=""
+                        src={getUploadedImageUrl(imageUrl)}
+                        alt={`Portfolio ${index + 1}`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
                   ))}
                   <div className="aspect-square rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center text-gray-300 gap-2 hover:bg-gray-50 cursor-pointer transition-colors">
-                    <span className="material-symbols-outlined text-4xl">
-                      add
-                    </span>
+                    {portfolio.length ? (
+                      <span className="material-symbols-outlined text-4xl">
+                        add
+                      </span>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-4xl">
+                          add_a_photo
+                        </span>
+                        <p className="px-4 text-center text-xs font-semibold">
+                          Add your work photos
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -540,7 +601,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       Phone
                     </p>
                     <p className="text-base font-bold tracking-tight">
-                      +251 911 234 567
+                      {phone || "Add your phone number"}
                     </p>
                   </div>
                   <div className="p-5 bg-white/5 rounded-2xl">
@@ -548,7 +609,15 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       Telegram
                     </p>
                     <p className="text-base font-bold tracking-tight">
-                      @abebe_plumb
+                      {telegramUsername ? `@${telegramUsername.replace(/^@+/, "")}` : "Add your Telegram username"}
+                    </p>
+                  </div>
+                  <div className="p-5 bg-white/5 rounded-2xl">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">
+                      TikTok
+                    </p>
+                    <p className="text-base font-bold tracking-tight break-all">
+                      {tiktokProfile || "Add your TikTok profile link"}
                     </p>
                   </div>
                 </div>
