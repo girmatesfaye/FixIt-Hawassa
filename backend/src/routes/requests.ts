@@ -3,6 +3,7 @@ import {
   assignWorker,
   clientConfirmCompletion,
   createRequest,
+  getMyReports,
   getMyRequests,
   workerComplete,
   workerResponse,
@@ -12,6 +13,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 const requestsRouter = Router();
 
 requestsRouter.get("/mine", requireAuth, getMyRequests);
+requestsRouter.get("/reports", requireAuth, getMyReports);
 requestsRouter.post("/", requireRole("client"), createRequest);
 requestsRouter.patch("/:requestId/assign", requireRole("client"), assignWorker);
 requestsRouter.patch("/:requestId/worker-response", requireRole("worker"), workerResponse);

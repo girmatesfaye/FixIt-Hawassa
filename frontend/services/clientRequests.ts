@@ -35,6 +35,21 @@ export interface ClientRequestItem {
   assignedWorkerId: RequestUserRef | null;
 }
 
+export interface ClientReportItem {
+  id: string;
+  type: string;
+  text: string;
+  status: "pending" | "investigating" | "resolved" | "dismissed";
+  createdAt: string;
+  updatedAt: string;
+  reportedUser: RequestUserRef | null;
+  request: {
+    id: string;
+    category: string | null;
+    area: string | null;
+  } | null;
+}
+
 export const fetchClientRequests = async (): Promise<ClientRequestItem[]> => {
   const token = getAuthToken();
   if (!token) {
@@ -333,4 +348,33 @@ export const fetchTopPros = async () => {
   }
 
   return result.recommendations.slice(0, 5);
+};
+
+export const fetchMyReports = async (): Promise<ClientReportItem[]> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/requests/reports`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    reports?: ClientReportItem[];
+  } | null;
+
+  if (!response.ok) {
+    throw new Error("LOAD_FAILED");
+  }
+
+  return Array.isArray(result?.reports) ? result.reports : [];
 };
