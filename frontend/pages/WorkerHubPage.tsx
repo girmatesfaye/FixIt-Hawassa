@@ -10,6 +10,7 @@ import {
 } from "../services/clientRequests";
 import { getUploadedImageUrl } from "../services/upload";
 import { getMyWorkerProfile } from "../services/worker";
+import Modal from "../components/Modal";
 
 interface WorkerHubPageProps {
   onLogout: () => void;
@@ -36,6 +37,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const [requestActionId, setRequestActionId] = useState("");
   const [requestError, setRequestError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<ClientReportItem | null>(null);
+  const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
 
   const profileAvatar =
     getUploadedImageUrl(avatar) || "https://picsum.photos/id/64/200/200";
@@ -92,8 +95,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         );
         setRequests(workerRequests);
         setWorkerReports(workerReportsData);
-        setRating(Number(workerProfile.rating ?? 0));
-        setReviewCount(Number(workerProfile.reviews ?? 0));
+        setRating(Number((workerProfile as any).rating ?? 0));
+        setReviewCount(Number((workerProfile as any).reviews ?? 0));
       } catch (error) {
         console.error("Failed to load worker data", error);
         setRequestError("Could not load invitations right now.");
@@ -667,36 +670,47 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                     {recentReportUpdates.map((report) => (
                       <div
                         key={report.id}
-                        className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4 bg-gray-50/60 dark:bg-gray-900/30"
+                        className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4 bg-gray-50/60 dark:bg-gray-900/30 flex flex-col gap-3"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-bold text-[#120e1b] dark:text-white uppercase tracking-wider">
-                            {report.type}
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <p className="text-xs font-bold text-[#120e1b] dark:text-white uppercase tracking-wider">
+                              {report.type}
+                            </p>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                report.status === "resolved"
+                                  ? "bg-green-100 text-green-700"
+                                  : report.status === "investigating"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : report.status === "dismissed"
+                                      ? "bg-gray-200 text-gray-700"
+                                      : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {report.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                            {report.adminFeedback?.trim()
+                              ? report.adminFeedback
+                              : "No admin note yet."}
                           </p>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              report.status === "resolved"
-                                ? "bg-green-100 text-green-700"
-                                : report.status === "investigating"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : report.status === "dismissed"
-                                    ? "bg-gray-200 text-gray-700"
-                                    : "bg-amber-100 text-amber-700"
-                            }`}
-                          >
-                            {report.status}
-                          </span>
+                          <p className="text-[10px] font-semibold text-gray-400 mt-2">
+                            {report.resolvedAt
+                              ? `Updated ${new Date(report.resolvedAt).toLocaleString()}`
+                              : `Submitted ${new Date(report.createdAt).toLocaleString()}`}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
-                          {report.adminFeedback?.trim()
-                            ? report.adminFeedback
-                            : "No admin note yet."}
-                        </p>
-                        <p className="text-[10px] font-semibold text-gray-400 mt-2">
-                          {report.resolvedAt
-                            ? `Updated ${new Date(report.resolvedAt).toLocaleString()}`
-                            : `Submitted ${new Date(report.createdAt).toLocaleString()}`}
-                        </p>
+                        <button
+                          onClick={() => {
+                            setSelectedReport(report);
+                            setIsReportDetailModalOpen(true);
+                          }}
+                          className="w-full h-8 bg-white dark:bg-gray-800 hover:bg-primary text-gray-700 dark:text-gray-300 hover:text-white border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-bold transition-colors"
+                        >
+                          View Details
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -754,6 +768,71 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           </div>
         </div>
       </main>
+
+      {/* Report Detail Modal */}
+      <Modal
+        isOpen={isReportDetailModalOpen}
+        onClose={() => setIsReportDetailModalOpen(false)}
+        title="Report Details"
+      >
+        {selectedReport && (
+          <div className="flex flex-col gap-5 pt-2">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  ID: {selectedReport.id}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded text-xs font-medium ${
+                    selectedReport.status === "resolved"
+                      ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-800/50"
+                      : selectedReport.status === "investigating"
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50"
+                        : selectedReport.status === "dismissed"
+                          ? "bg-gray-50 text-gray-700 dark:bg-gray-500/10 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
+                  }`}
+                >
+                  {selectedReport.status}
+                </span>
+              </div>
+              <h4 className="text-lg font-semibold dark:text-white tracking-tight">
+                {selectedReport.type}
+              </h4>
+              <p className="text-sm text-primary font-medium">
+                Submitted by {selectedReport.reporterUser?.name ?? "Client"}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+                  Client Description
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                  "{selectedReport.text}"
+                </p>
+              </div>
+
+              <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                <p className="text-xs font-semibold text-primary mb-1.5">
+                  Admin Resolution
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">
+                  {selectedReport.adminFeedback?.trim() || "No admin note yet."}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsReportDetailModalOpen(false)}
+              className="w-full h-10 mt-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium shadow-sm transition-all"
+            >
+              Close Details
+            </button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
