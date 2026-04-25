@@ -40,8 +40,14 @@ export interface ClientReportItem {
   type: string;
   text: string;
   status: "pending" | "investigating" | "resolved" | "dismissed";
+  adminFeedback: string;
+  resolutionAction: "warning" | "none" | "resolved" | "suspend_worker" | null;
+  isDangerous: boolean;
+  resolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  reporterUser: RequestUserRef | null;
+  resolvedBy: RequestUserRef | null;
   reportedUser: RequestUserRef | null;
   request: {
     id: string;

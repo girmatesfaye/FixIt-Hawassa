@@ -16,7 +16,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: "dashboard", label: "Dashboard", path: "/admin/analytics" },
+    { icon: "dashboard", label: "Dashboard", path: "/admin/dashboard" },
     { icon: "group", label: "User Management", path: "/admin/users" },
     {
       icon: "category",
@@ -35,6 +35,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
     if (location.pathname.includes("/users")) return "Users";
     if (location.pathname.includes("/reports")) return "Reports";
     if (location.pathname.includes("/categories")) return "Categories";
+    if (location.pathname.includes("/dashboard")) return "Dashboard";
     if (location.pathname.includes("/analytics")) return "Dashboard";
     if (location.pathname.includes("/settings")) return "Settings";
     return "Dashboard";

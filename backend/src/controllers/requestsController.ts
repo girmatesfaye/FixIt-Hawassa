@@ -167,6 +167,7 @@ export const getMyRequests = async (req: Request, res: Response) => {
 
 export const getMyReports = async (req: Request, res: Response) => {
   const authenticatedUserId = (req as AuthenticatedRequest).userId;
+  const authenticatedRole = (req as AuthenticatedRequest).userRole;
   if (
     typeof authenticatedUserId !== "string" ||
     !Types.ObjectId.isValid(authenticatedUserId)
@@ -177,10 +178,16 @@ export const getMyReports = async (req: Request, res: Response) => {
   }
 
   try {
-    const reports = await Report.find({
-      reporterUserId: new Types.ObjectId(authenticatedUserId),
-    })
+    const userObjectId = new Types.ObjectId(authenticatedUserId);
+    const reportFilter =
+      authenticatedRole === "worker"
+        ? { reportedUserId: userObjectId }
+        : { reporterUserId: userObjectId };
+
+    const reports = await Report.find(reportFilter)
       .populate("reportedUserId", "fullName")
+      .populate("reporterUserId", "fullName")
+      .populate("resolvedBy", "fullName")
       .populate("requestId", "category area createdAt")
       .sort({ createdAt: -1 })
       .lean();
@@ -192,6 +199,18 @@ export const getMyReports = async (req: Request, res: Response) => {
         type: report.type,
         text: report.text,
         status: report.status,
+        adminFeedback:
+          typeof report.adminFeedback === "string" ? report.adminFeedback : "",
+        resolutionAction:
+          typeof report.resolutionAction === "string"
+            ? report.resolutionAction
+            : null,
+        isDangerous: Boolean(report.isDangerous),
+        resolvedAt: report.resolvedAt
+          ? report.resolvedAt instanceof Date
+            ? report.resolvedAt.toISOString()
+            : new Date(report.resolvedAt).toISOString()
+          : null,
         createdAt:
           report.createdAt instanceof Date
             ? report.createdAt.toISOString()
@@ -200,13 +219,45 @@ export const getMyReports = async (req: Request, res: Response) => {
           report.updatedAt instanceof Date
             ? report.updatedAt.toISOString()
             : new Date(report.updatedAt).toISOString(),
+        reporterUser: report.reporterUserId
+          ? {
+              _id: String(
+                (report.reporterUserId as { _id?: unknown })._id ?? "",
+              ),
+              name:
+                typeof (report.reporterUserId as { fullName?: unknown })
+                  .fullName === "string"
+                  ? String(
+                      (report.reporterUserId as { fullName?: unknown })
+                        .fullName,
+                    )
+                  : null,
+            }
+          : null,
+        resolvedBy: report.resolvedBy
+          ? {
+              _id: String((report.resolvedBy as { _id?: unknown })._id ?? ""),
+              name:
+                typeof (report.resolvedBy as { fullName?: unknown })
+                  .fullName === "string"
+                  ? String(
+                      (report.resolvedBy as { fullName?: unknown }).fullName,
+                    )
+                  : null,
+            }
+          : null,
         reportedUser: report.reportedUserId
           ? {
-              id: String((report.reportedUserId as { _id?: unknown })._id ?? ""),
+              _id: String(
+                (report.reportedUserId as { _id?: unknown })._id ?? "",
+              ),
               name:
-                typeof (report.reportedUserId as { fullName?: unknown }).fullName ===
-                "string"
-                  ? String((report.reportedUserId as { fullName?: unknown }).fullName)
+                typeof (report.reportedUserId as { fullName?: unknown })
+                  .fullName === "string"
+                  ? String(
+                      (report.reportedUserId as { fullName?: unknown })
+                        .fullName,
+                    )
                   : null,
             }
           : null,
@@ -216,10 +267,13 @@ export const getMyReports = async (req: Request, res: Response) => {
               category:
                 typeof (report.requestId as { category?: unknown }).category ===
                 "string"
-                  ? String((report.requestId as { category?: unknown }).category)
+                  ? String(
+                      (report.requestId as { category?: unknown }).category,
+                    )
                   : null,
               area:
-                typeof (report.requestId as { area?: unknown }).area === "string"
+                typeof (report.requestId as { area?: unknown }).area ===
+                "string"
                   ? String((report.requestId as { area?: unknown }).area)
                   : null,
             }

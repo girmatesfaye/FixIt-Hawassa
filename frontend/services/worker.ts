@@ -14,6 +14,8 @@ export interface MyWorkerProfile {
     bio: string;
     area: string;
     skills: string[];
+    rating: number;
+    reviews: number;
     isActive: boolean;
     telegramUsername: string;
     tiktokProfile: string;

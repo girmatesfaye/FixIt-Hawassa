@@ -22,6 +22,7 @@ import UserManagementPage from "./admin/UserManagementPage";
 import ReportManagementPage from "./admin/ReportManagementPage";
 import AnalyticsPage from "./admin/AnalyticsPage";
 import CategoryManagementPage from "./admin/CategoryManagementPage";
+import AdminSettingsPage from "./admin/AdminSettingsPage";
 import {
   clearSession,
   getAuthToken,
@@ -257,11 +258,9 @@ const App: React.FC = () => {
           <Route path="users" element={<UserManagementPage />} />
           <Route path="categories" element={<CategoryManagementPage />} />
           <Route path="reports" element={<ReportManagementPage />} />
+          <Route path="dashboard" element={<AnalyticsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
-          <Route
-            path="settings"
-            element={<div className="p-8">Settings (Coming Soon)</div>}
-          />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />

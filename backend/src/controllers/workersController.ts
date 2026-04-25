@@ -173,12 +173,41 @@ export const getWorkerById = async (req: Request, res: Response) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    const aggregateStats = await Review.aggregate<{
+      avgRating: number;
+      count: number;
+    }>([
+      { $match: { workerId: new Types.ObjectId(resolvedWorkerUserId) } },
+      {
+        $group: {
+          _id: "$workerId",
+          avgRating: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          avgRating: 1,
+          count: 1,
+        },
+      },
+    ]);
+
+    const stats = aggregateStats[0];
+
     return res.json({
       worker: {
         id: workerUser._id,
         name: workerUser.fullName,
         phone: workerUser.phone,
-        profile: workerProfile,
+        profile: workerProfile
+          ? {
+              ...workerProfile,
+              rating: stats ? Number(stats.avgRating.toFixed(2)) : 0,
+              reviews: stats ? stats.count : 0,
+            }
+          : workerProfile,
         reviews,
       },
     });

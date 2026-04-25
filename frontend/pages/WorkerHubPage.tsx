@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ClientReportItem,
   ClientRequestItem,
   fetchClientRequests,
+  fetchMyReports,
   markRequestCompleteByWorker,
   respondToWorkerInvite,
 } from "../services/clientRequests";
@@ -27,7 +29,10 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const [tiktokProfile, setTiktokProfile] = useState("");
   const [avatar, setAvatar] = useState("");
   const [portfolio, setPortfolio] = useState<string[]>([]);
+  const [rating, setRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
   const [requests, setRequests] = useState<ClientRequestItem[]>([]);
+  const [workerReports, setWorkerReports] = useState<ClientReportItem[]>([]);
   const [requestActionId, setRequestActionId] = useState("");
   const [requestError, setRequestError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -38,9 +43,10 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   useEffect(() => {
     const fetchWorkerData = async () => {
       try {
-        const [profile, workerRequests] = await Promise.all([
+        const [profile, workerRequests, workerReportsData] = await Promise.all([
           getMyWorkerProfile(),
           fetchClientRequests(),
+          fetchMyReports(),
         ]);
         const workerProfile = profile.profile ?? {
           title: "",
@@ -85,6 +91,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           ),
         );
         setRequests(workerRequests);
+        setWorkerReports(workerReportsData);
+        setRating(Number(workerProfile.rating ?? 0));
+        setReviewCount(Number(workerProfile.reviews ?? 0));
       } catch (error) {
         console.error("Failed to load worker data", error);
         setRequestError("Could not load invitations right now.");
@@ -101,6 +110,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const activeJobs = requests.filter(
     (request) => request.status === "IN_PROGRESS",
   );
+  const recentReportUpdates = workerReports.slice(0, 4);
 
   const handleWorkerDecision = async (
     requestId: string,
@@ -621,14 +631,14 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                 </p>
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <span className="text-5xl font-extrabold tracking-tight dark:text-white">
-                    4.9
+                    {rating.toFixed(1)}
                   </span>
                   <span className="material-symbols-outlined text-amber-400 text-5xl fill-current">
                     star
                   </span>
                 </div>
                 <p className="text-[11px] font-bold text-green-500 uppercase tracking-widest mt-2">
-                  Excellent Rating
+                  {reviewCount} review{reviewCount === 1 ? "" : "s"}
                 </p>
                 <div className="mt-6 pt-6 border-t border-gray-50 dark:border-gray-800">
                   <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
@@ -640,6 +650,63 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                     <span className="text-[#120e1b] dark:text-white">42</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="portal-panel rounded-3xl p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-base font-extrabold tracking-tight dark:text-white">
+                    Report Status Updates
+                  </h4>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    {workerReports.length} total
+                  </span>
+                </div>
+
+                {recentReportUpdates.length ? (
+                  <div className="space-y-3">
+                    {recentReportUpdates.map((report) => (
+                      <div
+                        key={report.id}
+                        className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4 bg-gray-50/60 dark:bg-gray-900/30"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-bold text-[#120e1b] dark:text-white uppercase tracking-wider">
+                            {report.type}
+                          </p>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              report.status === "resolved"
+                                ? "bg-green-100 text-green-700"
+                                : report.status === "investigating"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : report.status === "dismissed"
+                                    ? "bg-gray-200 text-gray-700"
+                                    : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {report.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
+                          {report.adminFeedback?.trim()
+                            ? report.adminFeedback
+                            : "No admin note yet."}
+                        </p>
+                        <p className="text-[10px] font-semibold text-gray-400 mt-2">
+                          {report.resolvedAt
+                            ? `Updated ${new Date(report.resolvedAt).toLocaleString()}`
+                            : `Submitted ${new Date(report.createdAt).toLocaleString()}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-4 text-center">
+                    <p className="text-xs font-semibold text-gray-500">
+                      No reports linked to your account yet.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Direct Contact Options */}

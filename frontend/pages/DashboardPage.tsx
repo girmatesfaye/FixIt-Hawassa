@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Modal from "../components/Modal";
-import { RequestStatus, ReportStatus, ServiceRequest, Report } from "../types";
+import { RequestStatus } from "../types";
 import {
   ApiRequestStatus,
   ClientRequestItem,
+  ClientReportItem,
   fetchClientRequests,
+  fetchMyReports,
 } from "../services/clientRequests";
 import { getAuthToken } from "../services/auth";
 
@@ -18,15 +20,71 @@ const API_BASE_URL =
   "http://localhost:4000";
 const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
 
+type DashboardReport = {
+  id: string;
+  workerName: string;
+  dateSubmitted: string;
+  status: ClientReportItem["status"];
+  category: string;
+  issue: string;
+  clientDescription: string;
+  adminResolution: string;
+};
+
+const formatReportStatus = (status: ClientReportItem["status"]): string => {
+  if (status === "investigating") return "Investigating";
+  if (status === "resolved") return "Resolved";
+  if (status === "dismissed") return "Dismissed";
+  return "Pending";
+};
+
+const getReportResolutionText = (
+  status: ClientReportItem["status"],
+): string => {
+  if (status === "resolved") {
+    return "This report has been resolved by the admin team.";
+  }
+
+  if (status === "investigating") {
+    return "The admin team is reviewing this report right now.";
+  }
+
+  if (status === "dismissed") {
+    return "This report was dismissed after review.";
+  }
+
+  return "Your report has been received and is waiting for review.";
+};
+
+const toDashboardReport = (report: ClientReportItem): DashboardReport => {
+  const workerName = report.reportedUser?.name ?? "Unknown worker";
+  const requestCategory = report.request?.category ?? report.type;
+
+  return {
+    id: report.id,
+    workerName,
+    dateSubmitted: new Date(report.createdAt).toLocaleDateString(),
+    status: report.status,
+    category: report.type,
+    issue: requestCategory,
+    clientDescription: report.text,
+    adminResolution:
+      report.adminFeedback?.trim() || getReportResolutionText(report.status),
+  };
+};
+
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [selectedReport, setSelectedReport] = useState<DashboardReport | null>(
+    null,
+  );
   const [activeRequestsCount, setActiveRequestsCount] = useState(0);
   const [myRequestsPreview, setMyRequestsPreview] = useState<
     ClientRequestItem[]
   >([]);
+  const [myReports, setMyReports] = useState<DashboardReport[]>([]);
   const [allClientRequests, setAllClientRequests] = useState<
     ClientRequestItem[]
   >([]);
@@ -61,12 +119,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
       });
   };
 
+  const refreshReports = () => {
+    fetchMyReports()
+      .then((items) => {
+        setMyReports(items.map(toDashboardReport));
+      })
+      .catch(() => {
+        setMyReports([]);
+      });
+  };
+
   useEffect(() => {
     refreshRequests();
+    refreshReports();
 
     const intervalId = window.setInterval(refreshRequests, 5000);
+    const reportsIntervalId = window.setInterval(refreshReports, 15000);
     return () => {
       window.clearInterval(intervalId);
+      window.clearInterval(reportsIntervalId);
     };
   }, []);
 
@@ -207,33 +278,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     navigate("/messages");
   };
 
-  const myReports: Report[] = [
-    {
-      id: "RPT-101",
-      workerName: "Dawit M.",
-      dateSubmitted: "Oct 14, 2023",
-      status: ReportStatus.UNDER_REVIEW,
-      category: "Overcharging",
-      issue: "Disagreement on final price",
-      clientDescription:
-        "The worker asked for 500 ETB more than the initial quote despite no extra work being done.",
-      adminResolution:
-        "Pending investigation. We are contacting the worker for clarification.",
-    },
-    {
-      id: "RPT-102",
-      workerName: "Samuel T.",
-      dateSubmitted: "Oct 05, 2023",
-      status: ReportStatus.RESOLVED,
-      category: "Late Arrival",
-      issue: "Worker arrived 4 hours late",
-      clientDescription: "Scheduled for 9 AM, arrived at 1 PM without notice.",
-      adminResolution:
-        "Worker has been issued a formal warning. A credit has been added to your account.",
-    },
-  ];
-
-  const openReportDetail = (report: Report) => {
+  const openReportDetail = (report: DashboardReport) => {
     setSelectedReport(report);
     setIsReportDetailModalOpen(true);
   };
@@ -518,12 +563,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                           </div>
                           <span
                             className={`px-2.5 py-1 rounded inline-flex text-xs font-medium ${
-                              report.status === ReportStatus.RESOLVED
+                              report.status === "resolved"
                                 ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-800/50"
-                                : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 animate-pulse"
+                                : report.status === "investigating"
+                                  ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50"
+                                  : report.status === "dismissed"
+                                    ? "bg-gray-50 text-gray-700 dark:bg-gray-500/10 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
+                                    : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 animate-pulse"
                             }`}
                           >
-                            {report.status}
+                            {formatReportStatus(report.status)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-5">
@@ -571,12 +620,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 </span>
                 <span
                   className={`px-2.5 py-1 rounded text-xs font-medium ${
-                    selectedReport.status === ReportStatus.RESOLVED
+                    selectedReport.status === "resolved"
                       ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-800/50"
-                      : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
+                      : selectedReport.status === "investigating"
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50"
+                        : selectedReport.status === "dismissed"
+                          ? "bg-gray-50 text-gray-700 dark:bg-gray-500/10 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
                   }`}
                 >
-                  {selectedReport.status}
+                  {formatReportStatus(selectedReport.status)}
                 </span>
               </div>
               <h4 className="text-lg font-semibold dark:text-white tracking-tight">

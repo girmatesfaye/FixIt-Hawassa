@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { z } from "zod";
 import {
   RecommendationSnapshot,
+  Review,
   ServiceRequest,
   User,
   WorkerProfile,
@@ -34,29 +35,62 @@ const loadRankedWorkers = async (
   try {
     const profiles = await WorkerProfile.find().lean();
     const userIds = profiles.map((profile) => profile.userId);
-    const users = await User.find({ _id: { $in: userIds } })
-      .select("fullName")
-      .lean();
+    const [users, reviewStats] = await Promise.all([
+      User.find({ _id: { $in: userIds } })
+        .select("fullName status")
+        .lean(),
+      Review.aggregate<{
+        _id: unknown;
+        avgRating: number;
+        count: number;
+      }>([
+        { $match: { workerId: { $in: userIds } } },
+        {
+          $group: {
+            _id: "$workerId",
+            avgRating: { $avg: "$rating" },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
 
     const usersById = new Map(users.map((user) => [String(user._id), user]));
+    const reviewStatsByWorkerId = new Map(
+      reviewStats.map((item) => [
+        String(item._id),
+        {
+          rating: Number(item.avgRating?.toFixed(2) ?? 0),
+          reviews: Number(item.count ?? 0),
+        },
+      ]),
+    );
 
-    const workersFromMongo = profiles.map((profile) => {
-      const linkedUser = usersById.get(String(profile.userId));
-      return {
-        id: String(profile.userId),
-        name: linkedUser?.fullName ?? "Worker",
-        location: `Hawassa, ${profile.area}`,
-        area: profile.area,
-        rating: profile.rating,
-        reviews: profile.reviews,
-        isActive: profile.isActive,
-        distanceKm: profile.distanceKm,
-        completionRate: profile.completionRate,
-        responseMinutes: profile.responseMinutes,
-        skills: profile.skills,
-        avatar: profile.avatar,
-      };
-    });
+    const workersFromMongo = profiles
+      .map((profile) => {
+        const linkedUser = usersById.get(String(profile.userId));
+        const liveReviewStats = reviewStatsByWorkerId.get(
+          String(profile.userId),
+        );
+        return {
+          id: String(profile.userId),
+          name: linkedUser?.fullName ?? "Worker",
+          location: `Hawassa, ${profile.area}`,
+          area: profile.area,
+          rating: liveReviewStats?.rating ?? 0,
+          reviews: liveReviewStats?.reviews ?? 0,
+          isActive: profile.isActive,
+          distanceKm: profile.distanceKm,
+          completionRate: profile.completionRate,
+          responseMinutes: profile.responseMinutes,
+          skills: profile.skills,
+          avatar: profile.avatar,
+        };
+      })
+      .filter((worker) => {
+        const linkedUser = usersById.get(worker.id);
+        return linkedUser?.status === "active";
+      });
 
     return {
       ranked: rankWorkers(
