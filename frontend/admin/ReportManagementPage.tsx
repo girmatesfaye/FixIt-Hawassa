@@ -528,7 +528,7 @@ const ReportManagementPage: React.FC = () => {
                   Notify both parties
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
-                  Send automated resolution update email
+                  Make visible to their dashboards
                 </span>
               </div>
               <button
