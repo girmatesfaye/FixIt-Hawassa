@@ -353,7 +353,7 @@ export const resolveReport = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    if (!Types.ObjectId.isValid(req.params.id)) {
+    if (typeof req.params.id !== "string" || !Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
@@ -397,7 +397,7 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    if (!Types.ObjectId.isValid(req.params.id)) {
+    if (typeof req.params.id !== "string" || !Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
@@ -466,7 +466,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const updateUserStatus = async (req: Request, res: Response) => {
   try {
-    if (!Types.ObjectId.isValid(req.params.id)) {
+    if (typeof req.params.id !== "string" || !Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
