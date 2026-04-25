@@ -1,15 +1,8 @@
 import { Router } from "express";
-import { getDatabaseStatus } from "../config/db";
+import { getHealth } from "../controllers/healthController";
 
 const healthRouter = Router();
 
-healthRouter.get("/", (_req, res) => {
-  res.json({
-    status: "ok",
-    service: "fixit-backend",
-    timestamp: new Date().toISOString(),
-    database: getDatabaseStatus(),
-  });
-});
+healthRouter.get("/", getHealth);
 
 export default healthRouter;
