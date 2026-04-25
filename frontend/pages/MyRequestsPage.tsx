@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Modal from "../components/Modal";
 import { RequestStatus } from "../types";
 import {
   ApiRequestStatus,
   ClientRequestItem,
   confirmRequestCompletion,
   fetchClientRequests,
+  submitWorkerReport,
+  submitWorkerReview,
 } from "../services/clientRequests";
 
 type RequestCard = {
@@ -16,6 +19,7 @@ type RequestCard = {
   status: RequestStatus;
   date: string;
   worker: string | null;
+  workerId: string | null;
   lastDeclinedWorker: string | null;
   lastDeclinedAt: string | null;
   avatar?: string;
@@ -53,6 +57,7 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
     status: mapStatus(request.status),
     date: formatDate(request.createdAt),
     worker: request.assignedWorkerId ? request.assignedWorkerId.name : null,
+    workerId: request.assignedWorkerId ? request.assignedWorkerId._id : null,
     lastDeclinedWorker: request.lastDeclinedWorkerId?.name ?? null,
     lastDeclinedAt: request.lastDeclinedAt ?? null,
     avatar: request.assignedWorkerId
@@ -71,6 +76,18 @@ const MyRequestsPage: React.FC = () => {
   const [loadError, setLoadError] = useState("");
   const [requests, setRequests] = useState<RequestCard[]>([]);
   const [confirmingRequestId, setConfirmingRequestId] = useState("");
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedFeedbackRequest, setSelectedFeedbackRequest] =
+    useState<RequestCard | null>(null);
+  const [ratingValue, setRatingValue] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reportReason, setReportReason] = useState("Overcharging");
+  const [reportDescription, setReportDescription] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reviewedRequestIds, setReviewedRequestIds] = useState<string[]>([]);
+  const [reportedRequestIds, setReportedRequestIds] = useState<string[]>([]);
 
   const loadRequests = async () => {
     setIsLoading(true);
@@ -128,6 +145,113 @@ const MyRequestsPage: React.FC = () => {
       (request) => request.status === RequestStatus.COMPLETED,
     );
   }, [activeTab, requests]);
+
+  const openReviewModal = (request: RequestCard) => {
+    if (!request.workerId) {
+      return;
+    }
+    setSelectedFeedbackRequest(request);
+    setRatingValue(5);
+    setReviewComment("");
+    setIsReviewModalOpen(true);
+  };
+
+  const openReportModal = (request: RequestCard) => {
+    if (!request.workerId) {
+      return;
+    }
+    setSelectedFeedbackRequest(request);
+    setReportReason("Overcharging");
+    setReportDescription("");
+    setIsReportModalOpen(true);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!selectedFeedbackRequest?.workerId) {
+      return;
+    }
+
+    const trimmedComment = reviewComment.trim();
+    if (!trimmedComment) {
+      setLoadError("Please write a review comment before submitting.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    setLoadError("");
+    try {
+      await submitWorkerReview({
+        workerId: selectedFeedbackRequest.workerId,
+        requestId: selectedFeedbackRequest.id,
+        rating: ratingValue,
+        comment: trimmedComment,
+      });
+
+      setReviewedRequestIds((prev) =>
+        prev.includes(selectedFeedbackRequest.id)
+          ? prev
+          : [...prev, selectedFeedbackRequest.id],
+      );
+      setIsReviewModalOpen(false);
+      setSelectedFeedbackRequest(null);
+      setReviewComment("");
+      await loadRequests();
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        navigate("/login");
+        return;
+      }
+
+      setLoadError(
+        error instanceof Error ? error.message : "Could not submit review.",
+      );
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const handleSubmitReport = async () => {
+    if (!selectedFeedbackRequest?.workerId) {
+      return;
+    }
+
+    const trimmedDescription = reportDescription.trim();
+    if (!trimmedDescription) {
+      setLoadError("Please describe your report before submitting.");
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    setLoadError("");
+    try {
+      await submitWorkerReport({
+        workerId: selectedFeedbackRequest.workerId,
+        requestId: selectedFeedbackRequest.id,
+        type: reportReason,
+        text: trimmedDescription,
+      });
+
+      setReportedRequestIds((prev) =>
+        prev.includes(selectedFeedbackRequest.id)
+          ? prev
+          : [...prev, selectedFeedbackRequest.id],
+      );
+      setIsReportModalOpen(false);
+      setSelectedFeedbackRequest(null);
+      setReportDescription("");
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        navigate("/login");
+        return;
+      }
+
+      setLoadError(
+        error instanceof Error ? error.message : "Could not submit report.",
+      );
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
@@ -286,7 +410,7 @@ const MyRequestsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-50 dark:border-gray-800">
+                    <div className="flex items-center flex-wrap gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-50 dark:border-gray-800">
                       {req.worker ? (
                         <div className="flex items-center gap-3 mr-4">
                           <div className="text-right hidden sm:block">
@@ -342,6 +466,28 @@ const MyRequestsPage: React.FC = () => {
                       >
                         {req.hasMessagesAccess ? "Open Chat" : "Track Order"}
                       </button>
+                      {req.apiStatus === "COMPLETED" && req.workerId ? (
+                        <>
+                          <button
+                            onClick={() => openReviewModal(req)}
+                            disabled={reviewedRequestIds.includes(req.id)}
+                            className="h-11 px-5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {reviewedRequestIds.includes(req.id)
+                              ? "Rated"
+                              : "Rate Worker"}
+                          </button>
+                          <button
+                            onClick={() => openReportModal(req)}
+                            disabled={reportedRequestIds.includes(req.id)}
+                            className="h-11 px-5 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {reportedRequestIds.includes(req.id)
+                              ? "Reported"
+                              : "Report Worker"}
+                          </button>
+                        </>
+                      ) : null}
                       {req.apiStatus === "IN_PROGRESS" &&
                       req.workerMarkedCompleteAt ? (
                         <button
@@ -392,6 +538,122 @@ const MyRequestsPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <Modal
+        isOpen={isReviewModalOpen}
+        onClose={() => {
+          setIsReviewModalOpen(false);
+          setSelectedFeedbackRequest(null);
+        }}
+        title="Rate Worker"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Share your experience for
+            <span className="font-bold text-[#120e1b] dark:text-white">
+              {" "}
+              {selectedFeedbackRequest?.worker ?? "this worker"}
+            </span>
+            .
+          </p>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+              Rating
+            </label>
+            <select
+              value={ratingValue}
+              onChange={(e) => setRatingValue(Number(e.target.value))}
+              className="w-full h-11 px-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+            >
+              {[5, 4, 3, 2, 1].map((value) => (
+                <option key={value} value={value}>
+                  {value} Star{value > 1 ? "s" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+              Comment
+            </label>
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              rows={4}
+              placeholder="How was the quality, communication, and timeliness?"
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+            />
+          </div>
+          <button
+            onClick={() => {
+              void handleSubmitReview();
+            }}
+            disabled={isSubmittingReview}
+            className="w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-white text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+          >
+            {isSubmittingReview ? "Submitting..." : "Submit Review"}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setSelectedFeedbackRequest(null);
+        }}
+        title="Report Worker"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Tell us what went wrong with
+            <span className="font-bold text-[#120e1b] dark:text-white">
+              {" "}
+              {selectedFeedbackRequest?.worker ?? "this worker"}
+            </span>
+            .
+          </p>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+              Reason
+            </label>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="w-full h-11 px-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+            >
+              <option value="Overcharging">Overcharging</option>
+              <option value="Poor Quality">Poor Quality</option>
+              <option value="Unprofessional Behavior">
+                Unprofessional Behavior
+              </option>
+              <option value="No Show">No Show</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+              Description
+            </label>
+            <textarea
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              rows={4}
+              placeholder="Provide details to help admin investigate."
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+            />
+          </div>
+          <button
+            onClick={() => {
+              void handleSubmitReport();
+            }}
+            disabled={isSubmittingReport}
+            className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+          >
+            {isSubmittingReport ? "Submitting..." : "Submit Report"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

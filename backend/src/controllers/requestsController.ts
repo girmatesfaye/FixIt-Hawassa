@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { ServiceRequest, User, WorkerProfile } from "../models";
+import { Report, ServiceRequest, User, WorkerProfile } from "../models";
 
 type AuthenticatedRequest = Request & {
   userId?: string;
@@ -161,6 +161,76 @@ export const getMyRequests = async (req: Request, res: Response) => {
     console.error("[requests] Failed to fetch user requests", error);
     return res.status(500).json({
       message: "Failed to load requests",
+    });
+  }
+};
+
+export const getMyReports = async (req: Request, res: Response) => {
+  const authenticatedUserId = (req as AuthenticatedRequest).userId;
+  if (
+    typeof authenticatedUserId !== "string" ||
+    !Types.ObjectId.isValid(authenticatedUserId)
+  ) {
+    return res.status(401).json({
+      message: "Unauthorized: valid user token required",
+    });
+  }
+
+  try {
+    const reports = await Report.find({
+      reporterUserId: new Types.ObjectId(authenticatedUserId),
+    })
+      .populate("reportedUserId", "fullName")
+      .populate("requestId", "category area createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json({
+      total: reports.length,
+      reports: reports.map((report) => ({
+        id: String(report._id),
+        type: report.type,
+        text: report.text,
+        status: report.status,
+        createdAt:
+          report.createdAt instanceof Date
+            ? report.createdAt.toISOString()
+            : new Date(report.createdAt).toISOString(),
+        updatedAt:
+          report.updatedAt instanceof Date
+            ? report.updatedAt.toISOString()
+            : new Date(report.updatedAt).toISOString(),
+        reportedUser: report.reportedUserId
+          ? {
+              id: String((report.reportedUserId as { _id?: unknown })._id ?? ""),
+              name:
+                typeof (report.reportedUserId as { fullName?: unknown }).fullName ===
+                "string"
+                  ? String((report.reportedUserId as { fullName?: unknown }).fullName)
+                  : null,
+            }
+          : null,
+        request: report.requestId
+          ? {
+              id: String((report.requestId as { _id?: unknown })._id ?? ""),
+              category:
+                typeof (report.requestId as { category?: unknown }).category ===
+                "string"
+                  ? String((report.requestId as { category?: unknown }).category)
+                  : null,
+              area:
+                typeof (report.requestId as { area?: unknown }).area === "string"
+                  ? String((report.requestId as { area?: unknown }).area)
+                  : null,
+            }
+          : null,
+      })),
+      source: "mongodb",
+    });
+  } catch (error) {
+    console.error("[requests] Failed to fetch client reports", error);
+    return res.status(500).json({
+      message: "Failed to load reports",
     });
   }
 };
