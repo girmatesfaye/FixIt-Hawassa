@@ -273,8 +273,8 @@ export const getUsers = async (_req: Request, res: Response) => {
 export const getReports = async (_req: Request, res: Response) => {
   try {
     const reports = await Report.find()
-      .populate("reportedUserId", "fullName")
-      .populate("reporterUserId", "fullName")
+      .populate("reportedUserId", "fullName phone")
+      .populate("reporterUserId", "fullName phone")
       .populate("resolvedBy", "fullName")
       .sort({ createdAt: -1 })
       .lean();
@@ -339,8 +339,8 @@ export const resolveReport = async (req: Request, res: Response) => {
     }
 
     const populatedReport = await Report.findById(report._id)
-      .populate("reportedUserId", "fullName")
-      .populate("reporterUserId", "fullName")
+      .populate("reportedUserId", "fullName phone")
+      .populate("reporterUserId", "fullName phone")
       .populate("resolvedBy", "fullName")
       .lean();
 
@@ -353,7 +353,10 @@ export const resolveReport = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    if (typeof req.params.id !== "string" || !Types.ObjectId.isValid(req.params.id)) {
+    if (
+      typeof req.params.id !== "string" ||
+      !Types.ObjectId.isValid(req.params.id)
+    ) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
@@ -397,7 +400,10 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    if (typeof req.params.id !== "string" || !Types.ObjectId.isValid(req.params.id)) {
+    if (
+      typeof req.params.id !== "string" ||
+      !Types.ObjectId.isValid(req.params.id)
+    ) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
@@ -466,7 +472,10 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const updateUserStatus = async (req: Request, res: Response) => {
   try {
-    if (typeof req.params.id !== "string" || !Types.ObjectId.isValid(req.params.id)) {
+    if (
+      typeof req.params.id !== "string" ||
+      !Types.ObjectId.isValid(req.params.id)
+    ) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 

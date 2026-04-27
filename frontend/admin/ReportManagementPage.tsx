@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
@@ -7,21 +7,54 @@ const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
 
+type ReportStatus = "pending" | "investigating" | "resolved" | "dismissed";
+
+type ReportItem = {
+  id: string;
+  category: string;
+  title: string;
+  time: string;
+  content: string;
+  createdAtMs: number;
+  reporter: {
+    name: string;
+    avatar: string;
+    phone: string;
+  };
+  reported: {
+    name: string;
+    avatar: string;
+    phone: string;
+  };
+  status: ReportStatus;
+  adminFeedback: string;
+  isDangerous: boolean;
+};
+
 const ReportManagementPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [selectedContactReportId, setSelectedContactReportId] = useState<
+    string | null
+  >(null);
   const [resolutionAction, setResolutionAction] = useState<
     "warning" | "none" | "resolved" | "suspend_worker"
   >("warning");
   const [notifyParties, setNotifyParties] = useState(true);
   const [internalNotes, setInternalNotes] = useState("");
   const [isDangerous, setIsDangerous] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | ReportStatus>("all");
+  const [sortOrder, setSortOrder] = useState<"latest" | "oldest">("latest");
+  const [page, setPage] = useState(1);
 
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<ReportItem[]>([]);
   const [stats, setStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const PAGE_SIZE = 6;
 
   const fetchReportsData = async () => {
     try {
@@ -57,16 +90,25 @@ const ReportManagementPage: React.FC = () => {
           category: r.type,
           title: `Report on ${r.reportedUserId?.fullName || "User"}`,
           time: new Date(r.createdAt).toLocaleString(),
+          createdAtMs: new Date(r.createdAt).getTime(),
           content: `"${r.text}"`,
           reporter: {
             name: r.reporterUserId?.fullName || "Reporter",
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.reporterUserId?._id || "reporter"}`,
+            phone:
+              typeof r.reporterUserId?.phone === "string"
+                ? r.reporterUserId.phone
+                : "",
           },
           reported: {
             name: r.reportedUserId?.fullName || "Reported",
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.reportedUserId?._id || "reported"}`,
+            phone:
+              typeof r.reportedUserId?.phone === "string"
+                ? r.reportedUserId.phone
+                : "",
           },
-          status: r.status,
+          status: String(r.status ?? "pending") as ReportStatus,
           adminFeedback: r.adminFeedback || "",
           isDangerous: Boolean(r.isDangerous),
         })),
@@ -137,6 +179,55 @@ const ReportManagementPage: React.FC = () => {
       navigate(location.pathname, { replace: true, state: null });
     }
   }, [location.pathname, location.state, navigate, reports]);
+
+  const filteredReports = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const matched = reports.filter((report) => {
+      const passesStatus =
+        statusFilter === "all" || report.status === statusFilter;
+      if (!passesStatus) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
+      return (
+        report.id.toLowerCase().includes(query) ||
+        report.category.toLowerCase().includes(query) ||
+        report.content.toLowerCase().includes(query) ||
+        report.reporter.name.toLowerCase().includes(query) ||
+        report.reported.name.toLowerCase().includes(query)
+      );
+    });
+
+    return [...matched].sort((left, right) =>
+      sortOrder === "latest"
+        ? right.createdAtMs - left.createdAtMs
+        : left.createdAtMs - right.createdAtMs,
+    );
+  }, [reports, searchQuery, sortOrder, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedReports = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredReports.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredReports]);
+
+  const showingFrom = filteredReports.length
+    ? (currentPage - 1) * PAGE_SIZE + 1
+    : 0;
+  const showingTo = Math.min(currentPage * PAGE_SIZE, filteredReports.length);
+
+  const selectedContactReport =
+    reports.find((report) => report.id === selectedContactReportId) ?? null;
+
+  const openContactModal = (id: string) => {
+    setSelectedContactReportId(id);
+    setIsContactModalOpen(true);
+  };
 
   const handleOpenResolveModal = (id: string) => {
     setSelectedReportId(id);
@@ -255,22 +346,52 @@ const ReportManagementPage: React.FC = () => {
           <input
             type="text"
             placeholder="Search by name, ID, or issue..."
+            value={searchQuery}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setPage(1);
+            }}
             className="w-full h-11 pl-10 pr-4 bg-gray-50 border-none rounded-xl text-sm focus:ring-1 focus:ring-red-500"
           />
         </div>
-        <button className="h-11 px-6 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-          <span className="material-symbols-outlined">filter_list</span>
-          Filter
-        </button>
-        <button className="h-11 px-6 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-          <span className="material-symbols-outlined">sort</span>
-          Sort
-        </button>
+        <label className="h-11 px-3 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 bg-white">
+          <span className="material-symbols-outlined text-[18px]">
+            filter_list
+          </span>
+          <select
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value as "all" | ReportStatus);
+              setPage(1);
+            }}
+            className="bg-transparent outline-none text-sm font-bold text-gray-600"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="investigating">Investigating</option>
+            <option value="resolved">Resolved</option>
+            <option value="dismissed">Dismissed</option>
+          </select>
+        </label>
+        <label className="h-11 px-3 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 bg-white">
+          <span className="material-symbols-outlined text-[18px]">sort</span>
+          <select
+            value={sortOrder}
+            onChange={(event) => {
+              setSortOrder(event.target.value as "latest" | "oldest");
+              setPage(1);
+            }}
+            className="bg-transparent outline-none text-sm font-bold text-gray-600"
+          >
+            <option value="latest">Latest</option>
+            <option value="oldest">Oldest</option>
+          </select>
+        </label>
       </div>
 
       {/* Reports Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {reports.map((report) => (
+        {paginatedReports.map((report) => (
           <div
             key={report.id}
             className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
@@ -357,7 +478,10 @@ const ReportManagementPage: React.FC = () => {
                 {report.status.toUpperCase()}
               </span>
               <div className="flex gap-4">
-                <button className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
+                <button
+                  onClick={() => openContactModal(report.id)}
+                  className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
+                >
                   <span className="material-symbols-outlined text-xl">
                     mail
                   </span>
@@ -376,6 +500,16 @@ const ReportManagementPage: React.FC = () => {
             </div>
           </div>
         ))}
+        {!paginatedReports.length ? (
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+            <p className="text-base font-semibold text-[#120e1b]">
+              No reports found
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Try adjusting search, filter, or sort options.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {/* Resolve Report Modal */}
@@ -562,29 +696,102 @@ const ReportManagementPage: React.FC = () => {
         </div>
       </Modal>
 
+      <Modal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        title={`Contact Users #${selectedContactReportId ?? ""}`}
+      >
+        {selectedContactReport ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-gray-100 p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Reporter (Client)
+              </p>
+              <p className="text-sm font-bold text-[#120e1b] mt-1">
+                {selectedContactReport.reporter.name}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedContactReport.reporter.phone || "Phone unavailable"}
+              </p>
+              <a
+                href={
+                  selectedContactReport.reporter.phone
+                    ? `tel:${selectedContactReport.reporter.phone}`
+                    : undefined
+                }
+                className={`mt-3 inline-flex h-10 px-4 items-center rounded-lg text-xs font-bold uppercase tracking-widest ${selectedContactReport.reporter.phone ? "bg-primary text-white" : "bg-gray-100 text-gray-400 pointer-events-none"}`}
+              >
+                Call Reporter
+              </a>
+            </div>
+
+            <div className="rounded-xl border border-gray-100 p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Reported (Worker)
+              </p>
+              <p className="text-sm font-bold text-[#120e1b] mt-1">
+                {selectedContactReport.reported.name}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedContactReport.reported.phone || "Phone unavailable"}
+              </p>
+              <a
+                href={
+                  selectedContactReport.reported.phone
+                    ? `tel:${selectedContactReport.reported.phone}`
+                    : undefined
+                }
+                className={`mt-3 inline-flex h-10 px-4 items-center rounded-lg text-xs font-bold uppercase tracking-widest ${selectedContactReport.reported.phone ? "bg-primary text-white" : "bg-gray-100 text-gray-400 pointer-events-none"}`}
+              >
+                Call Worker
+              </a>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
       {/* Pagination Footer */}
       <div className="flex items-center justify-between border-t border-gray-200 pt-6">
         <p className="text-xs font-medium text-gray-500 tracking-wider">
           Showing{" "}
           <span className="text-[#120e1b] font-semibold">
-            1-{reports.length}
+            {showingFrom}-{showingTo}
           </span>{" "}
           of{" "}
-          <span className="text-[#120e1b] font-semibold">{reports.length}</span>{" "}
+          <span className="text-[#120e1b] font-semibold">
+            {filteredReports.length}
+          </span>{" "}
           reports
         </p>
         <div className="flex items-center gap-1">
-          <button className="h-9 px-4 rounded-lg text-xs font-bold text-gray-400 hover:text-red-500 disabled:opacity-50">
+          <button
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={currentPage <= 1}
+            className="h-9 px-4 rounded-lg text-xs font-bold text-gray-400 hover:text-red-500 disabled:opacity-50"
+          >
             Previous
           </button>
-          <button className="size-9 rounded-lg bg-primary text-white text-xs font-bold">
-            1
-          </button>
-          <button className="size-9 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100 transition-colors">
-            2
-          </button>
-          <span className="px-2 text-gray-300">...</span>
-          <button className="h-9 px-4 rounded-lg text-xs font-bold text-gray-500 hover:text-red-500">
+          {Array.from({ length: totalPages }, (_, index) => index + 1)
+            .slice(
+              Math.max(0, currentPage - 2),
+              Math.max(0, currentPage - 2) + 3,
+            )
+            .map((pageNumber) => (
+              <button
+                key={pageNumber}
+                onClick={() => setPage(pageNumber)}
+                className={`size-9 rounded-lg text-xs font-bold transition-colors ${pageNumber === currentPage ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100"}`}
+              >
+                {pageNumber}
+              </button>
+            ))}
+          <button
+            onClick={() =>
+              setPage((current) => Math.min(totalPages, current + 1))
+            }
+            disabled={currentPage >= totalPages}
+            className="h-9 px-4 rounded-lg text-xs font-bold text-gray-500 hover:text-red-500 disabled:opacity-50"
+          >
             Next
           </button>
         </div>
