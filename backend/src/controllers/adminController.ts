@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import {
   Category,
+  Message,
   Report,
   Review,
   ServiceRequest,
@@ -305,6 +306,7 @@ export const resolveReport = async (req: Request, res: Response) => {
     const feedback =
       typeof req.body.feedback === "string" ? req.body.feedback.trim() : "";
     const isDangerous = Boolean(req.body.isDangerous);
+    const notifyParties = Boolean(req.body.notifyParties);
     const shouldSuspendWorker =
       Boolean(req.body.suspendWorker) ||
       isDangerous ||
@@ -338,13 +340,43 @@ export const resolveReport = async (req: Request, res: Response) => {
       workerSuspended = true;
     }
 
+    let notificationSent = false;
+    if (notifyParties) {
+      const request = await ServiceRequest.findById(report.requestId)
+        .select("_id category area")
+        .lean();
+
+      if (request && typeof adminUserId === "string" && adminUserId) {
+        const notificationText = [
+          `Admin reviewed a ${report.type} report.`,
+          `Resolution: ${status}.`,
+          feedback ? `Note: ${feedback}` : null,
+        ]
+          .filter((part): part is string => Boolean(part))
+          .join(" ");
+
+        await Message.create({
+          requestId: request._id,
+          senderId: new Types.ObjectId(adminUserId),
+          text: notificationText,
+          isRead: false,
+        });
+
+        notificationSent = true;
+      }
+    }
+
     const populatedReport = await Report.findById(report._id)
       .populate("reportedUserId", "fullName phone")
       .populate("reporterUserId", "fullName phone")
       .populate("resolvedBy", "fullName")
       .lean();
 
-    return res.json({ report: populatedReport, workerSuspended });
+    return res.json({
+      report: populatedReport,
+      workerSuspended,
+      notificationSent,
+    });
   } catch (error) {
     console.error("[admin] Failed to update report", error);
     return res.status(500).json({ error: "Failed to update report" });
