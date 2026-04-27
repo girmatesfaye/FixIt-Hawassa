@@ -55,6 +55,7 @@ export const updateMyWorkerProfile = async (data: {
   skills?: string[];
   avatar?: string;
   portfolio?: string[];
+  isActive?: boolean;
 }): Promise<MyWorkerProfile> => {
   const token = getAuthToken();
   if (!token) throw new Error("UNAUTHORIZED");

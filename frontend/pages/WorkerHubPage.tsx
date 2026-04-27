@@ -9,7 +9,7 @@ import {
   respondToWorkerInvite,
 } from "../services/clientRequests";
 import { getUploadedImageUrl } from "../services/upload";
-import { getMyWorkerProfile } from "../services/worker";
+import { getMyWorkerProfile, updateMyWorkerProfile } from "../services/worker";
 import Modal from "../components/Modal";
 
 interface WorkerHubPageProps {
@@ -285,7 +285,16 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               </div>
             </div>
             <button
-              onClick={() => setIsAvailable(!isAvailable)}
+              onClick={async () => {
+                const nextAvailable = !isAvailable;
+                setIsAvailable(nextAvailable);
+                try {
+                  await updateMyWorkerProfile({ isActive: nextAvailable });
+                } catch (error) {
+                  console.error("Failed to update availability", error);
+                  setIsAvailable(isAvailable);
+                }
+              }}
               className={`w-20 h-10 rounded-full relative transition-colors shadow-inner ${isAvailable ? "bg-green-500" : "bg-gray-300 dark:bg-gray-800"}`}
             >
               <div

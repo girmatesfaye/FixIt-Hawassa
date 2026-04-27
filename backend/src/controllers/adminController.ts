@@ -707,12 +707,21 @@ export const deleteCategory = async (req: Request, res: Response) => {
   }
 };
 
-export const getStats = async (_req: Request, res: Response) => {
+export const getStats = async (req: Request, res: Response) => {
   try {
+    const rangeParam = req.query.range as string;
     const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
+    const trendStartDate = new Date(now);
+    
+    if (rangeParam === "30days") {
+      trendStartDate.setDate(trendStartDate.getDate() - 29);
+    } else if (rangeParam === "all") {
+      trendStartDate.setFullYear(2000); // effectively all time
+    } else {
+      // default 7 days
+      trendStartDate.setDate(trendStartDate.getDate() - 6);
+    }
+    trendStartDate.setHours(0, 0, 0, 0);
 
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
@@ -730,7 +739,7 @@ export const getStats = async (_req: Request, res: Response) => {
       Report.countDocuments({ status: "pending" }),
       WorkerProfile.countDocuments(),
       ServiceRequest.aggregate([
-        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $match: { createdAt: { $gte: trendStartDate } } },
         {
           $group: {
             _id: {
@@ -759,9 +768,13 @@ export const getStats = async (_req: Request, res: Response) => {
       buildRecentActivity(),
     ]);
 
-    const dayLabels = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(sevenDaysAgo);
-      date.setDate(sevenDaysAgo.getDate() + index);
+    let numDays = 7;
+    if (rangeParam === "30days") numDays = 30;
+    else if (rangeParam === "all") numDays = 60; // Just show 60 points or so to avoid overflow if too big
+
+    const dayLabels = Array.from({ length: numDays }, (_, index) => {
+      const date = new Date(trendStartDate);
+      date.setDate(trendStartDate.getDate() + index);
       return formatDayKey(date);
     });
 

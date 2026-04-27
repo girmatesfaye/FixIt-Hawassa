@@ -96,6 +96,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaveError, setProfileSaveError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [categories, setCategories] = useState<any[]>([]);
 
   const formatStatus = (status: ApiRequestStatus): RequestStatus => {
     if (status === "IN_PROGRESS") return RequestStatus.IN_PROGRESS;
@@ -138,6 +139,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   useEffect(() => {
     refreshRequests();
     refreshReports();
+
+    fetch(`${API_BASE_URL}/requests/categories`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.categories) {
+          setCategories(data.categories);
+        }
+      })
+      .catch((err) => console.error("Failed to load categories:", err));
 
     const intervalId = window.setInterval(refreshRequests, 5000);
     const reportsIntervalId = window.setInterval(refreshReports, 15000);
@@ -488,55 +498,42 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {[
-                  {
-                    name: "Plumbing",
-                    icon: "plumbing",
-                    color: "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
-                  },
-                  {
-                    name: "Electrical",
-                    icon: "bolt",
-                    color: "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
-                  },
-                  {
-                    name: "Carpentry",
-                    icon: "carpenter",
-                    color: "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
-                  },
-                  {
-                    name: "Painting",
-                    icon: "format_paint",
-                    color: "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
-                  },
-                  {
-                    name: "Cleaning",
-                    icon: "cleaning_services",
-                    color: "bg-green-50 text-green-500 dark:bg-green-500/10",
-                  },
-                  {
-                    name: "Masonry",
-                    icon: "foundation",
-                    color: "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
-                  },
-                ].map((svc) => (
-                  <button
-                    key={svc.name}
-                    onClick={handleServiceClick}
-                    className="group flex flex-col items-center gap-3 p-5 rounded-2xl portal-panel hover:shadow-md hover:border-primary/30 transition-all duration-300"
-                  >
-                    <div
-                      className={`size-12 rounded-xl ${svc.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                {(categories.length > 0 ? categories : [
+                  { name: "Plumbing", icon: "plumbing" },
+                  { name: "Electrical", icon: "bolt" },
+                  { name: "Carpentry", icon: "carpenter" },
+                  { name: "Painting", icon: "format_paint" },
+                  { name: "Cleaning", icon: "cleaning_services" },
+                  { name: "Masonry", icon: "foundation" },
+                ]).map((svc, index) => {
+                  const colors = [
+                    "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
+                    "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
+                    "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
+                    "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
+                    "bg-green-50 text-green-500 dark:bg-green-500/10",
+                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10"
+                  ];
+                  const color = colors[index % colors.length];
+                  return (
+                    <button
+                      key={svc.name}
+                      onClick={handleServiceClick}
+                      className="group flex flex-col items-center gap-3 p-5 rounded-2xl portal-panel hover:shadow-md hover:border-primary/30 transition-all duration-300"
                     >
-                      <span className="material-symbols-outlined text-2xl">
-                        {svc.icon}
+                      <div
+                        className={`size-12 rounded-xl ${color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                      >
+                        <span className="material-symbols-outlined text-2xl">
+                          {svc.icon || "build"}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium dark:text-white">
+                        {svc.name}
                       </span>
-                    </div>
-                    <span className="text-sm font-medium dark:text-white">
-                      {svc.name}
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

@@ -12,6 +12,7 @@ const MessagesPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [me, setMe] = useState<any>(null);
   const currentRole = getStoredRole();
   const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
@@ -192,13 +193,24 @@ const MessagesPage: React.FC = () => {
               </span>
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search conversations..."
                 className="w-full h-10 pl-10 pr-4 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-xs focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {requests.map((contact, idx) => (
+            {requests
+              .map((contact, idx) => ({ contact, idx }))
+              .filter(({ contact }) => {
+                if (!searchQuery) return true;
+                const q = searchQuery.toLowerCase();
+                const name = getContactName(contact).toLowerCase();
+                const cat = (contact.category || "").toLowerCase();
+                return name.includes(q) || cat.includes(q);
+              })
+              .map(({ contact, idx }) => (
               <div
                 key={contact.id}
                 onClick={() => setSelectedContact(idx)}

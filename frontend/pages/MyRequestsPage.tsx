@@ -534,11 +534,7 @@ const MyRequestsPage: React.FC = () => {
                             : "Confirm Complete"}
                         </button>
                       ) : null}
-                      <button className="size-11 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary transition-colors">
-                        <span className="material-symbols-outlined">
-                          more_vert
-                        </span>
-                      </button>
+
                     </div>
                   </div>
                 ))}

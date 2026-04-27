@@ -85,6 +85,7 @@ export const updateMyWorkerProfile = async (req: Request, res: Response) => {
       skills,
       avatar,
       portfolio,
+      isActive,
     } = req.body;
 
     if (name !== undefined) {
@@ -118,6 +119,9 @@ export const updateMyWorkerProfile = async (req: Request, res: Response) => {
       if (portfolio !== undefined && Array.isArray(portfolio)) {
         workerProfile.portfolio = portfolio;
       }
+      if (isActive !== undefined) {
+        workerProfile.isActive = isActive;
+      }
       await workerProfile.save();
     } else {
       await WorkerProfile.create({
@@ -129,6 +133,7 @@ export const updateMyWorkerProfile = async (req: Request, res: Response) => {
         skills: Array.isArray(skills) ? skills : [],
         avatar: avatar || "",
         portfolio: Array.isArray(portfolio) ? portfolio : [],
+        isActive: isActive !== undefined ? isActive : true,
       });
     }
 

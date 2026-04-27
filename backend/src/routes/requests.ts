@@ -8,10 +8,12 @@ import {
   workerComplete,
   workerResponse,
 } from "../controllers/requestsController";
+import { getCategories } from "../controllers/adminController";
 import { requireAuth, requireRole } from "../middleware/auth";
 
 const requestsRouter = Router();
 
+requestsRouter.get("/categories", getCategories);
 requestsRouter.get("/mine", requireAuth, getMyRequests);
 requestsRouter.get("/reports", requireAuth, getMyReports);
 requestsRouter.post("/", requireRole("client"), createRequest);
