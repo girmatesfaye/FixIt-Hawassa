@@ -91,6 +91,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const [myUserId, setMyUserId] = useState("");
   const [currentUserName, setCurrentUserName] = useState("");
   const [currentUserArea, setCurrentUserArea] = useState("");
+  const [profileNameInput, setProfileNameInput] = useState("");
+  const [profileAreaInput, setProfileAreaInput] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
   const formatStatus = (status: ApiRequestStatus): RequestStatus => {
@@ -263,6 +267,78 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
       window.clearInterval(intervalId);
     };
   }, [allClientRequests, myUserId]);
+
+  useEffect(() => {
+    if (!isProfileModalOpen) {
+      return;
+    }
+
+    setProfileNameInput(currentUserName);
+    setProfileAreaInput(currentUserArea);
+    setProfileSaveError("");
+  }, [isProfileModalOpen, currentUserName, currentUserArea]);
+
+  const handleSaveProfile = async () => {
+    const nextName = profileNameInput.trim();
+    const nextArea = profileAreaInput.trim();
+
+    if (nextName.length < 2) {
+      setProfileSaveError("Please enter a valid full name.");
+      return;
+    }
+
+    if (nextArea.length < 2) {
+      setProfileSaveError("Please enter a valid location.");
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    setIsSavingProfile(true);
+    setProfileSaveError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fullName: nextName,
+          area: nextArea,
+        }),
+      });
+
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        user?: { name?: string; area?: string };
+      } | null;
+
+      if (response.status === 401) {
+        navigate("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(result?.message ?? "Failed to save profile");
+      }
+
+      setCurrentUserName(result?.user?.name ?? nextName);
+      setCurrentUserArea(result?.user?.area ?? nextArea);
+      setIsProfileModalOpen(false);
+    } catch (error) {
+      setProfileSaveError(
+        error instanceof Error ? error.message : "Failed to save profile",
+      );
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const handleOpenNotifications = () => {
     const requestsWithChat = allClientRequests.filter((request) =>
@@ -692,7 +768,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
             <input
               className="w-full h-10 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:text-white text-sm"
               type="text"
-              defaultValue={currentUserName}
+              value={profileNameInput}
+              onChange={(event) => setProfileNameInput(event.target.value)}
               placeholder="Your full name"
             />
           </div>
@@ -707,16 +784,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <input
                 className="w-full h-10 pl-9 pr-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:text-white text-sm"
                 type="text"
-                defaultValue={currentUserArea}
+                value={profileAreaInput}
+                onChange={(event) => setProfileAreaInput(event.target.value)}
                 placeholder="Neighborhood / Area"
               />
             </div>
           </div>
+          {profileSaveError ? (
+            <p className="text-sm font-medium text-red-600">
+              {profileSaveError}
+            </p>
+          ) : null}
           <button
-            onClick={() => setIsProfileModalOpen(false)}
+            onClick={() => {
+              void handleSaveProfile();
+            }}
+            disabled={isSavingProfile}
             className="w-full h-10 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium shadow-sm mt-3 transition-all"
           >
-            Update Profile
+            {isSavingProfile ? "Updating..." : "Update Profile"}
           </button>
         </div>
       </Modal>

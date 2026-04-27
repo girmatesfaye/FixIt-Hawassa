@@ -39,6 +39,23 @@ const verifySchema = z.object({
   role: z.enum(["client", "worker", "admin"]).optional(),
 });
 
+const updateMeSchema = z
+  .object({
+    fullName: z.string().trim().min(2).max(120).optional(),
+    area: z.string().trim().min(2).max(120).optional(),
+    location: z.string().trim().min(2).max(120).optional(),
+  })
+  .refine(
+    (data) =>
+      data.fullName !== undefined ||
+      data.area !== undefined ||
+      data.location !== undefined,
+    {
+      message: "At least one field is required",
+      path: ["fullName"],
+    },
+  );
+
 type OtpSession = {
   userId: string;
   role: UserRole;
@@ -127,6 +144,66 @@ export const getMe = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[auth] Failed to load current user", error);
     return res.status(500).json({ message: "Failed to load current user" });
+  }
+};
+
+export const updateMe = async (req: Request, res: Response) => {
+  const userId = (req as { userId?: string }).userId;
+  const role = (req as { userRole?: UserRole }).userRole;
+
+  if (!userId || !role) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const parsed = updateMeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Invalid profile update payload",
+      errors: parsed.error.flatten(),
+    });
+  }
+
+  const updatePayload: { fullName?: string; area?: string } = {};
+  if (parsed.data.fullName !== undefined) {
+    updatePayload.fullName = parsed.data.fullName;
+  }
+
+  const normalizedArea = (parsed.data.location ?? parsed.data.area)?.trim();
+  if (normalizedArea !== undefined) {
+    updatePayload.area = normalizedArea;
+  }
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updatePayload },
+      { new: true },
+    )
+      .select("_id fullName role phone area status isVerified")
+      .lean();
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ message: "User not found", source: "mongodb" });
+    }
+
+    return res.json({
+      message: "Profile updated",
+      user: {
+        id: String(updatedUser._id),
+        name: updatedUser.fullName,
+        role: updatedUser.role,
+        phone: updatedUser.phone,
+        area: updatedUser.area,
+        status: updatedUser.status,
+        isVerified: updatedUser.isVerified,
+      },
+      source: "mongodb",
+    });
+  } catch (error) {
+    console.error("[auth] Failed to update current user", error);
+    return res.status(500).json({ message: "Failed to update profile" });
   }
 };
 
