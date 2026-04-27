@@ -609,6 +609,104 @@ export const createCategory = async (req: Request, res: Response) => {
   }
 };
 
+export const updateCategory = async (req: Request, res: Response) => {
+  try {
+    if (
+      typeof req.params.id !== "string" ||
+      !Types.ObjectId.isValid(req.params.id)
+    ) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    const description =
+      typeof req.body?.description === "string"
+        ? req.body.description.trim()
+        : "";
+    const icon =
+      typeof req.body?.icon === "string" && req.body.icon.trim()
+        ? req.body.icon.trim()
+        : "category";
+
+    if (!name || !description) {
+      return res
+        .status(400)
+        .json({ error: "Name and description are required" });
+    }
+
+    const category = await Category.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          name,
+          description,
+          icon,
+        },
+      },
+      { new: true },
+    ).lean();
+
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    return res.json({ category });
+  } catch (error) {
+    console.error("[admin] Failed to update category", error);
+    return res.status(500).json({ error: "Failed to update category" });
+  }
+};
+
+export const updateCategoryStatus = async (req: Request, res: Response) => {
+  try {
+    if (
+      typeof req.params.id !== "string" ||
+      !Types.ObjectId.isValid(req.params.id)
+    ) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    const isActive = Boolean(req.body?.isActive);
+
+    const category = await Category.findByIdAndUpdate(
+      req.params.id,
+      { $set: { isActive } },
+      { new: true },
+    ).lean();
+
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    return res.json({ category });
+  } catch (error) {
+    console.error("[admin] Failed to update category status", error);
+    return res.status(500).json({ error: "Failed to update category status" });
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    if (
+      typeof req.params.id !== "string" ||
+      !Types.ObjectId.isValid(req.params.id)
+    ) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    const category = await Category.findByIdAndDelete(req.params.id).lean();
+
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    return res.json({ message: "Category deleted" });
+  } catch (error) {
+    console.error("[admin] Failed to delete category", error);
+    return res.status(500).json({ error: "Failed to delete category" });
+  }
+};
+
 export const getStats = async (_req: Request, res: Response) => {
   try {
     const now = new Date();
