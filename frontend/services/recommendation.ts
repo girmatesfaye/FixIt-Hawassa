@@ -8,98 +8,33 @@ const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
 
-export const MOCK_WORKERS: WorkerRecommendation[] = [
-  {
-    id: 1,
-    name: "Abebe Kebede",
-    location: "Hawassa, Piassa",
-    area: "Piassa",
-    rating: 4.8,
-    reviews: 142,
-    isActive: true,
-    distanceKm: 1.2,
-    completionRate: 0.96,
-    responseMinutes: 6,
-    skills: ["Plumbing", "Pipe Repair", "Leak Fix"],
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&h=300&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Tigist Bekele",
-    location: "Hawassa, Tabor",
-    area: "Tabor",
-    rating: 4.9,
-    reviews: 89,
-    isActive: true,
-    distanceKm: 3.4,
-    completionRate: 0.93,
-    responseMinutes: 9,
-    skills: ["Plumbing", "Installation", "Bathroom Fix"],
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=300&h=300&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    name: "Dawit Alemu",
-    location: "Hawassa, Millennium",
-    area: "Millennium",
-    rating: 4.5,
-    reviews: 56,
-    isActive: true,
-    distanceKm: 5.2,
-    completionRate: 0.89,
-    responseMinutes: 12,
-    skills: ["General Repair", "Plumbing", "Emergency Service"],
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&h=300&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    name: "Meron Hailu",
-    location: "Hawassa, Gudumale",
-    area: "Gudumale",
-    rating: 4.7,
-    reviews: 63,
-    isActive: false,
-    distanceKm: 7.9,
-    completionRate: 0.9,
-    responseMinutes: 14,
-    skills: ["Plumbing", "Water Heater", "Maintenance"],
-    avatar:
-      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=300&h=300&auto=format&fit=crop",
-  },
-  {
-    id: 5,
-    name: "Samuel Tadesse",
-    location: "Hawassa, Piassa",
-    area: "Piassa",
-    rating: 4.6,
-    reviews: 74,
-    isActive: true,
-    distanceKm: 2.5,
-    completionRate: 0.91,
-    responseMinutes: 7,
-    skills: ["Electrical", "Plumbing", "Home Repair"],
-    avatar:
-      "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=300&h=300&auto=format&fit=crop",
-  },
-  {
-    id: 6,
-    name: "Yonas Bekele",
-    location: "Hawassa, Tabor",
-    area: "Tabor",
-    rating: 4.4,
-    reviews: 48,
-    isActive: true,
-    distanceKm: 6.1,
-    completionRate: 0.87,
-    responseMinutes: 16,
-    skills: ["Carpentry", "Plumbing", "Fittings"],
-    avatar:
-      "https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=300&h=300&auto=format&fit=crop",
-  },
-];
+export const fetchTopWorkers = async (filters?: {
+  maxDistanceKm?: number;
+  minRating?: number;
+  onlyActive?: boolean;
+  limit?: number;
+}): Promise<WorkerRecommendation[]> => {
+  const params = new URLSearchParams({
+    maxDistanceKm: String(filters?.maxDistanceKm ?? 20),
+    minRating: String(filters?.minRating ?? 0),
+    onlyActive: String(filters?.onlyActive ?? false),
+    page: "1",
+    limit: String(filters?.limit ?? 12),
+  });
+
+  const response = await fetch(
+    `${API_BASE_URL}/recommendations/rank?${params.toString()}`,
+  );
+  const result = (await response.json().catch(() => null)) as {
+    recommendations?: WorkerRecommendation[];
+  } | null;
+
+  if (!response.ok || !Array.isArray(result?.recommendations)) {
+    throw new Error("RECOMMENDATION_LOAD_FAILED");
+  }
+
+  return result.recommendations;
+};
 
 const normalize = (value: number, min: number, max: number): number => {
   if (max === min) return 1;

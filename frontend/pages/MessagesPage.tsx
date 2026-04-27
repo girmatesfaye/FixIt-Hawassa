@@ -24,7 +24,7 @@ const MessagesPage: React.FC = () => {
       try {
         const token = getAuthToken();
         const res = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
@@ -43,12 +43,14 @@ const MessagesPage: React.FC = () => {
       try {
         const token = getAuthToken();
         const res = await fetch(`${API_BASE_URL}/requests/mine`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
           setRequests(
-            (data.requests || []).filter((request: any) => request.assignedWorkerId),
+            (data.requests || []).filter(
+              (request: any) => request.assignedWorkerId,
+            ),
           );
         }
       } catch (err) {
@@ -76,7 +78,7 @@ const MessagesPage: React.FC = () => {
     try {
       const token = getAuthToken();
       const res = await fetch(`${API_BASE_URL}/messages/${requestId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -106,14 +108,14 @@ const MessagesPage: React.FC = () => {
     try {
       const token = getAuthToken();
       const requestId = requests[selectedContact].id;
-      
+
       const res = await fetch(`${API_BASE_URL}/messages/${requestId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text: newMessage })
+        body: JSON.stringify({ text: newMessage }),
       });
       if (res.ok) {
         setNewMessage("");
@@ -127,7 +129,9 @@ const MessagesPage: React.FC = () => {
   const getContactName = (req: any) => {
     if (!me) return "Unknown";
     if (req.clientUserId && req.clientUserId._id === me.id) {
-        return req.assignedWorkerId ? req.assignedWorkerId.name : "Unassigned Worker";
+      return req.assignedWorkerId
+        ? req.assignedWorkerId.name
+        : "Unassigned Worker";
     }
     return req.clientUserId ? req.clientUserId.name : "Client";
   };
@@ -169,7 +173,7 @@ const MessagesPage: React.FC = () => {
             </Link>
             <div className="size-10 rounded-full bg-gray-100 overflow-hidden">
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`}
                 alt="User"
               />
             </div>
@@ -202,7 +206,10 @@ const MessagesPage: React.FC = () => {
               >
                 <div className="relative shrink-0">
                   <div className="size-12 rounded-full overflow-hidden bg-gray-100">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`} alt={getContactName(contact)} />
+                    <img
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`}
+                      alt={getContactName(contact)}
+                    />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -215,9 +222,7 @@ const MessagesPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p
-                      className={`text-xs truncate text-gray-500`}
-                    >
+                    <p className={`text-xs truncate text-gray-500`}>
                       {contact.category}
                     </p>
                   </div>
@@ -235,7 +240,10 @@ const MessagesPage: React.FC = () => {
               <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-full overflow-hidden bg-gray-100">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(requests[selectedContact])}`} alt="" />
+                    <img
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(requests[selectedContact])}`}
+                      alt=""
+                    />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-[#120e1b] dark:text-white">
@@ -250,22 +258,26 @@ const MessagesPage: React.FC = () => {
                 {messages.map((msg) => {
                   const isMe = msg.senderId === me?.id;
                   return (
-                  <div
-                    key={msg._id}
-                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                  >
                     <div
-                      className={`max-w-[70%] rounded-2xl p-4 shadow-sm ${isMe ? "bg-primary text-white rounded-tr-none" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"}`}
+                      key={msg._id}
+                      className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
                       <div
-                        className={`text-[10px] mt-1 font-semibold uppercase opacity-60 ${isMe ? "text-right" : "text-left"}`}
+                        className={`max-w-[70%] rounded-2xl p-4 shadow-sm ${isMe ? "bg-primary text-white rounded-tr-none" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"}`}
                       >
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                        <div
+                          className={`text-[10px] mt-1 font-semibold uppercase opacity-60 ${isMe ? "text-right" : "text-left"}`}
+                        >
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )})}
+                  );
+                })}
               </div>
 
               {/* Input Area */}
@@ -294,7 +306,7 @@ const MessagesPage: React.FC = () => {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">
-               Select a conversation to start messaging
+              Select a conversation to start messaging
             </div>
           )}
         </section>

@@ -134,8 +134,7 @@ const WorkerProfilePage: React.FC = () => {
         setWorker({
           id: workerData.id,
           name: workerData.name,
-          title:
-            profile?.title || profile?.skills?.[0] || "Worker Professional",
+          title: profile?.title || profile?.skills?.[0] || "",
           rating: Number(profile?.rating ?? 0),
           reviews: Number(profile?.reviews ?? resolvedReviews.length),
           location: profile?.area?.trim() || "Hawassa",

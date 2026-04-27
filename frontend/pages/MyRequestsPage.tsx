@@ -10,6 +10,7 @@ import {
   submitWorkerReport,
   submitWorkerReview,
 } from "../services/clientRequests";
+import { getAuthToken } from "../services/auth";
 
 type RequestCard = {
   id: string;
@@ -88,6 +89,7 @@ const MyRequestsPage: React.FC = () => {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [reviewedRequestIds, setReviewedRequestIds] = useState<string[]>([]);
   const [reportedRequestIds, setReportedRequestIds] = useState<string[]>([]);
+  const [currentUserName, setCurrentUserName] = useState("");
 
   const loadRequests = async () => {
     setIsLoading(true);
@@ -109,6 +111,36 @@ const MyRequestsPage: React.FC = () => {
 
   useEffect(() => {
     void loadRequests();
+  }, []);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const token = getAuthToken();
+        if (!token) {
+          setCurrentUserName("");
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error("UNAUTHORIZED");
+        }
+
+        const result = (await response.json().catch(() => null)) as {
+          user?: { name?: string };
+        } | null;
+
+        setCurrentUserName(result?.user?.name ?? "");
+      } catch {
+        setCurrentUserName("");
+      }
+    };
+
+    void loadCurrentUser();
   }, []);
 
   const handleConfirmCompletion = async (requestId: string) => {
@@ -286,7 +318,7 @@ const MyRequestsPage: React.FC = () => {
             </Link>
             <div className="size-10 rounded-full bg-gray-100 overflow-hidden">
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUserName || "User")}`}
                 alt="User"
               />
             </div>

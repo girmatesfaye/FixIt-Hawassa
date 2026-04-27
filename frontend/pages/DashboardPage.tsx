@@ -89,6 +89,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     ClientRequestItem[]
   >([]);
   const [myUserId, setMyUserId] = useState("");
+  const [currentUserName, setCurrentUserName] = useState("");
+  const [currentUserArea, setCurrentUserArea] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
   const formatStatus = (status: ApiRequestStatus): RequestStatus => {
@@ -157,7 +159,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         }
 
         const result = (await response.json().catch(() => null)) as {
-          user?: { id?: string };
+          user?: { id?: string; name?: string; area?: string };
         } | null;
 
         if (!result?.user?.id) {
@@ -165,9 +167,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         }
 
         setMyUserId(result.user.id);
+        setCurrentUserName(result.user.name ?? "");
+        setCurrentUserArea(result.user.area ?? "");
       })
       .catch(() => {
         setMyUserId("");
+        setCurrentUserName("");
+        setCurrentUserArea("");
       });
   }, []);
 
@@ -368,11 +374,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
 
                 <div className="space-y-1">
                   <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#120e1b] dark:text-white">
-                    Hi, Abebe! 👋
+                    Hi, {currentUserName || "there"}! 👋
                   </h2>
                   <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
                     Ready to fix something in{" "}
-                    <span className="text-primary font-medium">Tabor</span>{" "}
+                    <span className="text-primary font-medium">
+                      {currentUserArea || "your area"}
+                    </span>{" "}
                     today?
                   </p>
                 </div>
@@ -684,7 +692,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
             <input
               className="w-full h-10 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:text-white text-sm"
               type="text"
-              defaultValue="Abebe Kebede"
+              defaultValue={currentUserName}
               placeholder="Your full name"
             />
           </div>
@@ -699,7 +707,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <input
                 className="w-full h-10 pl-9 pr-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:text-white text-sm"
                 type="text"
-                defaultValue="Hawassa, Tabor"
+                defaultValue={currentUserArea}
                 placeholder="Neighborhood / Area"
               />
             </div>

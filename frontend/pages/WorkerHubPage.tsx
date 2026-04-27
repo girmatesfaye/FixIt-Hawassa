@@ -19,12 +19,12 @@ interface WorkerHubPageProps {
 const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const [isAvailable, setIsAvailable] = useState(true);
-  const [skills, setSkills] = useState(["Plumbing", "Pipe Repair"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
-  const [workerName, setWorkerName] = useState("Worker Profile");
-  const [workerTitle, setWorkerTitle] = useState("Worker Professional");
-  const [bio, setBio] = useState("Update your profile to set a bio.");
-  const [area, setArea] = useState("Hawassa");
+  const [workerName, setWorkerName] = useState("");
+  const [workerTitle, setWorkerTitle] = useState("");
+  const [bio, setBio] = useState("");
+  const [area, setArea] = useState("");
   const [phone, setPhone] = useState("");
   const [telegramUsername, setTelegramUsername] = useState("");
   const [tiktokProfile, setTiktokProfile] = useState("");
@@ -37,7 +37,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   const [requestActionId, setRequestActionId] = useState("");
   const [requestError, setRequestError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [selectedReport, setSelectedReport] = useState<ClientReportItem | null>(null);
+  const [selectedReport, setSelectedReport] = useState<ClientReportItem | null>(
+    null,
+  );
   const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
 
   const profileAvatar =
@@ -69,15 +71,13 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           ? workerProfile.portfolio
           : [];
 
-        setWorkerName(profile.name || "Worker Profile");
+        setWorkerName(profile.name || "");
         setWorkerTitle(
           workerProfile.title ||
-            (nextSkills[0]
-              ? `${nextSkills[0]} Specialist`
-              : "Worker Professional"),
+            (nextSkills[0] ? `${nextSkills[0]} Specialist` : ""),
         );
-        setBio(workerProfile.bio || "Update your profile to set a bio.");
-        setArea(workerProfile.area || "Hawassa");
+        setBio(workerProfile.bio || "");
+        setArea(workerProfile.area || "");
         setPhone(profile.phone || "");
         setTelegramUsername(workerProfile.telegramUsername || "");
         setTiktokProfile(workerProfile.tiktokProfile || "");
