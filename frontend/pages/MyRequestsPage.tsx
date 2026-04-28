@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
+import ActionMenu from "../components/ActionMenu";
 import { RequestStatus } from "../types";
 import {
   ApiRequestStatus,
@@ -72,6 +73,9 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
 
 const MyRequestsPage: React.FC = () => {
   const navigate = useNavigate();
+  const API_BASE_URL =
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+    "http://localhost:4000";
   const [activeTab, setActiveTab] = useState<"Active" | "History">("Active");
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -486,55 +490,59 @@ const MyRequestsPage: React.FC = () => {
                           )}
                         </div>
                       )}
-                      <button
-                        onClick={() =>
-                          req.hasMessagesAccess
-                            ? navigate("/messages", {
-                                state: { requestId: req.id },
-                              })
-                            : navigate("/search-results")
-                        }
-                        className="flex-1 md:flex-none h-11 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
-                      >
-                        {req.hasMessagesAccess ? "Open Chat" : "Track Order"}
-                      </button>
-                      {req.apiStatus === "COMPLETED" && req.workerId ? (
-                        <>
-                          <button
-                            onClick={() => openReviewModal(req)}
-                            disabled={reviewedRequestIds.includes(req.id)}
-                            className="h-11 px-5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                          >
-                            {reviewedRequestIds.includes(req.id)
-                              ? "Rated"
-                              : "Rate Worker"}
-                          </button>
-                          <button
-                            onClick={() => openReportModal(req)}
-                            disabled={reportedRequestIds.includes(req.id)}
-                            className="h-11 px-5 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                          >
-                            {reportedRequestIds.includes(req.id)
-                              ? "Reported"
-                              : "Report Worker"}
-                          </button>
-                        </>
-                      ) : null}
-                      {req.apiStatus === "IN_PROGRESS" &&
-                      req.workerMarkedCompleteAt ? (
-                        <button
-                          onClick={() => {
-                            void handleConfirmCompletion(req.id);
-                          }}
-                          disabled={confirmingRequestId === req.id}
-                          className="h-11 px-5 bg-green-100 hover:bg-green-600 text-green-700 hover:text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-60"
-                        >
-                          {confirmingRequestId === req.id
-                            ? "Confirming..."
-                            : "Confirm Complete"}
-                        </button>
-                      ) : null}
+                      <ActionMenu
+                        actions={(() => {
+                          const base = [
+                            {
+                              label: req.hasMessagesAccess
+                                ? "Open Chat"
+                                : "Track Order",
+                              onClick: () =>
+                                req.hasMessagesAccess
+                                  ? navigate("/messages", {
+                                      state: { requestId: req.id },
+                                    })
+                                  : navigate("/search-results"),
+                            },
+                          ];
 
+                          if (req.apiStatus === "COMPLETED" && req.workerId) {
+                            base.push(
+                              {
+                                label: reviewedRequestIds.includes(req.id)
+                                  ? "Rated"
+                                  : "Rate Worker",
+                                onClick: () => openReviewModal(req),
+                                disabled: reviewedRequestIds.includes(req.id),
+                              },
+                              {
+                                label: reportedRequestIds.includes(req.id)
+                                  ? "Reported"
+                                  : "Report Worker",
+                                onClick: () => openReportModal(req),
+                                disabled: reportedRequestIds.includes(req.id),
+                              },
+                            );
+                          }
+
+                          if (
+                            req.apiStatus === "IN_PROGRESS" &&
+                            req.workerMarkedCompleteAt
+                          ) {
+                            base.push({
+                              label:
+                                confirmingRequestId === req.id
+                                  ? "Confirming..."
+                                  : "Confirm Complete",
+                              onClick: () =>
+                                void handleConfirmCompletion(req.id),
+                              disabled: confirmingRequestId === req.id,
+                            });
+                          }
+
+                          return base;
+                        })()}
+                      />
                     </div>
                   </div>
                 ))}

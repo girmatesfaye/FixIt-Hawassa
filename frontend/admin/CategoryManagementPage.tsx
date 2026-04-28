@@ -9,6 +9,12 @@ const API_BASE_URL =
 const CategoryManagementPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editIcon, setEditIcon] = useState("");
+  const [page, setPage] = useState(1);
 
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +52,79 @@ const CategoryManagementPage: React.FC = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  const PAGE_SIZE = 8;
+
+  const totalPages = Math.max(1, Math.ceil(categories.length / PAGE_SIZE));
+
+  const paginated = categories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const openEditModal = (cat: any) => {
+    setEditCategoryId(cat.id);
+    setEditName(cat.name);
+    setEditDesc(cat.description);
+    setEditIcon(cat.icon || "category");
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editCategoryId) return;
+    try {
+      const token = getAuthToken();
+      const res = await fetch(
+        `${API_BASE_URL}/admin/categories/${editCategoryId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: editName,
+            description: editDesc,
+            icon: editIcon,
+          }),
+        },
+      );
+      if (res.ok) {
+        setIsEditModalOpen(false);
+        fetchCategories();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/admin/categories/${id}/status`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isActive: !isActive }),
+      });
+      if (res.ok) fetchCategories();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Delete this category? This action cannot be undone.")) return;
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) fetchCategories();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleCreateCategory = async () => {
     try {
@@ -118,7 +197,7 @@ const CategoryManagementPage: React.FC = () => {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filteredCategories.map((category) => (
+        {paginated.map((category) => (
           <div
             key={category.id}
             className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all group"
@@ -152,15 +231,35 @@ const CategoryManagementPage: React.FC = () => {
                     {category.workers} Workers
                   </span>
                 </div>
-                <span
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wider uppercase ${
-                    category.status === "Active"
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-gray-50 text-gray-600 border border-gray-200"
-                  }`}
-                >
-                  {category.status}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      handleToggleStatus(
+                        category.id,
+                        category.status === "Active",
+                      )
+                    }
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wider uppercase ${
+                      category.status === "Active"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-gray-50 text-gray-600 border border-gray-200"
+                    }`}
+                  >
+                    {category.status}
+                  </button>
+                  <button
+                    onClick={() => openEditModal(category)}
+                    className="h-8 px-3 rounded-md border border-gray-100 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCategory(category.id)}
+                    className="h-8 px-3 rounded-md border border-red-100 text-xs font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -229,24 +328,81 @@ const CategoryManagementPage: React.FC = () => {
         </div>
       </Modal>
 
+      {/* Edit Category Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Category"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-[#120e1b]">Name</label>
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-100"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-[#120e1b]">
+              Description
+            </label>
+            <textarea
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              className="w-full h-24 p-3 rounded-xl bg-gray-50 border border-gray-100"
+            />
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="flex-1 h-12 rounded-xl border border-gray-200 font-bold text-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpdateCategory}
+              className="flex-1 h-12 rounded-xl bg-primary text-white font-bold"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Pagination Footer */}
       <div className="flex items-center justify-between border-t border-gray-200 pt-6">
         <p className="text-xs font-medium text-gray-500 tracking-wider">
-          Showing <span className="text-[#120e1b]">1-8</span> of{" "}
-          <span className="text-[#120e1b]">12</span> categories
+          Showing{" "}
+          <span className="text-[#120e1b]">{(page - 1) * PAGE_SIZE + 1}</span> -{" "}
+          <span className="text-[#120e1b]">
+            {Math.min(page * PAGE_SIZE, categories.length)}
+          </span>{" "}
+          of <span className="text-[#120e1b]">{categories.length}</span>{" "}
+          categories
         </p>
         <div className="flex items-center gap-1">
-          <button className="h-9 px-4 rounded-lg text-xs font-bold text-gray-400 hover:text-primary disabled:opacity-50">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="h-9 px-4 rounded-lg text-xs font-bold text-gray-400 hover:text-primary disabled:opacity-50"
+          >
             Previous
           </button>
-          <button className="size-9 rounded-lg bg-primary text-white text-xs font-bold">
-            1
-          </button>
-          <button className="size-9 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100 transition-colors">
-            2
-          </button>
-          <span className="px-2 text-gray-300">...</span>
-          <button className="h-9 px-4 rounded-lg text-xs font-bold text-gray-500 hover:text-primary">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`size-9 rounded-lg text-xs font-bold ${p === page ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100"}`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="h-9 px-4 rounded-lg text-xs font-bold text-gray-500 hover:text-primary disabled:opacity-50"
+          >
             Next
           </button>
         </div>
