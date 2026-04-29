@@ -30,6 +30,19 @@ const ServiceRequestPage: React.FC = () => {
   }
 
   const currentCategory = navCategory ?? savedCategory ?? "Plumbing";
+  const findWorkersLabel = `Find ${currentCategory} Pros`;
+  const categoryLabel = currentCategory.trim() || "General service";
+  const categoryIcon = currentCategory.toLowerCase().includes("plumb")
+    ? "plumbing"
+    : currentCategory.toLowerCase().includes("elect")
+      ? "bolt"
+      : currentCategory.toLowerCase().includes("paint")
+        ? "format_paint"
+        : currentCategory.toLowerCase().includes("clean")
+          ? "cleaning_services"
+          : currentCategory.toLowerCase().includes("carpen")
+            ? "carpenter"
+            : "build";
   const [description, setDescription] = useState("");
   const [maintenanceLevel, setMaintenanceLevel] = useState("Medium");
   const [area, setArea] = useState("");
@@ -295,11 +308,14 @@ const ServiceRequestPage: React.FC = () => {
         </div>
 
         {/* Title Section */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="size-10 rounded-full bg-blue-50 text-primary flex items-center justify-center">
-            <span className="material-symbols-outlined">edit_note</span>
+        <div className="flex items-start sm:items-center gap-4 mb-8">
+          <div className="size-11 rounded-2xl bg-blue-50 text-primary flex items-center justify-center shadow-sm">
+            <span className="material-symbols-outlined">{categoryIcon}</span>
           </div>
-          <div>
+          <div className="flex-1">
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary mb-2">
+              {categoryLabel}
+            </span>
             <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white">
               Describe Your Problem
             </h1>
@@ -313,7 +329,7 @@ const ServiceRequestPage: React.FC = () => {
         {/* Form Sections */}
         <div className="space-y-6">
           {/* Issue Description */}
-          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-800">
             <h3 className="text-sm font-bold mb-4 text-[#120e1b] dark:text-white">
               What seems to be the issue?
             </h3>
@@ -325,7 +341,7 @@ const ServiceRequestPage: React.FC = () => {
                   setDescription(e.target.value);
                   if (formError) setFormError("");
                 }}
-                placeholder="E.g., The kitchen sink pipe is leaking underneath the cabinet. It started dripping yesterday and the water pressure is low..."
+                placeholder={`E.g., Describe your ${categoryLabel.toLowerCase()} issue clearly, when it started, and what has already been tried...`}
                 className="w-full h-32 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-primary dark:text-white text-sm resize-none"
               />
               <div className="text-right mt-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
@@ -335,7 +351,7 @@ const ServiceRequestPage: React.FC = () => {
           </div>
 
           {/* Photos */}
-          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-[#120e1b] dark:text-white">
                 Add Photos{" "}
@@ -399,7 +415,7 @@ const ServiceRequestPage: React.FC = () => {
           </div>
 
           {/* Location */}
-          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-800">
             <h3 className="text-sm font-bold mb-4 text-[#120e1b] dark:text-white">
               Location
             </h3>
@@ -458,7 +474,7 @@ const ServiceRequestPage: React.FC = () => {
           </div>
 
           {/* Maintenance Level */}
-          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-800">
             <h3 className="text-sm font-bold mb-4 text-[#120e1b] dark:text-white">
               Maintenance Level
             </h3>
@@ -494,18 +510,21 @@ const ServiceRequestPage: React.FC = () => {
                 {formError}
               </p>
             ) : null}
-            <button
-              onClick={handleFindWorkers}
-              disabled={isSubmitting}
-              className="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-primary/30 transition-all transform active:scale-95"
-            >
-              {isSubmitting ? "Submitting..." : "Find Plumbers"}
-              <span className="material-symbols-outlined">arrow_forward</span>
-            </button>
-            <p className="text-center text-[10px] text-gray-400 font-medium mt-4 leading-relaxed max-w-sm mx-auto">
-              By clicking "Find Plumbers", you agree to our Terms of Service.
-              Your request will be broadcast to verified workers nearby.
-            </p>
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-b from-white to-gray-50/70 dark:from-surface-dark dark:to-gray-900/30 p-4 sm:p-5">
+              <button
+                onClick={handleFindWorkers}
+                disabled={isSubmitting}
+                className="w-full h-14 bg-primary hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-primary/30 transition-all transform active:scale-[0.99]"
+              >
+                {isSubmitting ? "Submitting..." : findWorkersLabel}
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <p className="text-center text-[10px] text-gray-400 font-medium mt-4 leading-relaxed max-w-sm mx-auto">
+                By clicking "{findWorkersLabel}", you agree to our Terms of
+                Service. Your request will be broadcast to verified workers
+                nearby.
+              </p>
+            </div>
           </div>
         </div>
       </main>

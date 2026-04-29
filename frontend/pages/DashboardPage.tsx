@@ -380,6 +380,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     setIsReportDetailModalOpen(true);
   };
 
+  const completedRequestsCount = allClientRequests.filter(
+    (request) => request.status === "COMPLETED",
+  ).length;
+  const pendingResponsesCount = allClientRequests.filter(
+    (request) => request.status === "PENDING",
+  ).length;
+
   return (
     <div className="portal-shell dark:bg-background-dark text-[#120e1b] dark:text-white font-sans min-h-screen">
       <div className="flex flex-col">
@@ -396,9 +403,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 <h1 className="text-base font-bold leading-none dark:text-white tracking-tight">
                   FixIt Hawassa
                 </h1>
-                <p className="text-xs font-medium text-primary mt-1">
-                  Client Portal
-                </p>
+                <p className="text-xs font-medium text-primary mt-1">Client</p>
               </div>
             </Link>
 
@@ -442,67 +447,92 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
 
         <main className="mx-auto w-full max-w-7xl px-6 py-8">
           <div className="flex flex-col gap-10">
-            {/* Hero / Greeting */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 portal-panel p-6 sm:p-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Hero / Greeting */}
+              <div className="flex flex-col justify-between gap-6 portal-panel p-6 sm:p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
 
-              <div className="relative z-10 flex items-center gap-5">
-                {/* Profile Edit Trigger Icon */}
-                <button
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="group relative size-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all duration-300"
-                  aria-label="Edit Profile"
-                >
-                  <span className="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">
-                    account_circle
-                  </span>
-                  <div className="absolute -bottom-1 -right-1 size-5 bg-white dark:bg-surface-dark rounded-full flex items-center justify-center border border-primary/20 shadow-sm">
-                    <span className="material-symbols-outlined text-primary text-[12px] font-bold">
-                      edit
+                <div className="relative z-10 flex items-center gap-5">
+                  {/* Profile Edit Trigger Icon */}
+                  <button
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="group relative size-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all duration-300"
+                    aria-label="Edit Profile"
+                  >
+                    <span className="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">
+                      account_circle
                     </span>
-                  </div>
-                </button>
+                    <div className="absolute -bottom-1 -right-1 size-5 bg-white dark:bg-surface-dark rounded-full flex items-center justify-center border border-primary/20 shadow-sm">
+                      <span className="material-symbols-outlined text-primary text-[12px] font-bold">
+                        edit
+                      </span>
+                    </div>
+                  </button>
 
-                <div className="space-y-1">
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#120e1b] dark:text-white">
-                    Hi, {currentUserName || "there"}! 👋
-                  </h2>
-                  <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                    Ready to fix something in{" "}
-                    <span className="text-primary font-medium">
-                      {currentUserArea || "your area"}
-                    </span>{" "}
-                    today?
-                  </p>
+                  <div className="space-y-1">
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#120e1b] dark:text-white">
+                      Hi, {currentUserName || "there"}! 👋
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                      Need help in{" "}
+                      <span className="text-primary font-medium">
+                        {currentUserArea || "your area"}
+                      </span>
+                      ?
+                    </p>
+                  </div>
                 </div>
+
+
               </div>
 
-              <div className="relative z-10 w-full md:w-80">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
-                  search
-                </span>
-                <input
-                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:text-white text-sm transition-all"
-                  placeholder="Search for plumbers..."
-                  type="text"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="portal-panel p-4 h-full">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Active Requests
+                  </p>
+                  <p className="text-2xl font-bold text-[#120e1b] dark:text-white mt-1">
+                    {activeRequestsCount}
+                  </p>
+                </div>
+                <div className="portal-panel p-4 h-full">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Pending Replies
+                  </p>
+                  <p className="text-2xl font-bold text-[#120e1b] dark:text-white mt-1">
+                    {pendingResponsesCount}
+                  </p>
+                </div>
+                <div className="portal-panel p-4 h-full">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Completed Jobs
+                  </p>
+                  <p className="text-2xl font-bold text-[#120e1b] dark:text-white mt-1">
+                    {completedRequestsCount}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Service Grid */}
             <div className="space-y-5">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold dark:text-white tracking-tight">
-                  Services Categories
-                </h3>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold dark:text-white tracking-tight">
+                    Service Categories
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Pick a service to start a request fast
+                  </p>
+                </div>
                 <Link
                   to="/search-results"
-                  className="text-sm font-medium text-primary hover:underline"
+                  className="text-sm font-medium text-primary hover:underline shrink-0"
                 >
                   View All
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 {(categories.length > 0
                   ? categories
                   : [
@@ -527,17 +557,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                     <button
                       key={svc.name}
                       onClick={() => handleServiceClick(svc.name)}
-                      className="group flex flex-col items-center gap-3 p-5 rounded-2xl portal-panel hover:shadow-md hover:border-primary/30 transition-all duration-300"
+                      className="group flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-md transition-all duration-300 text-left"
                     >
                       <div
-                        className={`size-12 rounded-xl ${color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                        className={`size-10 rounded-xl ${color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
                       >
-                        <span className="material-symbols-outlined text-2xl">
+                        <span className="material-symbols-outlined text-xl">
                           {svc.icon || "build"}
                         </span>
                       </div>
-                      <span className="text-sm font-medium dark:text-white">
-                        {svc.name}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold dark:text-white truncate">
+                          {svc.name}
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          Start request
+                        </p>
+                      </div>
+                      <span className="material-symbols-outlined text-gray-300 group-hover:text-primary text-[18px]">
+                        chevron_right
                       </span>
                     </button>
                   );
@@ -553,7 +591,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                     My Recent Requests
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                    Live request data from your request history
+                    Latest activity from your requests
                   </p>
                 </div>
                 <Link
@@ -563,15 +601,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   View All
                 </Link>
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {myRequestsPreview.length ? (
                   myRequestsPreview.map((request) => (
                     <div
                       key={request.id}
-                      className="min-w-[280px] portal-panel p-4 flex flex-col gap-3 hover:shadow-md hover:border-primary/30 transition-all"
+                      className="portal-panel p-5 flex flex-col gap-4 hover:shadow-md hover:border-primary/30 transition-all"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h4 className="text-sm font-semibold text-[#120e1b] dark:text-white truncate">
+                        <h4 className="text-base font-semibold text-[#120e1b] dark:text-white truncate">
                           {request.category}
                         </h4>
                         <span
@@ -591,11 +629,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                         {request.description}
                       </p>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-primary font-medium truncate">
-                          {request.area}
-                        </span>
-                        <span className="text-gray-400">
+                      <div className="flex items-center justify-between text-xs border-t border-gray-100 dark:border-gray-800 pt-3">
+                        <div className="flex items-center gap-1.5 text-primary font-medium truncate">
+                          <span className="material-symbols-outlined text-[14px]">
+                            location_on
+                          </span>
+                          <span className="truncate">{request.area}</span>
+                        </div>
+                        <span className="text-gray-400 shrink-0">
                           {new Date(request.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -603,18 +644,24 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                         onClick={() => navigate("/my-requests")}
                         className="h-9 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-semibold transition-all"
                       >
-                        Open My Requests
+                        Open Request
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="portal-panel p-6 w-full text-center">
-                    <p className="text-sm font-semibold text-[#120e1b] dark:text-white">
+                  <div className="portal-panel p-8 w-full text-center md:col-span-2 xl:col-span-3">
+                    <p className="text-base font-semibold text-[#120e1b] dark:text-white">
                       No requests yet
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500 mt-1">
                       Submit a service request to see your requests here.
                     </p>
+                    <button
+                      onClick={() => navigate("/request-service")}
+                      className="mt-4 h-10 px-5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors"
+                    >
+                      Create Request
+                    </button>
                   </div>
                 )}
               </div>
@@ -623,7 +670,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
             {/* My Reports Section */}
             <div className="space-y-5">
               <h3 className="text-lg font-semibold dark:text-white tracking-tight">
-                My Report Status
+                Reports
               </h3>
               {activeRequestsCount ? (
                 <p className="text-xs text-primary font-semibold">

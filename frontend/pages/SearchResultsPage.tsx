@@ -9,6 +9,7 @@ import {
 import { getAuthToken } from "../services/auth";
 import {
   fetchRecommendations,
+  fetchTopWorkers,
   getRecommendationReasons,
   LAST_CREATED_REQUEST_ID_KEY,
   LAST_REQUEST_KEY,
@@ -30,8 +31,6 @@ const SearchResultsPage: React.FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [workers, setWorkers] = useState<WorkerRecommendation[]>([]);
-  const [recommendationSource, setRecommendationSource] = useState("");
-  const [snapshotCreatedAt, setSnapshotCreatedAt] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalWorkers, setTotalWorkers] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -42,6 +41,10 @@ const SearchResultsPage: React.FC = () => {
   const [statusNotice, setStatusNotice] = useState("");
   const [myUserId, setMyUserId] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sortBy, setSortBy] = useState<"recommended" | "rating" | "distance">(
+    "recommended",
+  );
+  const [searchQuery, setSearchQuery] = useState("");
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -211,17 +214,31 @@ const SearchResultsPage: React.FC = () => {
   }, [currentRequest?.id, myUserId]);
 
   useEffect(() => {
-    if (!requestDraft || !requestId) {
-      setWorkers([]);
-      setIsLoading(false);
-      setLoadError(
-        "Create a service request first to see personalized recommendations.",
-      );
-      return;
-    }
-
     setIsLoading(true);
     setLoadError("");
+
+    if (!requestId) {
+      fetchTopWorkers({
+        maxDistanceKm: distance,
+        minRating,
+        onlyActive,
+        limit: PAGE_SIZE,
+      })
+        .then((result) => {
+          setWorkers(result);
+          setCurrentPage(1);
+          setTotalWorkers(result.length);
+          setHasMore(false);
+        })
+        .catch(() => {
+          setWorkers([]);
+          setLoadError("Could not load workers. Please try again.");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      return;
+    }
 
     fetchRecommendations(requestId, {
       maxDistanceKm: distance,
@@ -232,8 +249,6 @@ const SearchResultsPage: React.FC = () => {
     })
       .then((result) => {
         setWorkers(result.recommendations);
-        setRecommendationSource(result.source);
-        setSnapshotCreatedAt(result.snapshotCreatedAt ?? "");
         setCurrentPage(result.page);
         setTotalWorkers(result.total);
         setHasMore(result.hasMore);
@@ -250,7 +265,7 @@ const SearchResultsPage: React.FC = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [distance, minRating, onlyActive, requestDraft, requestId]);
+  }, [distance, minRating, onlyActive, requestId]);
 
   const handleLoadMore = () => {
     if (!requestId || isLoadingMore || !hasMore) {
@@ -319,6 +334,38 @@ const SearchResultsPage: React.FC = () => {
   const assignedWorkerId = currentRequest?.assignedWorkerId?._id ?? "";
   const isInvitePending = currentRequest?.status === "PENDING";
   const isWorkInProgress = currentRequest?.status === "IN_PROGRESS";
+  const hasRequestContext = Boolean(requestId);
+  const visibleWorkers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const searched = query
+      ? workers.filter((worker) => {
+          const haystack = [
+            worker.name,
+            worker.location,
+            worker.area,
+            ...worker.skills,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(query);
+        })
+      : workers;
+
+    if (sortBy === "rating") {
+      return [...searched].sort((a, b) => {
+        if (b.rating === a.rating) {
+          return b.reviews - a.reviews;
+        }
+        return b.rating - a.rating;
+      });
+    }
+
+    if (sortBy === "distance") {
+      return [...searched].sort((a, b) => a.distanceKm - b.distanceKm);
+    }
+
+    return searched;
+  }, [workers, searchQuery, sortBy]);
 
   const handleOpenMessages = () => {
     if (!currentRequest?.id) {
@@ -357,7 +404,9 @@ const SearchResultsPage: React.FC = () => {
               </span>
               <input
                 type="text"
-                defaultValue={`${requestDraft?.category ?? "Plumbing"} in ${requestDraft?.area ?? "Hawassa"}`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={`${requestDraft?.category ?? "Search by name, skill or area"}${requestDraft?.area ? ` in ${requestDraft.area}` : ""}`}
                 className="w-full h-10 pl-10 pr-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:text-white text-sm transition-all"
               />
             </div>
@@ -397,7 +446,16 @@ const SearchResultsPage: React.FC = () => {
               <h2 className="text-lg font-semibold tracking-tight text-[#120e1b] dark:text-white">
                 Filters
               </h2>
-              <button className="text-xs font-medium text-primary hover:underline">
+              <button
+                onClick={() => {
+                  setDistance(5);
+                  setMinRating(4.4);
+                  setOnlyActive(true);
+                  setSortBy("recommended");
+                  setSearchQuery("");
+                }}
+                className="text-xs font-medium text-primary hover:underline"
+              >
                 Reset
               </button>
             </div>
@@ -408,12 +466,17 @@ const SearchResultsPage: React.FC = () => {
                   Sort By
                 </label>
                 <div className="grid grid-cols-1 gap-2">
-                  {["Recommended", "Top Rated", "Near Me"].map((opt) => (
+                  {[
+                    { label: "Recommended", value: "recommended" as const },
+                    { label: "Top Rated", value: "rating" as const },
+                    { label: "Near Me", value: "distance" as const },
+                  ].map((opt) => (
                     <button
-                      key={opt}
-                      className={`h-9 px-3 text-left rounded-lg text-sm font-medium transition-all ${opt === "Recommended" ? "bg-primary text-white shadow-sm" : "bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary"}`}
+                      key={opt.value}
+                      onClick={() => setSortBy(opt.value)}
+                      className={`h-9 px-3 text-left rounded-lg text-sm font-medium transition-all ${sortBy === opt.value ? "bg-primary text-white shadow-sm" : "bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary"}`}
                     >
-                      {opt}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
@@ -475,31 +538,21 @@ const SearchResultsPage: React.FC = () => {
         <main className="flex-1 flex flex-col gap-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white tracking-tight">
-              Hand-picked Pros
+              Available Workers
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Verified professionals available for physical work near you.
+              Choose a verified worker near you.
             </p>
             {requestDraft ? (
               <p className="text-xs text-primary font-semibold">
-                Request #{requestId || "-"}: {requestDraft.category} •{" "}
-                {requestDraft.area} • {requestDraft.maintenanceLevel}
+                {requestDraft.category} in {requestDraft.area}
               </p>
             ) : (
-              <p className="text-xs text-amber-600 font-semibold">
-                No saved request context found. Create a request to continue.
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Browse live workers. Create a request when you want to invite
+                one.
               </p>
             )}
-            {recommendationSource ? (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Source: {recommendationSource}
-              </p>
-            ) : null}
-            {snapshotCreatedAt ? (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Snapshot: {new Date(snapshotCreatedAt).toLocaleString()}
-              </p>
-            ) : null}
             {currentRequest?.status === "PENDING" &&
             currentRequest.assignedWorkerId ? (
               <p className="text-xs font-semibold text-amber-600">
@@ -546,24 +599,33 @@ const SearchResultsPage: React.FC = () => {
                 Recommendation unavailable
               </p>
               <p className="text-sm text-gray-500 mt-2">{loadError}</p>
-              <button
-                onClick={() => navigate("/request-service")}
-                className="mt-4 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold"
-              >
-                Create Request
-              </button>
+              {!hasRequestContext ? (
+                <button
+                  onClick={() => navigate("/request-service")}
+                  className="mt-4 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold"
+                >
+                  Create Request
+                </button>
+              ) : null}
             </div>
           ) : (
             <>
               {/* Simplified Workers Grid */}
-              {workers.length ? (
+              {visibleWorkers.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {workers.map((worker) =>
+                  {visibleWorkers.map((worker) =>
                     (() => {
                       const isAssignedWorker =
                         assignedWorkerId === String(worker.id);
+                      const isInviteDisabled =
+                        !hasRequestContext ||
+                        Boolean(invitingWorkerId) ||
+                        isWorkInProgress ||
+                        isInvitePending;
                       const inviteLabel =
-                        invitingWorkerId === String(worker.id)
+                        !hasRequestContext
+                          ? "Create Request to Invite"
+                          : invitingWorkerId === String(worker.id)
                           ? "Sending..."
                           : isWorkInProgress && isAssignedWorker
                             ? "Accepted"
@@ -645,11 +707,7 @@ const SearchResultsPage: React.FC = () => {
                                 onClick={() => {
                                   void handleInviteWorker(worker);
                                 }}
-                                disabled={
-                                  Boolean(invitingWorkerId) ||
-                                  isWorkInProgress ||
-                                  isInvitePending
-                                }
+                                disabled={isInviteDisabled}
                                 className={inviteClassName}
                               >
                                 {inviteLabel}
@@ -674,10 +732,10 @@ const SearchResultsPage: React.FC = () => {
               ) : (
                 <div className="bg-white dark:bg-surface-dark rounded-2xl p-10 border border-gray-100 dark:border-gray-800 text-center">
                   <p className="text-lg font-semibold text-[#120e1b] dark:text-white">
-                    No workers match your filters
+                    No workers found
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
-                    Try increasing max distance or lowering minimum rating.
+                    Try a different search term or loosen your filters.
                   </p>
                 </div>
               )}
@@ -694,7 +752,7 @@ const SearchResultsPage: React.FC = () => {
                   </button>
                 ) : null}
                 <p className="text-xs text-gray-400">
-                  Showing {workers.length} of {totalWorkers} recommended pros
+                  Showing {visibleWorkers.length} of {totalWorkers} workers
                 </p>
               </div>
             </>
