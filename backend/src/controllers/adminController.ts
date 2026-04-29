@@ -603,6 +603,28 @@ export const getCategories = async (_req: Request, res: Response) => {
   }
 };
 
+// Public categories endpoint for non-admin clients (workers/clients)
+export const getPublicCategories = async (_req: Request, res: Response) => {
+  try {
+    const categories = await Category.find({ isActive: true })
+      .sort({ name: 1 })
+      .lean();
+
+    // Expose only minimal fields for public consumption
+    const payload = categories.map((c) => ({
+      id: String(c._id),
+      name: c.name,
+      description: c.description,
+      icon: c.icon || "category",
+    }));
+
+    return res.json({ categories: payload });
+  } catch (error) {
+    console.error("[public] Failed to fetch categories", error);
+    return res.status(500).json({ error: "Failed to fetch categories" });
+  }
+};
+
 export const createCategory = async (req: Request, res: Response) => {
   try {
     const { name, description, icon } = req.body;

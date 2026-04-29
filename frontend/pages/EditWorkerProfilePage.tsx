@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getMyWorkerProfile, updateMyWorkerProfile, uploadImage } from "../services/worker";
+import {
+  getMyWorkerProfile,
+  updateMyWorkerProfile,
+  uploadImage,
+} from "../services/worker";
 
 const EditWorkerProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +17,15 @@ const EditWorkerProfilePage: React.FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [avatar, setAvatar] = useState("");
   const [portfolio, setPortfolio] = useState<string[]>([]);
-  
+  const API_BASE_URL =
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+    "http://localhost:4000";
+
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string; description?: string; icon?: string }>
+  >([]);
+  const [categorySearch, setCategorySearch] = useState("");
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -21,7 +33,20 @@ const EditWorkerProfilePage: React.FC = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [locationHint, setLocationHint] = useState("");
 
-  const popularSuggestions = ["Water Heater", "Sewage", "Tiling", "Plumbing", "Electrical", "Painting"];
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/categories`);
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const json = await res.json();
+        setCategories(Array.isArray(json.categories) ? json.categories : []);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+
+    void loadCategories();
+  }, []);
 
   useEffect(() => {
     getMyWorkerProfile()
@@ -52,7 +77,7 @@ const EditWorkerProfilePage: React.FC = () => {
         bio,
         skills,
         avatar,
-        portfolio
+        portfolio,
       });
       navigate("/worker-hub");
     } catch (err) {
@@ -147,10 +172,18 @@ const EditWorkerProfilePage: React.FC = () => {
     }
   };
 
+  const toggleCategory = (name: string) => {
+    if (skills.includes(name)) setSkills(skills.filter((s) => s !== name));
+    else setSkills([...skills, name]);
+  };
+
   const getImageUrl = (path: string) => {
-    if (!path) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&h=256&auto=format&fit=crop";
+    if (!path)
+      return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&h=256&auto=format&fit=crop";
     if (path.startsWith("http")) return path;
-    const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:4000";
+    const API_BASE_URL =
+      (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+      "http://localhost:4000";
     return `${API_BASE_URL}${path}`;
   };
 
@@ -170,7 +203,9 @@ const EditWorkerProfilePage: React.FC = () => {
     }
   };
 
-  const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePortfolioUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -260,7 +295,13 @@ const EditWorkerProfilePage: React.FC = () => {
                   <span className="material-symbols-outlined text-xl">
                     {isUploadingAvatar ? "hourglass_empty" : "photo_camera"}
                   </span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={isUploadingAvatar} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={isUploadingAvatar}
+                  />
                 </label>
               </div>
               <h3 className="text-sm font-bold text-[#120e1b] dark:text-white">
@@ -422,39 +463,35 @@ const EditWorkerProfilePage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {skills.map((skill) => (
-                    <div
-                      key={skill}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/10 text-[#065f46] dark:text-green-400 text-xs font-bold rounded-lg border border-green-100 dark:border-green-800"
-                    >
-                      {skill}
-                      <button
-                        onClick={() => removeSkill(skill)}
-                        className="hover:text-red-500 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">
-                          close
-                        </span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <div className="flex flex-col gap-3">
+                  <input
+                    type="text"
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    placeholder="Filter categories..."
+                    className="w-full h-10 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-[#10b981] text-sm font-semibold dark:text-white"
+                  />
 
-                <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    Popular Suggestions
-                  </h4>
                   <div className="flex flex-wrap gap-2">
-                    {popularSuggestions.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => addSkill(s)}
-                        className="px-4 py-2 rounded-lg border border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
-                      >
-                        + {s}
-                      </button>
-                    ))}
+                    {categories
+                      .filter((c) =>
+                        c.name
+                          .toLowerCase()
+                          .includes(categorySearch.toLowerCase()),
+                      )
+                      .map((c) => {
+                        const selected = skills.includes(c.name);
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() => toggleCategory(c.name)}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${selected ? "bg-green-600 text-white" : "border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-primary hover:text-primary"}`}
+                          >
+                            {selected ? "✓ " : ""}
+                            {c.name}
+                          </button>
+                        );
+                      })}
                   </div>
                 </div>
               </div>
@@ -478,15 +515,26 @@ const EditWorkerProfilePage: React.FC = () => {
 
               <div className="space-y-6">
                 <label className="w-full aspect-[2/1] bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group relative overflow-hidden">
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={handlePortfolioUpload} disabled={isUploadingPortfolio} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handlePortfolioUpload}
+                    disabled={isUploadingPortfolio}
+                  />
                   <div className="size-12 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center text-primary shadow-sm group-hover:scale-110 transition-transform">
                     <span className="material-symbols-outlined text-2xl">
-                      {isUploadingPortfolio ? "hourglass_empty" : "cloud_upload"}
+                      {isUploadingPortfolio
+                        ? "hourglass_empty"
+                        : "cloud_upload"}
                     </span>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-gray-700 dark:text-white">
-                      {isUploadingPortfolio ? "Uploading..." : "Click to upload or drag and drop"}
+                      {isUploadingPortfolio
+                        ? "Uploading..."
+                        : "Click to upload or drag and drop"}
                     </p>
                     <p className="text-xs font-medium text-gray-400 mt-1">
                       SVG, PNG, JPG or GIF (max. 3MB)
@@ -496,22 +544,35 @@ const EditWorkerProfilePage: React.FC = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {portfolio.map((imgUrl, index) => (
-                    <div key={index} className="aspect-square rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm relative group">
+                    <div
+                      key={index}
+                      className="aspect-square rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm relative group"
+                    >
                       <img
                         src={getImageUrl(imgUrl)}
                         className="w-full h-full object-cover bg-gray-100"
                         alt={`Portfolio ${index + 1}`}
                       />
-                      <button 
-                        onClick={(e) => { e.preventDefault(); setPortfolio(portfolio.filter((_, i) => i !== index)); }}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPortfolio(portfolio.filter((_, i) => i !== index));
+                        }}
                         className="absolute top-2 right-2 size-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
                       >
-                        <span className="material-symbols-outlined text-sm">delete</span>
+                        <span className="material-symbols-outlined text-sm">
+                          delete
+                        </span>
                       </button>
                     </div>
                   ))}
-                  {Array.from({ length: Math.min(10 - portfolio.length, 1) }).map((_, i) => (
-                    <div key={`empty-${i}`} className="aspect-square bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-300">
+                  {Array.from({
+                    length: Math.min(10 - portfolio.length, 1),
+                  }).map((_, i) => (
+                    <div
+                      key={`empty-${i}`}
+                      className="aspect-square bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-300"
+                    >
                       <span className="material-symbols-outlined text-4xl">
                         image
                       </span>
