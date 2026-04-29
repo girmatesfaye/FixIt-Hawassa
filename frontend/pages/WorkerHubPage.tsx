@@ -652,7 +652,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                 <p className="text-[11px] font-bold text-green-500 uppercase tracking-widest mt-2">
                   {reviewCount} review{reviewCount === 1 ? "" : "s"}
                 </p>
-                <div className="mt-6 pt-6 border-t border-gray-50 dark:border-gray-800">
+                {/* this feature need to commented */}
+                {/* <div className="mt-6 pt-6 border-t border-gray-50 dark:border-gray-800">
                   <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
                     <span>Profile Views</span>
                     <span className="text-[#120e1b] dark:text-white">124</span>
@@ -661,7 +662,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                     <span>Contact Clicks</span>
                     <span className="text-[#120e1b] dark:text-white">42</span>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <div className="portal-panel rounded-3xl p-8">

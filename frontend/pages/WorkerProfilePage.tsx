@@ -47,6 +47,7 @@ type WorkerViewModel = {
   id: string;
   name: string;
   title: string;
+  skills: string[];
   rating: number;
   reviews: number;
   location: string;
@@ -135,6 +136,9 @@ const WorkerProfilePage: React.FC = () => {
           id: workerData.id,
           name: workerData.name,
           title: profile?.title || profile?.skills?.[0] || "",
+          skills: Array.isArray(profile?.skills)
+            ? profile.skills.filter(Boolean)
+            : [],
           rating: Number(profile?.rating ?? 0),
           reviews: Number(profile?.reviews ?? resolvedReviews.length),
           location: profile?.area?.trim() || "Hawassa",
@@ -384,6 +388,18 @@ const WorkerProfilePage: React.FC = () => {
                 <p className="text-lg font-bold text-gray-500 dark:text-gray-400">
                   {worker.title}
                 </p>
+                {worker.skills.length ? (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {worker.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-4 mt-2">
                   <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-100 dark:border-amber-500/20">
                     <span className="material-symbols-outlined text-amber-500 text-[18px] fill-current">

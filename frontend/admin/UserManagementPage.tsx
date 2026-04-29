@@ -17,7 +17,7 @@ type AdminUser = {
   reportCount: number;
   area: string;
   avatar: string;
-  category: string;
+  categories: string[];
 };
 
 type UserDetail = {
@@ -99,6 +99,9 @@ const UserManagementPage: React.FC = () => {
     workerProfile: null,
   });
 
+  const formatCategories = (categories: string[]) =>
+    categories.length ? categories.join(", ") : "-";
+
   const fetchAdminData = async () => {
     try {
       const headers = getAuthHeaders();
@@ -129,12 +132,12 @@ const UserManagementPage: React.FC = () => {
             : "-",
           reportCount: typeof u.reportCount === "number" ? u.reportCount : 0,
           area: u.area || "",
-          category:
+          categories:
             u.role === "worker"
-              ? String(
-                  u.workerProfile?.title || u.workerProfile?.skills?.[0] || "-",
-                )
-              : "-",
+              ? Array.isArray(u.workerProfile?.skills)
+                ? u.workerProfile.skills.filter(Boolean)
+                : []
+              : [],
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
         })),
       );
@@ -198,7 +201,7 @@ const UserManagementPage: React.FC = () => {
         user.name.toLowerCase().includes(query) ||
         user.phone.toLowerCase().includes(query) ||
         user.role.toLowerCase().includes(query) ||
-        user.category.toLowerCase().includes(query),
+        user.categories.join(", ").toLowerCase().includes(query),
     );
   }, [searchQuery, users]);
 
@@ -584,7 +587,7 @@ const UserManagementPage: React.FC = () => {
                       {user.joined}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {user.category}
+                      {formatCategories(user.categories)}
                     </td>
                     <td className="px-6 py-4">
                       {user.reportCount > 0 ? (
@@ -692,9 +695,7 @@ const UserManagementPage: React.FC = () => {
               <span className="text-gray-500">Category / Skill:</span>{" "}
               <span className="font-semibold">
                 {selectedUser.role === "worker"
-                  ? selectedUser.workerProfile?.title ||
-                    selectedUser.workerProfile?.skills?.[0] ||
-                    "-"
+                  ? formatCategories(selectedUser.workerProfile?.skills ?? [])
                   : "-"}
               </span>
             </p>
@@ -728,7 +729,7 @@ const UserManagementPage: React.FC = () => {
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Skills:{" "}
-                  {selectedUser.workerProfile?.skills?.join(", ") || "-"}
+                  {formatCategories(selectedUser.workerProfile?.skills ?? [])}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Active for requests:{" "}

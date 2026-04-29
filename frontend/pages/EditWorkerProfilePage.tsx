@@ -24,7 +24,9 @@ const EditWorkerProfilePage: React.FC = () => {
   const [categories, setCategories] = useState<
     Array<{ id: string; name: string; description?: string; icon?: string }>
   >([]);
-  const [categorySearch, setCategorySearch] = useState("");
+  const [categoryLoadState, setCategoryLoadState] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -40,8 +42,10 @@ const EditWorkerProfilePage: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch categories");
         const json = await res.json();
         setCategories(Array.isArray(json.categories) ? json.categories : []);
+        setCategoryLoadState("ready");
       } catch (err) {
         console.error("Failed to fetch categories", err);
+        setCategoryLoadState("error");
       }
     };
 
@@ -162,19 +166,20 @@ const EditWorkerProfilePage: React.FC = () => {
     );
   };
 
-  const removeSkill = (skillToRemove: string) => {
-    setSkills(skills.filter((s) => s !== skillToRemove));
-  };
-
-  const addSkill = (skill: string) => {
-    if (!skills.includes(skill)) {
-      setSkills([...skills, skill]);
-    }
-  };
-
   const toggleCategory = (name: string) => {
     if (skills.includes(name)) setSkills(skills.filter((s) => s !== name));
     else setSkills([...skills, name]);
+  };
+
+  const handleSkillsInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const nextSkills = event.target.value
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+
+    setSkills(Array.from(new Set(nextSkills)));
   };
 
   const getImageUrl = (path: string) => {
@@ -452,48 +457,55 @@ const EditWorkerProfilePage: React.FC = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
-                    search
-                  </span>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                    Selected categories
+                  </label>
                   <input
                     type="text"
-                    placeholder="Search skills (e.g. Plumbing, Painting...)"
-                    className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-[#10b981] text-sm font-semibold dark:text-white"
+                    value={skills.join(", ")}
+                    onChange={handleSkillsInputChange}
+                    placeholder="Arrange your categories here, separated by commas"
+                    className="w-full h-12 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 text-sm font-semibold dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    You can type, remove, or reorder categories here. Clicking a
+                    category below will still add or remove it.
+                  </p>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <input
-                    type="text"
-                    value={categorySearch}
-                    onChange={(e) => setCategorySearch(e.target.value)}
-                    placeholder="Filter categories..."
-                    className="w-full h-10 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-[#10b981] text-sm font-semibold dark:text-white"
-                  />
-
+                {categoryLoadState === "loading" ? (
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Loading categories from the admin dashboard...
+                  </p>
+                ) : categories.length ? (
                   <div className="flex flex-wrap gap-2">
-                    {categories
-                      .filter((c) =>
-                        c.name
-                          .toLowerCase()
-                          .includes(categorySearch.toLowerCase()),
-                      )
-                      .map((c) => {
-                        const selected = skills.includes(c.name);
-                        return (
-                          <button
-                            key={c.id}
-                            onClick={() => toggleCategory(c.name)}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${selected ? "bg-green-600 text-white" : "border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-primary hover:text-primary"}`}
-                          >
-                            {selected ? "✓ " : ""}
-                            {c.name}
-                          </button>
-                        );
-                      })}
+                    {categories.map((c) => {
+                      const selected = skills.includes(c.name);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleCategory(c.name)}
+                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${selected ? "bg-green-600 text-white" : "border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-primary hover:text-primary"}`}
+                        >
+                          {selected ? "✓ " : ""}
+                          {c.name}
+                        </button>
+                      );
+                    })}
                   </div>
-                </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-3">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      No categories found yet.
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Create categories in the admin dashboard and they will
+                      appear here.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

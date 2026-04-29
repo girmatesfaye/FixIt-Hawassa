@@ -606,9 +606,7 @@ export const getCategories = async (_req: Request, res: Response) => {
 // Public categories endpoint for non-admin clients (workers/clients)
 export const getPublicCategories = async (_req: Request, res: Response) => {
   try {
-    const categories = await Category.find({ isActive: true })
-      .sort({ name: 1 })
-      .lean();
+    const categories = await Category.find().sort({ name: 1 }).lean();
 
     // Expose only minimal fields for public consumption
     const payload = categories.map((c) => ({
