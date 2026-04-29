@@ -225,7 +225,7 @@ const buildRecentActivity = async () => {
 
 export const getUsers = async (_req: Request, res: Response) => {
   try {
-    const [users, reportCounts] = await Promise.all([
+    const [users, reportCounts, workerProfiles] = await Promise.all([
       User.find()
         .select("fullName role status phone area createdAt")
         .sort({ createdAt: -1 })
@@ -238,7 +238,12 @@ export const getUsers = async (_req: Request, res: Response) => {
           },
         },
       ]),
+      WorkerProfile.find().select("userId title skills isActive").lean(),
     ]);
+
+    const workerProfileByUserId = new Map(
+      workerProfiles.map((profile) => [String(profile.userId), profile]),
+    );
 
     const reportsByUser = new Map<string, number>(
       reportCounts.map((entry) => [
@@ -256,6 +261,7 @@ export const getUsers = async (_req: Request, res: Response) => {
       area: user.area,
       createdAt: user.createdAt,
       reportCount: reportsByUser.get(String(user._id)) ?? 0,
+      workerProfile: workerProfileByUserId.get(String(user._id)) ?? null,
     }));
 
     return res.json({
@@ -712,7 +718,7 @@ export const getStats = async (req: Request, res: Response) => {
     const rangeParam = req.query.range as string;
     const now = new Date();
     const trendStartDate = new Date(now);
-    
+
     if (rangeParam === "30days") {
       trendStartDate.setDate(trendStartDate.getDate() - 29);
     } else if (rangeParam === "all") {

@@ -17,6 +17,7 @@ type AdminUser = {
   reportCount: number;
   area: string;
   avatar: string;
+  category: string;
 };
 
 type UserDetail = {
@@ -128,6 +129,12 @@ const UserManagementPage: React.FC = () => {
             : "-",
           reportCount: typeof u.reportCount === "number" ? u.reportCount : 0,
           area: u.area || "",
+          category:
+            u.role === "worker"
+              ? String(
+                  u.workerProfile?.title || u.workerProfile?.skills?.[0] || "-",
+                )
+              : "-",
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
         })),
       );
@@ -190,7 +197,8 @@ const UserManagementPage: React.FC = () => {
       (user) =>
         user.name.toLowerCase().includes(query) ||
         user.phone.toLowerCase().includes(query) ||
-        user.role.toLowerCase().includes(query),
+        user.role.toLowerCase().includes(query) ||
+        user.category.toLowerCase().includes(query),
     );
   }, [searchQuery, users]);
 
@@ -516,6 +524,9 @@ const UserManagementPage: React.FC = () => {
                   Joined Date
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Category / Skill
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Reports
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
@@ -572,6 +583,9 @@ const UserManagementPage: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {user.joined}
                     </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {user.category}
+                    </td>
                     <td className="px-6 py-4">
                       {user.reportCount > 0 ? (
                         <span className="size-6 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center justify-center">
@@ -626,7 +640,7 @@ const UserManagementPage: React.FC = () => {
                 <tr>
                   <td
                     className="px-6 py-12 text-center text-sm text-gray-500"
-                    colSpan={6}
+                    colSpan={7}
                   >
                     No users found for the current filters.
                   </td>
@@ -675,6 +689,16 @@ const UserManagementPage: React.FC = () => {
               <span className="font-semibold">{selectedUser.area || "-"}</span>
             </p>
             <p>
+              <span className="text-gray-500">Category / Skill:</span>{" "}
+              <span className="font-semibold">
+                {selectedUser.role === "worker"
+                  ? selectedUser.workerProfile?.title ||
+                    selectedUser.workerProfile?.skills?.[0] ||
+                    "-"
+                  : "-"}
+              </span>
+            </p>
+            <p>
               <span className="text-gray-500">Status:</span>{" "}
               <span className="font-semibold capitalize">
                 {selectedUser.status}
@@ -701,6 +725,10 @@ const UserManagementPage: React.FC = () => {
                 <p className="font-semibold text-[#120e1b]">Worker Profile</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Title: {selectedUser.workerProfile?.title || "-"}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Skills:{" "}
+                  {selectedUser.workerProfile?.skills?.join(", ") || "-"}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Active for requests:{" "}

@@ -24,7 +24,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
       path: "/admin/categories",
     },
     { icon: "report", label: "Reported Content", path: "/admin/reports" },
-    { icon: "analytics", label: "Analytics", path: "/admin/analytics" },
+    // Analytics functionality is available from Dashboard; removing duplicate menu entry
   ];
 
   const systemItems = [
@@ -36,7 +36,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
     if (location.pathname.includes("/reports")) return "Reports";
     if (location.pathname.includes("/categories")) return "Categories";
     if (location.pathname.includes("/dashboard")) return "Dashboard";
-    if (location.pathname.includes("/analytics")) return "Dashboard";
+    // analytics removed from menu; keep dashboard breadcrumb behavior
     if (location.pathname.includes("/settings")) return "Settings";
     return "Dashboard";
   };
