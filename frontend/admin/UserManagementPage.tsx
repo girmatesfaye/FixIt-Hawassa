@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -335,10 +336,11 @@ const UserManagementPage: React.FC = () => {
       }
 
       setIsEditOpen(false);
+      toast.success("User updated successfully!");
       await fetchAdminData();
     } catch (error) {
       console.error("Failed to update user", error);
-      alert("Could not update this user.");
+      toast.error("Could not update this user.");
     } finally {
       setActionUserId("");
     }
@@ -378,9 +380,10 @@ const UserManagementPage: React.FC = () => {
           entry.id === user.id ? { ...entry, status: nextStatus } : entry,
         ),
       );
+      toast.success(`User is now ${nextStatus}`);
     } catch (error) {
       console.error("Failed to update user status", error);
-      alert("Could not change user status.");
+      toast.error("Could not change user status.");
     } finally {
       setActionUserId("");
     }

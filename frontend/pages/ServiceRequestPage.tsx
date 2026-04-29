@@ -8,6 +8,7 @@ import {
 } from "../services/recommendation";
 import { clearSession, getAuthToken } from "../services/auth";
 import { getUploadedImageUrl, uploadImage } from "../services/upload";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -156,6 +157,7 @@ const ServiceRequestPage: React.FC = () => {
       setPhotoUrls((current) => [...current, ...uploaded].slice(0, 3));
     } catch (_error) {
       setFormError("Could not upload one of the images. Please try again.");
+      toast.error("Image upload failed.");
     } finally {
       setIsUploadingPhotos(false);
       e.target.value = "";
@@ -221,16 +223,20 @@ const ServiceRequestPage: React.FC = () => {
       if (!response.ok) {
         if (response.status === 401) {
           clearSession();
-          setFormError("Your session has expired. Please login again.");
+          const msg = "Your session has expired. Please login again.";
+          setFormError(msg);
+          toast.error(msg);
           navigate("/login");
           return;
         }
 
-        setFormError(
-          result?.message ?? "Could not submit your request. Please try again.",
-        );
+        const msg = result?.message ?? "Could not submit your request. Please try again.";
+        setFormError(msg);
+        toast.error(msg);
         return;
       }
+
+      toast.success("Request submitted successfully!");
 
       localStorage.setItem(LAST_REQUEST_KEY, JSON.stringify(requestDraft));
       if (result?.id) {

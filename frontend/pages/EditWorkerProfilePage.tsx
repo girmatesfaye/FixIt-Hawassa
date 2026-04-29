@@ -5,6 +5,7 @@ import {
   updateMyWorkerProfile,
   uploadImage,
 } from "../services/worker";
+import toast from "react-hot-toast";
 
 const EditWorkerProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -83,10 +84,11 @@ const EditWorkerProfilePage: React.FC = () => {
         avatar,
         portfolio,
       });
+      toast.success("Profile updated successfully!");
       navigate("/worker-hub");
     } catch (err) {
       console.error(err);
-      alert("Failed to save changes.");
+      toast.error("Failed to save profile changes.");
     } finally {
       setIsSaving(false);
     }
@@ -200,9 +202,10 @@ const EditWorkerProfilePage: React.FC = () => {
       setIsUploadingAvatar(true);
       const url = await uploadImage(file);
       setAvatar(url);
+      toast.success("Avatar uploaded!");
     } catch (error) {
       console.error(error);
-      alert("Failed to upload avatar");
+      toast.error("Failed to upload avatar");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -222,9 +225,10 @@ const EditWorkerProfilePage: React.FC = () => {
         newUrls.push(url);
       }
       setPortfolio((prev) => [...prev, ...newUrls].slice(0, 10)); // max 10
+      toast.success("Gallery images uploaded!");
     } catch (error) {
       console.error(error);
-      alert("Failed to upload portfolio images");
+      toast.error("Failed to upload portfolio images");
     } finally {
       setIsUploadingPortfolio(false);
     }

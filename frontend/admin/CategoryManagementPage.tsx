@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -106,10 +107,14 @@ const CategoryManagementPage: React.FC = () => {
       );
       if (res.ok) {
         setIsEditModalOpen(false);
+        toast.success("Category updated!");
         fetchCategories();
+      } else {
+        throw new Error("Update failed");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Could not update category.");
     }
   };
 
@@ -124,9 +129,15 @@ const CategoryManagementPage: React.FC = () => {
         },
         body: JSON.stringify({ isActive: !isActive }),
       });
-      if (res.ok) fetchCategories();
+      if (res.ok) {
+        toast.success(`Category ${!isActive ? "activated" : "deactivated"}`);
+        fetchCategories();
+      } else {
+        throw new Error("Toggle failed");
+      }
     } catch (err) {
       console.error(err);
+      toast.error("Could not change category status.");
     }
   };
 
@@ -146,10 +157,14 @@ const CategoryManagementPage: React.FC = () => {
       if (res.ok) {
         setIsDeleteModalOpen(false);
         setDeleteCategory(null);
+        toast.success("Category deleted.");
         fetchCategories();
+      } else {
+        throw new Error("Delete failed");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Could not delete category.");
     }
   };
 
@@ -169,15 +184,19 @@ const CategoryManagementPage: React.FC = () => {
         }),
       });
 
-        if (res.ok) {
-          setIsAddModalOpen(false);
-          setNewName("");
-          setNewDesc("");
-          setNewIcon("category");
-          fetchCategories();
-        }
+      if (res.ok) {
+        setIsAddModalOpen(false);
+        setNewName("");
+        setNewDesc("");
+        setNewIcon("category");
+        toast.success("Category created!");
+        fetchCategories();
+      } else {
+        throw new Error("Creation failed");
+      }
     } catch (error) {
       console.error("Failed to create category", error);
+      toast.error("Could not create category.");
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -50,10 +51,13 @@ const LoginPage: React.FC = () => {
       } | null;
 
       if (!response.ok || !result?.sessionId) {
-        setFormError(result?.message ?? "Login failed. Please try again.");
+        const msg = result?.message ?? "Login failed. Please try again.";
+        setFormError(msg);
+        toast.error(msg);
         return;
       }
 
+      toast.success("Login successful! Sending verification code.");
       navigate("/verify", {
         state: {
           role: result.role ?? "client",

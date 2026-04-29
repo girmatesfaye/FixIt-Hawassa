@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
+import toast from "react-hot-toast";
 import {
   assignWorkerToRequest,
   submitWorkerReport,
@@ -184,9 +185,7 @@ const WorkerProfilePage: React.FC = () => {
   const submitReview = async () => {
     try {
       if (!existingRequestId || !id) {
-        alert(
-          "Open this profile from your completed request to submit feedback.",
-        );
+        toast.error("Open this profile from your completed request to submit feedback.");
         return;
       }
 
@@ -199,6 +198,7 @@ const WorkerProfilePage: React.FC = () => {
 
       setIsReviewModalOpen(false);
       setReviewComment("");
+      toast.success("Review submitted! Thank you.");
       fetchWorker();
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -206,16 +206,14 @@ const WorkerProfilePage: React.FC = () => {
         return;
       }
 
-      alert(error instanceof Error ? error.message : "Failed to submit review");
+      toast.error(error instanceof Error ? error.message : "Failed to submit review");
     }
   };
 
   const submitReport = async () => {
     try {
       if (!existingRequestId || !id) {
-        alert(
-          "Open this profile from your completed request to submit a report.",
-        );
+        toast.error("Open this profile from your completed request to submit a report.");
         return;
       }
 
@@ -228,13 +226,14 @@ const WorkerProfilePage: React.FC = () => {
 
       setIsReportModalOpen(false);
       setReportDescription("");
+      toast.success("Report submitted and will be reviewed.");
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         navigate("/login");
         return;
       }
 
-      alert(error instanceof Error ? error.message : "Failed to submit report");
+      toast.error(error instanceof Error ? error.message : "Failed to submit report");
     }
   };
 
@@ -249,7 +248,7 @@ const WorkerProfilePage: React.FC = () => {
 
       if (existingRequestId && id) {
         await assignWorkerToRequest(existingRequestId, id);
-        alert("Invitation sent. You can track it in My Requests.");
+        toast.success("Invitation sent! Tracking enabled.");
         navigate("/my-requests");
         return;
       }
@@ -274,13 +273,14 @@ const WorkerProfilePage: React.FC = () => {
         body: JSON.stringify(requestDraft),
       });
       if (res.ok) {
-        alert("Invitation sent. You can track it in My Requests.");
+        toast.success("Invitation sent! Tracking enabled.");
         navigate("/my-requests");
       } else {
-        alert("Failed to submit request");
+        toast.error("Failed to submit request.");
       }
     } catch (e) {
       console.error(e);
+      toast.error("Something went wrong.");
     } finally {
       setIsHiring(false);
     }
@@ -632,10 +632,10 @@ const WorkerProfilePage: React.FC = () => {
       {/* Lightbox Modal */}
       {selectedGalleryIdx !== null && (
         <div
-          className="fixed inset-0 z-[60] bg-black/95 flex flex-col items-center justify-center animate-in fade-in duration-300"
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300"
           onClick={() => setSelectedGalleryIdx(null)}
         >
-          <button className="absolute top-6 right-6 text-white hover:text-primary transition-colors z-[70]">
+          <button className="absolute top-6 right-6 text-white hover:text-primary transition-colors z-[110]">
             <span className="material-symbols-outlined text-4xl">close</span>
           </button>
 
@@ -645,7 +645,7 @@ const WorkerProfilePage: React.FC = () => {
           >
             <button
               onClick={prevImage}
-              className="absolute left-4 md:left-8 size-14 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all z-[70]"
+              className="absolute left-4 md:left-8 size-14 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all z-[110]"
             >
               <span className="material-symbols-outlined text-3xl">
                 chevron_left
@@ -670,7 +670,7 @@ const WorkerProfilePage: React.FC = () => {
 
             <button
               onClick={nextImage}
-              className="absolute right-4 md:right-8 size-14 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all z-[70]"
+              className="absolute right-4 md:right-8 size-14 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all z-[110]"
             >
               <span className="material-symbols-outlined text-3xl">
                 chevron_right

@@ -11,6 +11,7 @@ import {
 import { getUploadedImageUrl } from "../services/upload";
 import { getMyWorkerProfile, updateMyWorkerProfile } from "../services/worker";
 import Modal from "../components/Modal";
+import toast from "react-hot-toast";
 
 interface WorkerHubPageProps {
   onLogout: () => void;
@@ -87,10 +88,10 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         setIsAvailable(workerProfile.isActive ?? true);
         setIsProfileComplete(
           Boolean(
-            workerProfile.bio ||
-            nextSkills.length ||
-            workerProfile.avatar ||
-            nextPortfolio.length,
+            workerProfile.bio &&
+            nextSkills.length > 0 &&
+            workerProfile.avatar &&
+            nextPortfolio.length > 0,
           ),
         );
         setRequests(workerRequests);
@@ -133,6 +134,11 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           request.id === requestId ? updatedRequest : request,
         );
       });
+      toast.success(
+        decision === "accept"
+          ? "Invitation accepted! Job moved to Active Jobs."
+          : "Invitation declined.",
+      );
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         onLogout();
@@ -140,11 +146,12 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         return;
       }
 
-      setRequestError(
+      const msg =
         error instanceof Error
           ? error.message
-          : "Could not update this invitation.",
-      );
+          : "Could not update this invitation.";
+      setRequestError(msg);
+      toast.error(msg);
     } finally {
       setRequestActionId("");
     }
@@ -161,6 +168,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           request.id === requestId ? updatedRequest : request,
         ),
       );
+      toast.success("Job marked as completed! Waiting for client confirmation.");
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         onLogout();
@@ -168,13 +176,14 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         return;
       }
 
-      setRequestError(
+      const msg =
         error instanceof Error
           ? error.message.includes("WORKER_COMPLETE_FAILED (404)")
-            ? "Completion endpoint not found. Restart backend so latest routes are loaded."
+            ? "Completion endpoint not found. Restart backend."
             : error.message
-          : "Could not mark this job as completed.",
-      );
+          : "Could not mark this job as completed.";
+      setRequestError(msg);
+      toast.error(msg);
     } finally {
       setRequestActionId("");
     }
@@ -251,56 +260,85 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         </header>
 
         <div className="max-w-6xl mx-auto p-10 flex flex-col gap-10">
-          {/* Availability Toggle - The most critical part of the Hub */}
-          <div
-            className={`rounded-3xl p-8 border-2 transition-all flex items-center justify-between shadow-sm ${
-              isAvailable
-                ? "bg-green-50 border-green-100 dark:bg-green-950/20 dark:border-green-900"
-                : "bg-gray-50 border-gray-100 dark:bg-gray-900 dark:border-gray-800"
-            }`}
-          >
-            <div className="flex items-center gap-6">
-              <div
-                className={`size-16 rounded-3xl flex items-center justify-center transition-colors ${
-                  isAvailable
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                <span className="material-symbols-outlined text-3xl">
-                  sensors
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Availability Toggle */}
+            <div
+              className={`rounded-3xl p-6 border-2 transition-all flex items-center justify-between shadow-sm ${
+                isAvailable
+                  ? "bg-green-50 border-green-100 dark:bg-green-950/20 dark:border-green-900"
+                  : "bg-gray-50 border-gray-100 dark:bg-gray-900 dark:border-gray-800"
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={`size-12 rounded-2xl flex items-center justify-center transition-colors ${
+                    isAvailable
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-500"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-2xl">
+                    sensors
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-base font-extrabold tracking-tight dark:text-white">
+                    {isAvailable
+                      ? "You are visible to clients"
+                      : "Your profile is hidden"}
+                  </h3>
+                  <p className="text-[11px] font-bold text-gray-500 mt-0.5">
+                    {isAvailable
+                      ? "Clients can call or message you for physical work."
+                      : "Turn this on to appear in Hawassa search results."}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={async () => {
+                  const nextAvailable = !isAvailable;
+                  setIsAvailable(nextAvailable);
+                  try {
+                    await updateMyWorkerProfile({ isActive: nextAvailable });
+                    toast.success(
+                      nextAvailable ? "You are now visible!" : "Profile hidden.",
+                    );
+                  } catch (error) {
+                    console.error("Failed to update availability", error);
+                    setIsAvailable(isAvailable);
+                    toast.error("Could not update availability.");
+                  }
+                }}
+                className={`w-14 h-7 rounded-full relative transition-colors shadow-inner shrink-0 ${isAvailable ? "bg-green-500" : "bg-gray-300 dark:bg-gray-800"}`}
+              >
+                <div
+                  className={`absolute top-1 size-5 bg-white rounded-full shadow-lg transition-all ${isAvailable ? "left-8" : "left-1"}`}
+                />
+              </button>
+            </div>
+
+            {/* Worker Reputation (Moved to top) */}
+            <div className="portal-panel rounded-3xl p-6 flex items-center justify-between">
               <div className="flex flex-col">
-                <h3 className="text-xl font-extrabold tracking-tight dark:text-white">
-                  {isAvailable
-                    ? "You are visible to clients"
-                    : "Your profile is hidden"}
-                </h3>
-                <p className="text-sm font-bold text-gray-500 mt-1">
-                  {isAvailable
-                    ? "Clients can call or message you for physical work."
-                    : "Turn this on to appear in Hawassa search results."}
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+                  Worker Reputation
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-extrabold tracking-tight dark:text-white">
+                    {rating.toFixed(1)}
+                  </span>
+                  <span className="material-symbols-outlined text-amber-400 text-2xl fill-current">
+                    star
+                  </span>
+                </div>
+                <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-1">
+                  {reviewCount} review{reviewCount === 1 ? "" : "s"}
                 </p>
               </div>
+              <div className="size-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500">
+                <span className="material-symbols-outlined text-2xl">workspace_premium</span>
+              </div>
             </div>
-            <button
-              onClick={async () => {
-                const nextAvailable = !isAvailable;
-                setIsAvailable(nextAvailable);
-                try {
-                  await updateMyWorkerProfile({ isActive: nextAvailable });
-                } catch (error) {
-                  console.error("Failed to update availability", error);
-                  setIsAvailable(isAvailable);
-                }
-              }}
-              className={`w-20 h-10 rounded-full relative transition-colors shadow-inner ${isAvailable ? "bg-green-500" : "bg-gray-300 dark:bg-gray-800"}`}
-            >
-              <div
-                className={`absolute top-1.5 size-7 bg-white rounded-full shadow-lg transition-all ${isAvailable ? "left-11" : "left-1.5"}`}
-              />
-            </button>
           </div>
 
           {!isProfileComplete && (
@@ -313,10 +351,10 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                 </div>
                 <div>
                   <h4 className="text-lg font-extrabold tracking-tight text-amber-900 dark:text-amber-100">
-                    Finish setting up your shop
+                    Boost your profile visibility
                   </h4>
                   <p className="text-sm font-bold text-amber-700 mt-1">
-                    Add photos of your physical work to build trust.
+                    Complete your profile to be recommended to more clients in Hawassa.
                   </p>
                 </div>
               </div>
@@ -356,52 +394,52 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                   Loading invitations...
                 </p>
               ) : pendingInvites.length ? (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
                   {pendingInvites.map((request) => (
                     <div
                       key={request.id}
-                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/20 p-5 flex flex-col gap-4"
+                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/20 p-4 flex flex-col gap-3"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-sm font-extrabold text-[#120e1b] dark:text-white">
+                          <p className="text-xs font-extrabold text-[#120e1b] dark:text-white">
                             {request.category}
                           </p>
-                          <p className="text-xs font-semibold text-primary uppercase tracking-widest mt-1">
+                          <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mt-0.5">
                             Client: {request.clientUserId?.name ?? "Client"}
                           </p>
                         </div>
-                        <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-widest">
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold uppercase tracking-widest">
                           Pending
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
                         {request.description}
                       </p>
                       {request.photoUrls.length ? (
-                        <div className="flex gap-2 overflow-x-auto">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
                           {request.photoUrls.slice(0, 3).map((photoUrl) => (
                             <img
                               key={photoUrl}
                               src={getUploadedImageUrl(photoUrl)}
                               alt="Service request"
-                              className="size-16 rounded-xl object-cover border border-gray-100 dark:border-gray-700"
+                              className="size-12 rounded-lg object-cover border border-gray-100 dark:border-gray-700"
                             />
                           ))}
                         </div>
                       ) : null}
-                      <div className="flex flex-wrap gap-3 text-xs font-bold text-gray-500">
+                      <div className="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400">
                         <span>{request.area}</span>
-                        <span>{request.landmark}</span>
+                        <span>•</span>
                         <span>{request.maintenanceLevel}</span>
                       </div>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
                             void handleWorkerDecision(request.id, "accept");
                           }}
                           disabled={requestActionId === request.id}
-                          className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold uppercase tracking-widest disabled:opacity-60"
+                          className="flex-1 h-9 rounded-lg bg-primary hover:bg-primary-dark text-white text-[10px] font-bold uppercase tracking-widest disabled:opacity-60"
                         >
                           {requestActionId === request.id
                             ? "Saving..."
@@ -412,7 +450,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                             void handleWorkerDecision(request.id, "decline");
                           }}
                           disabled={requestActionId === request.id}
-                          className="flex-1 h-11 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 text-sm font-bold uppercase tracking-widest disabled:opacity-60"
+                          className="flex-1 h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 text-[10px] font-bold uppercase tracking-widest disabled:opacity-60"
                         >
                           Decline
                         </button>
@@ -452,71 +490,73 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                   Loading jobs...
                 </p>
               ) : activeJobs.length ? (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
                   {activeJobs.map((request) => (
                     <div
                       key={request.id}
-                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/20 p-5 flex flex-col gap-4"
+                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/20 p-4 flex flex-col gap-3"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-sm font-extrabold text-[#120e1b] dark:text-white">
+                          <p className="text-xs font-extrabold text-[#120e1b] dark:text-white">
                             {request.category}
                           </p>
-                          <p className="text-xs font-semibold text-primary uppercase tracking-widest mt-1">
+                          <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mt-0.5">
                             Client: {request.clientUserId?.name ?? "Client"}
                           </p>
                         </div>
-                        <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest">
+                        <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold uppercase tracking-widest">
                           In Progress
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
                         {request.description}
                       </p>
                       {request.photoUrls.length ? (
-                        <div className="flex gap-2 overflow-x-auto">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
                           {request.photoUrls.slice(0, 3).map((photoUrl) => (
                             <img
                               key={photoUrl}
                               src={getUploadedImageUrl(photoUrl)}
                               alt="Service request"
-                              className="size-16 rounded-xl object-cover border border-gray-100 dark:border-gray-700"
+                              className="size-12 rounded-lg object-cover border border-gray-100 dark:border-gray-700"
                             />
                           ))}
                         </div>
                       ) : null}
-                      <div className="flex flex-wrap gap-3 text-xs font-bold text-gray-500">
+                      <div className="flex flex-wrap gap-2 text-[10px] font-bold text-gray-400">
                         <span>{request.area}</span>
-                        <span>{request.landmark}</span>
+                        <span>•</span>
                         <span>{request.maintenanceLevel}</span>
                       </div>
-                      <button
-                        onClick={() =>
-                          navigate("/messages", {
-                            state: { requestId: request.id },
-                          })
-                        }
-                        className="h-11 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-sm font-bold uppercase tracking-widest transition-all"
-                      >
-                        Open Messages
-                      </button>
-                      <button
-                        onClick={() => {
-                          void handleMarkCompleted(request.id);
-                        }}
-                        disabled={
-                          requestActionId === request.id ||
-                          Boolean(request.workerMarkedCompleteAt)
-                        }
-                        className="h-11 rounded-xl bg-green-100 hover:bg-green-600 text-green-700 hover:text-white text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        {request.workerMarkedCompleteAt
-                          ? "Waiting Client Confirm"
-                          : requestActionId === request.id
-                            ? "Saving..."
-                            : "Mark as Completed"}
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() =>
+                            navigate("/messages", {
+                              state: { requestId: request.id },
+                            })
+                          }
+                          className="h-9 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all"
+                        >
+                          Open Chat
+                        </button>
+                        <button
+                          onClick={() => {
+                            void handleMarkCompleted(request.id);
+                          }}
+                          disabled={
+                            requestActionId === request.id ||
+                            Boolean(request.workerMarkedCompleteAt)
+                          }
+                          className="h-9 rounded-lg bg-green-100 hover:bg-green-600 text-green-700 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {request.workerMarkedCompleteAt
+                            ? "Awaiting Confirm"
+                            : requestActionId === request.id
+                              ? "Saving..."
+                              : "Mark Done"}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -636,34 +676,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
             </div>
 
             <div className="space-y-8">
-              {/* Ratings - Performance based on physical work */}
-              <div className="portal-panel rounded-3xl p-8 text-center">
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
-                  Worker Reputation
-                </p>
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-5xl font-extrabold tracking-tight dark:text-white">
-                    {rating.toFixed(1)}
-                  </span>
-                  <span className="material-symbols-outlined text-amber-400 text-5xl fill-current">
-                    star
-                  </span>
-                </div>
-                <p className="text-[11px] font-bold text-green-500 uppercase tracking-widest mt-2">
-                  {reviewCount} review{reviewCount === 1 ? "" : "s"}
-                </p>
-                {/* this feature need to commented */}
-                {/* <div className="mt-6 pt-6 border-t border-gray-50 dark:border-gray-800">
-                  <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
-                    <span>Profile Views</span>
-                    <span className="text-[#120e1b] dark:text-white">124</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-bold text-gray-500">
-                    <span>Contact Clicks</span>
-                    <span className="text-[#120e1b] dark:text-white">42</span>
-                  </div>
-                </div> */}
-              </div>
+              {/* Report Status Updates (Moved up or kept here) */}
 
               <div className="portal-panel rounded-3xl p-8">
                 <div className="flex items-center justify-between mb-4">
@@ -734,37 +747,37 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               </div>
 
               {/* Direct Contact Options */}
-              <div className="bg-[#120e1b] rounded-3xl p-8 shadow-xl text-white">
-                <h4 className="text-lg font-extrabold tracking-tight mb-6 flex items-center gap-2">
+              <div className="portal-panel rounded-3xl p-8">
+                <h4 className="text-lg font-extrabold tracking-tight mb-6 flex items-center gap-2 dark:text-white text-[#120e1b]">
                   <span className="material-symbols-outlined text-green-500 text-[24px]">
                     contact_phone
                   </span>
                   My Contact Info
                 </h4>
                 <div className="space-y-4">
-                  <div className="p-5 bg-white/5 rounded-2xl">
+                  <div className="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                       Phone
                     </p>
-                    <p className="text-base font-bold tracking-tight">
+                    <p className="text-base font-bold tracking-tight dark:text-white text-[#120e1b]">
                       {phone || "Add your phone number"}
                     </p>
                   </div>
-                  <div className="p-5 bg-white/5 rounded-2xl">
+                  <div className="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                       Telegram
                     </p>
-                    <p className="text-base font-bold tracking-tight">
+                    <p className="text-base font-bold tracking-tight dark:text-white text-[#120e1b]">
                       {telegramUsername
                         ? `@${telegramUsername.replace(/^@+/, "")}`
                         : "Add your Telegram username"}
                     </p>
                   </div>
-                  <div className="p-5 bg-white/5 rounded-2xl">
+                  <div className="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                       TikTok
                     </p>
-                    <p className="text-base font-bold tracking-tight break-all">
+                    <p className="text-base font-bold tracking-tight break-all dark:text-white text-[#120e1b]">
                       {tiktokProfile || "Add your TikTok profile link"}
                     </p>
                   </div>

@@ -219,14 +219,29 @@ const LandingPage: React.FC = () => {
 
       {/* Mobile Menu */}
       <div
-        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden ${isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-[100] bg-black/60 backdrop-blur-md transition-opacity duration-300 md:hidden ${isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={() => setIsMobileMenuOpen(false)}
       >
         <div
           className={`absolute right-0 top-0 h-full w-[280px] bg-white dark:bg-surface-dark shadow-2xl transition-transform duration-300 transform p-8 flex flex-col gap-8 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <nav className="flex flex-col gap-6 mt-12">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                <span className="material-symbols-outlined text-lg">handyman</span>
+              </div>
+              <span className="text-sm font-bold dark:text-white">FixIt</span>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="size-10 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <nav className="flex flex-col gap-6 mt-4">
             {navLinks.map((link) => (
               <a
                 key={link.name}

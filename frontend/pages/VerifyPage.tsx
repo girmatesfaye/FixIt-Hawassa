@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveSession } from "../services/auth";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -96,19 +97,22 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
       } | null;
 
       if (!response.ok) {
-        setSubmitError(
-          result?.message ?? "Verification failed. Please try again.",
-        );
+        const msg = result?.message ?? "Verification failed. Please try again.";
+        setSubmitError(msg);
+        toast.error(msg);
         return;
       }
 
       const resolvedRole = result?.role ?? verifiedRole;
       const token = typeof result?.token === "string" ? result.token : "";
       if (!token) {
-        setSubmitError("Verification failed: missing auth token.");
+        const msg = "Verification failed: missing auth token.";
+        setSubmitError(msg);
+        toast.error(msg);
         return;
       }
 
+      toast.success("Phone verified successfully!");
       saveSession(token, resolvedRole);
       onVerify(resolvedRole);
 

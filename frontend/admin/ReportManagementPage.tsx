@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -271,10 +272,14 @@ const ReportManagementPage: React.FC = () => {
       );
       if (res.ok) {
         setIsResolveModalOpen(false);
+        toast.success("Report updated successfully!");
         fetchReportsData();
+      } else {
+        throw new Error("Resolution failed");
       }
     } catch (error) {
       console.error("Error resolving report", error);
+      toast.error("Could not update report status.");
     }
   };
 

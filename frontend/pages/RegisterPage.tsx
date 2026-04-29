@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { saveSession } from "../services/auth";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -169,11 +170,13 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
       } | null;
 
       if (!response.ok) {
-        setFormError(
-          result?.message ?? "Registration failed. Please try again.",
-        );
+        const msg = result?.message ?? "Registration failed. Please try again.";
+        setFormError(msg);
+        toast.error(msg);
         return;
       }
+
+      toast.success("Registration successful!");
 
       const resolvedRole = result?.user?.role ?? role;
       const requiresOtp = result?.requiresOtp ?? true;

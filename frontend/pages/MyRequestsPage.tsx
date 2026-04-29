@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import ActionMenu from "../components/ActionMenu";
+import toast from "react-hot-toast";
 import { RequestStatus } from "../types";
 import {
   ApiRequestStatus,
@@ -154,17 +155,19 @@ const MyRequestsPage: React.FC = () => {
     try {
       await confirmRequestCompletion(requestId);
       await loadRequests();
+      toast.success("Job completion confirmed!");
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         navigate("/login");
         return;
       }
 
-      setLoadError(
+      const msg =
         error instanceof Error
           ? error.message
-          : "Could not confirm completion.",
-      );
+          : "Could not confirm completion.";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setConfirmingRequestId("");
     }
@@ -231,6 +234,7 @@ const MyRequestsPage: React.FC = () => {
       setIsReviewModalOpen(false);
       setSelectedFeedbackRequest(null);
       setReviewComment("");
+      toast.success("Review submitted successfully!");
       await loadRequests();
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -238,9 +242,9 @@ const MyRequestsPage: React.FC = () => {
         return;
       }
 
-      setLoadError(
-        error instanceof Error ? error.message : "Could not submit review.",
-      );
+      const msg = error instanceof Error ? error.message : "Could not submit review.";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmittingReview(false);
     }
@@ -275,15 +279,16 @@ const MyRequestsPage: React.FC = () => {
       setIsReportModalOpen(false);
       setSelectedFeedbackRequest(null);
       setReportDescription("");
+      toast.success("Report submitted to administration.");
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         navigate("/login");
         return;
       }
 
-      setLoadError(
-        error instanceof Error ? error.message : "Could not submit report.",
-      );
+      const msg = error instanceof Error ? error.message : "Could not submit report.";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmittingReport(false);
     }
