@@ -48,3 +48,4 @@ npm run dev        # starts on http://localhost:4000
 
 - **frontend**: create a `.env` file in `frontend/` with `VITE_API_BASE_URL=http://localhost:4000`
 - **backend**: see `backend/.env.example` for required variables
+- If your backend logs a MongoDB Atlas whitelist/network error, add your current public IP to Atlas Network Access: https://www.mongodb.com/docs/atlas/security/ip-access-list/

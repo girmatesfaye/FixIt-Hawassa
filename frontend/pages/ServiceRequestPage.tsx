@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { RequestDraft } from "../types";
 import {
@@ -14,6 +15,21 @@ const API_BASE_URL =
 
 const ServiceRequestPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const navCategory = (location.state as { category?: string } | null)
+    ?.category;
+  let savedCategory: string | undefined = undefined;
+  try {
+    const savedDraftJson = localStorage.getItem(LAST_REQUEST_KEY);
+    if (savedDraftJson) {
+      const parsed = JSON.parse(savedDraftJson) as RequestDraft;
+      savedCategory = parsed?.category;
+    }
+  } catch {
+    savedCategory = undefined;
+  }
+
+  const currentCategory = navCategory ?? savedCategory ?? "Plumbing";
   const [description, setDescription] = useState("");
   const [maintenanceLevel, setMaintenanceLevel] = useState("Medium");
   const [area, setArea] = useState("");
@@ -104,9 +120,7 @@ const ServiceRequestPage: React.FC = () => {
 
   const handleBack = () => navigate("/dashboard");
 
-  const handlePhotoUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) {
       return;
@@ -156,7 +170,7 @@ const ServiceRequestPage: React.FC = () => {
     }
 
     const requestDraft: RequestDraft = {
-      category: "Plumbing",
+      category: currentCategory,
       description: description.trim(),
       area,
       landmark: landmark.trim(),
@@ -290,7 +304,8 @@ const ServiceRequestPage: React.FC = () => {
               Describe Your Problem
             </h1>
             <p className="text-sm text-gray-500 font-medium">
-              Providing details helps plumbers give accurate quotes.
+              Providing details helps {currentCategory} pros give accurate
+              quotes.
             </p>
           </div>
         </div>

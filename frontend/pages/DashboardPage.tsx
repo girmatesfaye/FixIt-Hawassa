@@ -105,7 +105,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     return RequestStatus.SEARCHING;
   };
 
-  const handleServiceClick = () => {
+  const handleServiceClick = (category?: string) => {
+    if (category) {
+      navigate("/request-service", { state: { category } });
+      return;
+    }
+
     navigate("/request-service");
   };
 
@@ -498,27 +503,30 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {(categories.length > 0 ? categories : [
-                  { name: "Plumbing", icon: "plumbing" },
-                  { name: "Electrical", icon: "bolt" },
-                  { name: "Carpentry", icon: "carpenter" },
-                  { name: "Painting", icon: "format_paint" },
-                  { name: "Cleaning", icon: "cleaning_services" },
-                  { name: "Masonry", icon: "foundation" },
-                ]).map((svc, index) => {
+                {(categories.length > 0
+                  ? categories
+                  : [
+                      { name: "Plumbing", icon: "plumbing" },
+                      { name: "Electrical", icon: "bolt" },
+                      { name: "Carpentry", icon: "carpenter" },
+                      { name: "Painting", icon: "format_paint" },
+                      { name: "Cleaning", icon: "cleaning_services" },
+                      { name: "Masonry", icon: "foundation" },
+                    ]
+                ).map((svc, index) => {
                   const colors = [
                     "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
                     "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
                     "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
                     "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
                     "bg-green-50 text-green-500 dark:bg-green-500/10",
-                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10"
+                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
                   ];
                   const color = colors[index % colors.length];
                   return (
                     <button
                       key={svc.name}
-                      onClick={handleServiceClick}
+                      onClick={() => handleServiceClick(svc.name)}
                       className="group flex flex-col items-center gap-3 p-5 rounded-2xl portal-panel hover:shadow-md hover:border-primary/30 transition-all duration-300"
                     >
                       <div
