@@ -6,14 +6,32 @@ const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
 
+const CATEGORY_ICON_OPTIONS = [
+  { value: "plumbing", label: "Plumbing" },
+  { value: "electrical_services", label: "Electrical" },
+  { value: "carpenter", label: "Carpentry" },
+  { value: "format_paint", label: "Painting" },
+  { value: "cleaning_services", label: "Cleaning" },
+  { value: "yard", label: "Landscaping" },
+  { value: "home_repair_service", label: "Home Repair" },
+  { value: "build", label: "Maintenance" },
+  { value: "handyman", label: "Handyman" },
+  { value: "category", label: "General" },
+];
+
 const CategoryManagementPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editIcon, setEditIcon] = useState("");
+  const [deleteCategory, setDeleteCategory] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [page, setPage] = useState(1);
 
   const [categories, setCategories] = useState<any[]>([]);
@@ -22,7 +40,7 @@ const CategoryManagementPage: React.FC = () => {
   // New Category Form State
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [newIcon, setNewIcon] = useState("");
+  const [newIcon, setNewIcon] = useState("category");
 
   const fetchCategories = async () => {
     try {
@@ -112,15 +130,24 @@ const CategoryManagementPage: React.FC = () => {
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!confirm("Delete this category? This action cannot be undone.")) return;
+  const openDeleteModal = (id: string, name: string) => {
+    setDeleteCategory({ id, name });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!deleteCategory) return;
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/categories/${deleteCategory.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) fetchCategories();
+      if (res.ok) {
+        setIsDeleteModalOpen(false);
+        setDeleteCategory(null);
+        fetchCategories();
+      }
     } catch (err) {
       console.error(err);
     }
@@ -142,13 +169,13 @@ const CategoryManagementPage: React.FC = () => {
         }),
       });
 
-      if (res.ok) {
-        setIsAddModalOpen(false);
-        setNewName("");
-        setNewDesc("");
-        setNewIcon("");
-        fetchCategories();
-      }
+        if (res.ok) {
+          setIsAddModalOpen(false);
+          setNewName("");
+          setNewDesc("");
+          setNewIcon("category");
+          fetchCategories();
+        }
     } catch (error) {
       console.error("Failed to create category", error);
     }
@@ -222,16 +249,25 @@ const CategoryManagementPage: React.FC = () => {
 
               <div className="h-px bg-gray-50"></div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-gray-400 text-lg">
                     engineering
                   </span>
-                  <span className="text-xs font-medium text-gray-600">
+                  <span className="text-xs font-medium text-gray-600 whitespace-nowrap">
                     {category.workers} Workers
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2">
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-wide ${
+                      category.status === "Active"
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {category.status === "Active" ? "On" : "Off"}
+                  </span>
                   <button
                     onClick={() =>
                       handleToggleStatus(
@@ -239,25 +275,53 @@ const CategoryManagementPage: React.FC = () => {
                         category.status === "Active",
                       )
                     }
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wider uppercase ${
+                    role="switch"
+                    aria-checked={category.status === "Active"}
+                    aria-label={`Set ${category.name} ${category.status === "Active" ? "inactive" : "active"}`}
+                    title={category.status}
+                    className={`relative h-6 w-11 rounded-full border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                       category.status === "Active"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-gray-50 text-gray-600 border border-gray-200"
+                        ? "bg-emerald-500 border-emerald-500 shadow-sm shadow-emerald-500/30"
+                        : "bg-gray-200 border-gray-300"
                     }`}
                   >
-                    {category.status}
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 flex items-center justify-center ${
+                        category.status === "Active"
+                          ? "translate-x-5"
+                          : "translate-x-0.5"
+                      }`}
+                    >
+                      <span
+                        className={`material-symbols-outlined text-[11px] ${
+                          category.status === "Active"
+                            ? "text-emerald-600"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {category.status === "Active" ? "check" : "close"}
+                      </span>
+                    </span>
                   </button>
                   <button
                     onClick={() => openEditModal(category)}
-                    className="h-8 px-3 rounded-md border border-gray-100 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                    title="Edit category"
+                    aria-label={`Edit ${category.name}`}
+                    className="size-8 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center"
                   >
-                    Edit
+                    <span className="material-symbols-outlined text-[18px]">
+                      edit
+                    </span>
                   </button>
                   <button
-                    onClick={() => handleDeleteCategory(category.id)}
-                    className="h-8 px-3 rounded-md border border-red-100 text-xs font-semibold text-red-600 hover:bg-red-50"
+                    onClick={() => openDeleteModal(category.id, category.name)}
+                    title="Delete category"
+                    aria-label={`Delete ${category.name}`}
+                    className="size-8 rounded-md border border-red-100 text-red-600 hover:bg-red-50 flex items-center justify-center"
                   >
-                    Delete
+                    <span className="material-symbols-outlined text-[18px]">
+                      delete
+                    </span>
                   </button>
                 </div>
               </div>
@@ -300,15 +364,35 @@ const CategoryManagementPage: React.FC = () => {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-[#120e1b] dark:text-white">
-              Material Icon Name
+              Category Icon
             </label>
-            <input
-              type="text"
-              value={newIcon}
-              onChange={(e) => setNewIcon(e.target.value)}
-              placeholder="e.g. plumbing, format_paint"
-              className="w-full h-12 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-primary text-sm font-medium dark:text-white"
-            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {CATEGORY_ICON_OPTIONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setNewIcon(item.value)}
+                  className={`h-12 px-3 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-colors ${
+                    newIcon === item.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {item.value}
+                  </span>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="h-12 px-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+              <span className="text-xs font-semibold text-gray-500">Preview:</span>
+              <div className="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[20px]">
+                  {newIcon}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-4 pt-4">
@@ -353,6 +437,28 @@ const CategoryManagementPage: React.FC = () => {
               className="w-full h-24 p-3 rounded-xl bg-gray-50 border border-gray-100"
             />
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-[#120e1b]">Icon</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {CATEGORY_ICON_OPTIONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setEditIcon(item.value)}
+                  className={`h-10 px-3 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-colors ${
+                    editIcon === item.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {item.value}
+                  </span>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex gap-4">
             <button
               onClick={() => setIsEditModalOpen(false)}
@@ -365,6 +471,42 @@ const CategoryManagementPage: React.FC = () => {
               className="flex-1 h-12 rounded-xl bg-primary text-white font-bold"
             >
               Save Changes
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteCategory(null);
+        }}
+        title="Delete Category"
+      >
+        <div className="space-y-6">
+          <p className="text-sm text-gray-600">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-[#120e1b]">
+              {deleteCategory?.name}
+            </span>
+            ? This action cannot be undone.
+          </p>
+          <div className="flex gap-4">
+            <button
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setDeleteCategory(null);
+              }}
+              className="flex-1 h-12 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteCategory}
+              className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all"
+            >
+              Delete
             </button>
           </div>
         </div>
