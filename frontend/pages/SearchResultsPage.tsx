@@ -335,7 +335,7 @@ const SearchResultsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
       {/* Navbar */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md dark:bg-surface-dark/90 border-b border-gray-200 dark:border-gray-800 px-6 py-3">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6">

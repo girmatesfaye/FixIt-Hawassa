@@ -69,20 +69,20 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row font-sans">
-      <header className="w-full bg-white dark:bg-[#1a2230] border-b border-[#e7ebf3] dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10 lg:fixed lg:top-0">
+      <header className="w-full bg-white dark:bg-surface-dark border-b border-[#9dc08b66] dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10 lg:fixed lg:top-0">
         <div className="flex items-center gap-3">
           <div className="size-8 text-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-3xl font-bold">
               handyman
             </span>
           </div>
-          <h2 className="text-[#0d121b] dark:text-white text-lg font-bold leading-tight">
+          <h2 className="text-[#40513b] dark:text-white text-lg font-bold leading-tight">
             FixIt Hawassa
           </h2>
         </div>
         <button
           type="button"
-          className="text-sm font-medium text-[#4c669a] dark:text-gray-400 hover:text-primary"
+          className="text-sm font-medium text-[#609966] dark:text-gray-400 hover:text-primary"
         >
           Help
         </button>
@@ -123,9 +123,9 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="flex-grow flex items-center justify-center p-4 sm:p-8 lg:w-1/2 lg:pt-24 bg-background-light dark:bg-background-dark">
-          <div className="w-full max-w-[440px] bg-white dark:bg-[#1a2230] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-800 p-6 sm:p-10 flex flex-col gap-8">
+          <div className="w-full max-w-[440px] bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-[#9dc08b66] dark:border-gray-800 p-6 sm:p-10 flex flex-col gap-8">
             <div className="flex flex-col gap-2 text-center">
-              <h1 className="text-[#0d121b] dark:text-white text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
+              <h1 className="text-[#40513b] dark:text-white text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
                 Welcome Back
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base font-medium">
@@ -136,12 +136,12 @@ const LoginPage: React.FC = () => {
             <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-5">
                 <label className="flex flex-col gap-2">
-                  <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                  <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                     Phone Number
                   </span>
                   <div className="relative flex w-full">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-[#4c669a] dark:text-gray-400 font-medium border-r border-gray-300 dark:border-gray-600 pr-2 mr-2 text-sm">
+                      <span className="text-[#609966] dark:text-gray-400 font-medium border-r border-gray-300 dark:border-gray-600 pr-2 mr-2 text-sm">
                         +251
                       </span>
                     </div>
@@ -152,7 +152,7 @@ const LoginPage: React.FC = () => {
                         setPhone(e.target.value);
                         if (formError) setFormError("");
                       }}
-                      className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-16 pr-4 text-base dark:text-white placeholder-[#4c669a] dark:placeholder-gray-500"
+                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-16 pr-4 text-base dark:text-white placeholder-[#609966] dark:placeholder-gray-500"
                       placeholder="911 234 567"
                       type="tel"
                     />
@@ -160,7 +160,7 @@ const LoginPage: React.FC = () => {
                 </label>
 
                 <label className="flex flex-col gap-2">
-                  <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                  <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                     Password
                   </span>
                   <div className="relative">
@@ -171,14 +171,14 @@ const LoginPage: React.FC = () => {
                         setPassword(e.target.value);
                         if (formError) setFormError("");
                       }}
-                      className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a] dark:placeholder-gray-500 pr-10"
+                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966] dark:placeholder-gray-500 pr-10"
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#4c669a] dark:text-gray-400 hover:text-primary"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#609966] dark:text-gray-400 hover:text-primary"
                     >
                       <span
                         className="material-symbols-outlined"
@@ -193,7 +193,7 @@ const LoginPage: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    className="text-sm font-medium text-primary hover:text-blue-700 hover:underline"
+                    className="text-sm font-medium text-primary hover:text-primary-dark hover:underline"
                   >
                     Forgot Password?
                   </button>
@@ -216,8 +216,8 @@ const LoginPage: React.FC = () => {
               </div>
             </form>
 
-            <div className="border-t border-[#e7ebf3] dark:border-gray-800 pt-6 text-center space-y-4">
-              <p className="text-sm text-[#0d121b] dark:text-gray-300">
+            <div className="border-t border-[#9dc08b66] dark:border-gray-800 pt-6 text-center space-y-4">
+              <p className="text-sm text-[#40513b] dark:text-gray-300">
                 Don't have an account?
                 <Link
                   className="text-primary font-bold hover:underline ml-1"

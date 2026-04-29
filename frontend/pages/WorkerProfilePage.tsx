@@ -305,7 +305,7 @@ const WorkerProfilePage: React.FC = () => {
   if (!worker) return <div>Worker not found.</div>;
 
   return (
-    <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <div className="max-w-[1280px] mx-auto flex items-center justify-between gap-6">

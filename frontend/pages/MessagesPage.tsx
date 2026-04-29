@@ -138,7 +138,7 @@ const MessagesPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col overflow-hidden">
+    <div className="h-screen bg-white dark:bg-background-dark font-sans flex flex-col overflow-hidden">
       {/* Navbar */}
       <header className="shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6">
@@ -211,36 +211,36 @@ const MessagesPage: React.FC = () => {
                 return name.includes(q) || cat.includes(q);
               })
               .map(({ contact, idx }) => (
-              <div
-                key={contact.id}
-                onClick={() => setSelectedContact(idx)}
-                className={`p-4 flex gap-3 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-800/50 ${selectedContact === idx ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}
-              >
-                <div className="relative shrink-0">
-                  <div className="size-12 rounded-full overflow-hidden bg-gray-100">
-                    <img
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`}
-                      alt={getContactName(contact)}
-                    />
+                <div
+                  key={contact.id}
+                  onClick={() => setSelectedContact(idx)}
+                  className={`p-4 flex gap-3 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-800/50 ${selectedContact === idx ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}
+                >
+                  <div className="relative shrink-0">
+                    <div className="size-12 rounded-full overflow-hidden bg-gray-100">
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`}
+                        alt={getContactName(contact)}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-0.5">
+                      <h4 className="text-sm font-bold text-[#120e1b] dark:text-white truncate">
+                        {getContactName(contact)}
+                      </h4>
+                      <span className="text-[10px] font-semibold text-gray-400">
+                        Request
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className={`text-xs truncate text-gray-500`}>
+                        {contact.category}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-0.5">
-                    <h4 className="text-sm font-bold text-[#120e1b] dark:text-white truncate">
-                      {getContactName(contact)}
-                    </h4>
-                    <span className="text-[10px] font-semibold text-gray-400">
-                      Request
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className={`text-xs truncate text-gray-500`}>
-                      {contact.category}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </aside>
 

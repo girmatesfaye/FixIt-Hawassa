@@ -231,7 +231,7 @@ const EditWorkerProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafd] dark:bg-background-dark font-sans flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
       {/* Navbar */}
       <header className="sticky top-0 z-50 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -385,7 +385,7 @@ const EditWorkerProfilePage: React.FC = () => {
                       : "Use current location"}
                   </button>
                   {locationHint && (
-                    <p className="text-xs text-[#4c669a] dark:text-gray-400">
+                    <p className="text-xs text-[#609966] dark:text-gray-400">
                       {locationHint}
                     </p>
                   )}

@@ -207,20 +207,20 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-background-dark font-sans text-[#0d121b] dark:text-white min-h-screen flex flex-col">
-      <header className="w-full bg-white/80 dark:bg-[#1a2230]/80 backdrop-blur-md border-b border-[#e7ebf3] dark:border-gray-800 px-6 py-4 flex items-center justify-between fixed top-0 z-50">
+    <div className="bg-white dark:bg-background-dark font-sans text-[#40513b] dark:text-white min-h-screen flex flex-col">
+      <header className="w-full bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-[#9dc08b66] dark:border-gray-800 px-6 py-4 flex items-center justify-between fixed top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="size-8 text-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-3xl font-bold">
               handyman
             </span>
           </div>
-          <h2 className="text-[#0d121b] dark:text-white text-lg font-bold leading-tight">
+          <h2 className="text-[#40513b] dark:text-white text-lg font-bold leading-tight">
             FixIt Hawassa
           </h2>
         </div>
         <a
-          className="text-sm font-medium text-[#4c669a] dark:text-gray-400 hover:text-primary transition-colors"
+          className="text-sm font-medium text-[#609966] dark:text-gray-400 hover:text-primary transition-colors"
           href="#"
         >
           Help
@@ -235,7 +235,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
               className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay"
               src="https://picsum.photos/id/1/1600/1200"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#101622] via-[#101622]/20 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#40513b] via-[#40513b]/20 to-transparent"></div>
             <div className="relative z-10 p-16 flex flex-col justify-end h-full max-w-2xl">
               <div className="flex flex-col gap-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 border border-primary/30 rounded-full w-fit">
@@ -257,9 +257,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
           </div>
 
           <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-background-light dark:bg-background-dark overflow-y-auto">
-            <div className="w-full max-w-[480px] bg-white dark:bg-[#1a2230] rounded-2xl shadow-xl lg:shadow-2xl border border-[#e7ebf3] dark:border-gray-800 p-8 sm:p-10 flex flex-col gap-8">
+            <div className="w-full max-w-[480px] bg-white dark:bg-surface-dark rounded-2xl shadow-xl lg:shadow-2xl border border-[#9dc08b66] dark:border-gray-800 p-8 sm:p-10 flex flex-col gap-8">
               <div className="flex flex-col gap-2">
-                <h1 className="text-[#0d121b] dark:text-white text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
+                <h1 className="text-[#40513b] dark:text-white text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
                   Join FixIt Hawassa
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base font-medium">
@@ -269,7 +269,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
 
               <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
                 <div className="flex flex-col gap-3">
-                  <label className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                  <label className="text-[#40513b] dark:text-white text-sm font-semibold">
                     I am joining as a...
                   </label>
                   <div className="grid grid-cols-2 gap-4">
@@ -282,7 +282,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                       }}
                     >
                       <div
-                        className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "client" ? "border-primary bg-blue-50 dark:bg-primary/10 text-primary" : "border-[#e7ebf3] dark:border-gray-700 bg-white dark:bg-[#111827] text-[#4c669a] dark:text-gray-400"}`}
+                        className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "client" ? "border-primary bg-[#edf1d6] dark:bg-primary/10 text-primary" : "border-[#9dc08b66] dark:border-gray-700 bg-white dark:bg-background-dark text-[#609966] dark:text-gray-400"}`}
                       >
                         <span
                           className="material-symbols-outlined"
@@ -311,7 +311,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                       }}
                     >
                       <div
-                        className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "worker" ? "border-primary bg-blue-50 dark:bg-primary/10 text-primary" : "border-[#e7ebf3] dark:border-gray-700 bg-white dark:bg-[#111827] text-[#4c669a] dark:text-gray-400"}`}
+                        className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "worker" ? "border-primary bg-[#edf1d6] dark:bg-primary/10 text-primary" : "border-[#9dc08b66] dark:border-gray-700 bg-white dark:bg-background-dark text-[#609966] dark:text-gray-400"}`}
                       >
                         <span
                           className="material-symbols-outlined"
@@ -337,7 +337,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
 
                 <div className="flex flex-col gap-4">
                   <label className="flex flex-col gap-2">
-                    <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                       Full Name
                     </span>
                     <input
@@ -347,18 +347,18 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                         setFullName(e.target.value);
                         if (formError) setFormError("");
                       }}
-                      className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a]"
+                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
                       placeholder="e.g. Abebe Bikila"
                       type="text"
                     />
                   </label>
                   <label className="flex flex-col gap-2">
-                    <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                       Phone Number
                     </span>
                     <div className="relative flex w-full">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-[#4c669a] dark:text-gray-400 font-medium border-r border-gray-300 dark:border-gray-600 pr-2 mr-2 text-sm">
+                        <span className="text-[#609966] dark:text-gray-400 font-medium border-r border-gray-300 dark:border-gray-600 pr-2 mr-2 text-sm">
                           +251
                         </span>
                       </div>
@@ -369,14 +369,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                           setPhone(e.target.value);
                           if (formError) setFormError("");
                         }}
-                        className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-16 pr-4 text-base dark:text-white placeholder-[#4c669a]"
+                        className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-16 pr-4 text-base dark:text-white placeholder-[#609966]"
                         placeholder="911 234 567"
                         type="tel"
                       />
                     </div>
                   </label>
                   <label className="flex flex-col gap-2">
-                    <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                       Location (Neighborhood/Area)
                     </span>
                     <input
@@ -386,7 +386,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                         setLocationValue(e.target.value);
                         if (formError) setFormError("");
                       }}
-                      className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a]"
+                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
                       placeholder="e.g., Piazza or Tabor"
                       type="text"
                     />
@@ -404,14 +404,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                         : "Use current location"}
                     </button>
                     {locationHint ? (
-                      <p className="text-xs text-[#4c669a] dark:text-gray-400">
+                      <p className="text-xs text-[#609966] dark:text-gray-400">
                         {locationHint}
                       </p>
                     ) : null}
                   </label>
                   {role === "worker" ? (
                     <label className="flex flex-col gap-2">
-                      <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                      <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                         National ID (Worker)
                       </span>
                       <input
@@ -421,14 +421,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                           setNationalId(e.target.value.toUpperCase());
                           if (formError) setFormError("");
                         }}
-                        className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a]"
+                        className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
                         placeholder="e.g. ETH-WORKER-1001"
                         type="text"
                       />
                     </label>
                   ) : null}
                   <label className="flex flex-col gap-2">
-                    <span className="text-[#0d121b] dark:text-white text-sm font-semibold">
+                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
                       Password
                     </span>
                     <div className="relative">
@@ -439,12 +439,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                           setPassword(e.target.value);
                           if (formError) setFormError("");
                         }}
-                        className="form-input flex w-full rounded-lg border border-[#cfd7e7] dark:border-gray-700 bg-[#f8f9fc] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#4c669a] pr-10"
+                        className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966] pr-10"
                         placeholder="Create a strong password"
                         type="password"
                       />
                       <button
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#4c669a] dark:text-gray-400 hover:text-primary"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#609966] dark:text-gray-400 hover:text-primary"
                         type="button"
                       >
                         <span
@@ -471,7 +471,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                   >
                     {isSubmitting ? "Creating Account..." : "Create Account"}
                   </button>
-                  <p className="text-center text-xs text-[#4c669a] dark:text-gray-500">
+                  <p className="text-center text-xs text-[#609966] dark:text-gray-500">
                     By continuing, you agree to our{" "}
                     <a className="underline hover:text-primary" href="#">
                       Terms of Service
@@ -485,8 +485,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                 </div>
               </form>
 
-              <div className="border-t border-[#e7ebf3] dark:border-gray-800 pt-6 text-center">
-                <p className="text-sm text-[#0d121b] dark:text-gray-300">
+              <div className="border-t border-[#9dc08b66] dark:border-gray-800 pt-6 text-center">
+                <p className="text-sm text-[#40513b] dark:text-gray-300">
                   Already have an account?
                   <Link
                     className="text-primary font-bold hover:underline ml-1"
