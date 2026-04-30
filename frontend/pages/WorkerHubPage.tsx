@@ -190,57 +190,9 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   };
 
   return (
-    <div className="flex h-screen portal-shell dark:bg-background-dark font-sans overflow-hidden">
-      {/* Minified Sidebar for the Physical Work model */}
-      <aside className="w-64 flex flex-col portal-panel-soft border-r-[#e8edf7] dark:border-gray-800 shrink-0">
-        <div className="p-8 border-b border-gray-50 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-              <span className="material-symbols-outlined font-bold">
-                construction
-              </span>
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-[#120e1b] dark:text-white">
-                Worker Hub
-              </h2>
-              <p className="text-[10px] font-semibold text-primary uppercase tracking-widest">
-                FixIt Hawassa
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <nav className="flex flex-col gap-2">
-            <button className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-primary text-white shadow-md shadow-primary/25 font-bold text-sm text-left transition-all">
-              <span className="material-symbols-outlined">account_circle</span>
-              My Profile
-            </button>
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-3 px-5 py-3.5 rounded-2xl text-gray-500 hover:bg-white/80 dark:hover:bg-gray-800 font-bold text-sm text-left transition-all"
-            >
-              <span className="material-symbols-outlined">person_search</span>
-              Find Help
-            </button>
-          </nav>
-        </div>
-
-        <div className="mt-auto p-6 border-t border-gray-50 dark:border-gray-800">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-5 py-3.5 w-full text-gray-500 hover:text-red-500 font-semibold text-sm transition-colors"
-          >
-            <span className="material-symbols-outlined">logout</span>
-            Logout Account
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
+    <div className="flex flex-col min-h-full">
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-10 portal-topbar border-x-0 border-t-0 px-10 py-6">
+        <div className="px-10 py-8 border-b border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex flex-col">
               <h1 className="text-2xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">
@@ -257,7 +209,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
               Update Profile
             </button>
           </div>
-        </header>
+        </div>
 
         <div className="max-w-6xl mx-auto p-10 flex flex-col gap-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -856,8 +808,8 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           </div>
         )}
       </Modal>
-    </div>
-  );
+  </div>
+);
 };
 
 export default WorkerHubPage;

@@ -235,21 +235,18 @@ const EditWorkerProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-3">
+    <div className="min-h-full bg-white dark:bg-background-dark font-sans flex flex-col">
+      {/* Action Bar */}
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/worker-hub" className="flex items-center gap-2">
-            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined font-bold text-xl">
-                construction
-              </span>
-            </div>
-            <h2 className="text-base font-bold tracking-tight text-primary">
-              FixIt Hawassa
-            </h2>
-          </Link>
-
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-[#120e1b] dark:text-white">
+              Edit Profile
+            </h1>
+            <p className="text-xs font-medium text-gray-500">
+              Update your presence in Hawassa.
+            </p>
+          </div>
           <div className="flex items-center gap-4">
             <button
               onClick={handleSave}
@@ -258,33 +255,14 @@ const EditWorkerProfilePage: React.FC = () => {
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
-            <div className="size-10 rounded-full bg-[#fef2f2] border border-orange-100 flex items-center justify-center text-orange-400 overflow-hidden">
-              <img
-                src={getImageUrl(avatar)}
-                alt="User"
-                className="w-full h-full object-cover"
-              />
-            </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto w-full px-6 py-8">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-widest mb-4">
-          <Link to="/worker-hub" className="hover:underline">
-            Home
-          </Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-400">Profile</span>
-        </nav>
 
-        <h1 className="text-4xl font-bold text-[#120e1b] dark:text-white mb-2">
-          Edit Profile
-        </h1>
-        <p className="text-sm font-medium text-gray-500 mb-10">
-          Update your public presence and qualifications for clients in Hawassa.
-        </p>
+
+
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column */}

@@ -547,7 +547,6 @@ const MyRequestsPage: React.FC = () => {
             )}
           </div>
         </div>
-      </main>
 
       <Modal
         isOpen={isReviewModalOpen}

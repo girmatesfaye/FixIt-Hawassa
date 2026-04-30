@@ -16,10 +16,12 @@ import SearchResultsPage from "./pages/SearchResultsPage";
 import WorkerProfilePage from "./pages/WorkerProfilePage";
 import MessagesPage from "./pages/MessagesPage";
 import MyRequestsPage from "./pages/MyRequestsPage";
+import ClientReportsPage from "./pages/ClientReportsPage";
 import WorkerHubPage from "./pages/WorkerHubPage";
 import EditWorkerProfilePage from "./pages/EditWorkerProfilePage";
 import AdminLayout from "./admin/AdminLayout";
 import ClientLayout from "./components/ClientLayout";
+import WorkerLayout from "./components/WorkerLayout";
 import UserManagementPage from "./admin/UserManagementPage";
 import ReportManagementPage from "./admin/ReportManagementPage";
 import AnalyticsPage from "./admin/AnalyticsPage";
@@ -206,52 +208,34 @@ const App: React.FC = () => {
             )
           }
         >
+          <Route path="reports" element={<ClientReportsPage />} />
           <Route
-            path="/dashboard"
+            path="dashboard"
             element={<DashboardPage onLogout={handleLogout} />}
           />
-          <Route path="/request-service" element={<ServiceRequestPage />} />
-          <Route path="/search-results" element={<SearchResultsPage />} />
-          <Route path="/my-requests" element={<MyRequestsPage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/worker/:id" element={<WorkerProfilePage />} />
+          <Route path="request-service" element={<ServiceRequestPage />} />
+          <Route path="search-results" element={<SearchResultsPage />} />
+          <Route path="my-requests" element={<MyRequestsPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="worker/:id" element={<WorkerProfilePage />} />
         </Route>
 
 
         {/* Worker & Shared Routes */}
         <Route
-          path="/messages"
           element={
             isAuthenticated && userRole === "worker" ? (
-              <MessagesPage />
+              <WorkerLayout onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )
           }
-        />
-
-
-        <Route
-          path="/worker-hub"
-          element={
-            isAuthenticated && userRole === "worker" ? (
-              <WorkerHubPage onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-
-        <Route
-          path="/worker/edit-profile"
-          element={
-            isAuthenticated && userRole === "worker" ? (
-              <EditWorkerProfilePage />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+        >
+          <Route path="worker-hub" element={<WorkerHubPage onLogout={handleLogout} />} />
+          <Route path="worker/edit-profile" element={<EditWorkerProfilePage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="dashboard" element={<DashboardPage onLogout={handleLogout} />} />
+        </Route>
 
 
         {/* Admin Routes */}

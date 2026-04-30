@@ -7,31 +7,24 @@ import {
   Link,
 } from "react-router-dom";
 
-interface AdminLayoutProps {
+interface WorkerLayoutProps {
   onLogout: () => void;
+  unreadCount?: number;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
+const WorkerLayout: React.FC<WorkerLayoutProps> = ({ onLogout, unreadCount = 0 }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
-    { icon: "dashboard", label: "Dashboard", path: "/admin/dashboard" },
-    { icon: "group", label: "User Management", path: "/admin/users" },
-    {
-      icon: "category",
-      label: "Category Management",
-      path: "/admin/categories",
-    },
-    { icon: "report", label: "Reported Content", path: "/admin/reports" },
-    // Analytics functionality is available from Dashboard; removing duplicate menu entry
+    { icon: "construction", label: "Worker Hub", path: "/worker-hub" },
+    { icon: "chat", label: "Messages", path: "/messages", badge: unreadCount },
+    { icon: "person_search", label: "Find Help", path: "/dashboard" },
   ];
 
   const systemItems = [
-    { icon: "settings", label: "Settings", path: "/admin/settings" },
+    { icon: "edit", label: "Edit Profile", path: "/worker/edit-profile" },
   ];
-
-
 
   return (
     <div className="flex h-screen portal-shell font-sans overflow-hidden">
@@ -43,14 +36,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
         >
           <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
             <span className="material-symbols-outlined font-semibold text-xl">
-              construction
+              engineering
             </span>
           </div>
           <div className="max-w-0 group-hover:max-w-[160px] opacity-0 group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
-            <h2 className="text-xs font-semibold tracking-tight text-[#120e1b]">
+            <h2 className="text-sm font-bold tracking-tight text-[#120e1b]">
               FixIt Hawassa
             </h2>
-            <p className="text-[10px] font-medium text-gray-400">Admin Portal</p>
+            <p className="text-xs font-medium text-primary">Worker Portal</p>
           </div>
         </Link>
 
@@ -61,10 +54,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-normal transition-all overflow-hidden ${
+                  `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all overflow-hidden ${
                     isActive
-                      ? "bg-primary text-white shadow-md shadow-primary/25 font-medium"
-                      : "text-gray-500 hover:bg-white/80 hover:text-primary"
+                      ? "bg-primary text-white shadow-md shadow-primary/25"
+                      : "text-gray-600 hover:bg-white/80 hover:text-primary"
                   }`
                 }
               >
@@ -74,13 +67,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
                 <span className="max-w-0 group-hover:max-w-[160px] opacity-0 group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
                   {item.label}
                 </span>
+                {item.badge && item.badge > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full absolute right-2 group-hover:static opacity-100 transition-all">
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
 
           <div className="space-y-4">
-            <h3 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider max-w-0 group-hover:max-w-[160px] opacity-0 group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
-              System
+            <h3 className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-[2px] max-w-0 group-hover:max-w-[160px] opacity-0 group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
+              Account
             </h3>
             <div className="space-y-1">
               {systemItems.map((item) => (
@@ -88,10 +86,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
                   key={item.path}
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-normal transition-all overflow-hidden ${
+                    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all overflow-hidden ${
                       isActive
-                        ? "bg-primary text-white shadow-md shadow-primary/25 font-medium"
-                        : "text-gray-500 hover:bg-white/80 hover:text-primary"
+                        ? "bg-primary text-white shadow-md shadow-primary/25"
+                        : "text-gray-600 hover:bg-white/80 hover:text-primary"
                     }`
                   }
                 >
@@ -113,7 +111,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
               onLogout();
               navigate("/");
             }}
-            className="flex items-center gap-3 px-4 py-2 w-full text-gray-500 hover:text-red-600 font-normal text-xs rounded-xl hover:bg-red-50 transition-colors overflow-hidden"
+            className="flex items-center gap-3 px-4 py-2.5 w-full text-gray-600 hover:text-red-600 font-medium text-sm rounded-xl hover:bg-red-50 transition-colors overflow-hidden"
           >
             <span className="material-symbols-outlined text-[24px] shrink-0">
               logout
@@ -147,4 +145,4 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
   );
 };
 
-export default AdminLayout;
+export default WorkerLayout;

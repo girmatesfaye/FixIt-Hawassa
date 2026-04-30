@@ -134,7 +134,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const refreshReports = () => {
     fetchMyReports()
       .then((items) => {
-        setMyReports(items.map(toDashboardReport));
+        setMyReports(items.slice(0, 2).map(toDashboardReport));
       })
       .catch(() => {
         setMyReports([]);
@@ -414,7 +414,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   </button>
 
                   <div className="space-y-1">
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#120e1b] dark:text-white">
+                    <h2 className="text-xl sm:text-xl font-bold tracking-tight text-[#120e1b] dark:text-white">
                       Hi, {currentUserName || "there"}! 👋
                     </h2>
                     <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
@@ -613,9 +613,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
 
             {/* My Reports Section */}
             <div className="space-y-5">
-              <h3 className="text-lg font-semibold dark:text-white tracking-tight">
-                Reports
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold dark:text-white tracking-tight">
+                  Recent Reports
+                </h3>
+                <Link
+                  to="/reports"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
               {activeRequestsCount ? (
                 <p className="text-xs text-primary font-semibold">
                   You have {activeRequestsCount} active request
@@ -680,10 +688,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   </div>
                 )}
               </div>
-            </div>
           </div>
-        </main>
-      </div>
+        </div>
 
       {/* Report Detail Modal */}
       <Modal
