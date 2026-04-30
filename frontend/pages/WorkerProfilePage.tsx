@@ -305,46 +305,8 @@ const WorkerProfilePage: React.FC = () => {
   if (!worker) return <div>Worker not found.</div>;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between gap-6">
-          <div className="flex items-center gap-6 shrink-0">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="size-9 bg-primary rounded-lg flex items-center justify-center text-white">
-                <span className="material-symbols-outlined font-bold">
-                  handyman
-                </span>
-              </div>
-              <h2 className="text-lg font-bold tracking-tight dark:text-white">
-                FixIt Hawassa
-              </h2>
-            </Link>
-          </div>
+    <div className="w-full">
 
-          <div className="flex-grow max-w-md hidden md:block">
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">
-                search
-              </span>
-              <input
-                type="text"
-                placeholder="Search workers..."
-                className="w-full h-10 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 border-none rounded-xl focus:ring-2 focus:ring-primary dark:text-white text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 shrink-0">
-            <Link
-              to="/login"
-              className="px-6 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-bold transition-all shadow-sm"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 py-6">

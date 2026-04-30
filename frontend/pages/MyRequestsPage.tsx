@@ -295,48 +295,9 @@ const MyRequestsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between gap-6">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="size-9 bg-primary rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined font-bold">
-                handyman
-              </span>
-            </div>
-            <h2 className="text-base font-bold tracking-tight dark:text-white">
-              FixIt Hawassa
-            </h2>
-          </Link>
-          <nav className="flex items-center gap-8">
-            <Link
-              to="/dashboard"
-              className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
-            >
-              Home
-            </Link>
-            <Link to="/my-requests" className="text-sm font-bold text-primary">
-              My Requests
-            </Link>
-            <Link
-              to="/messages"
-              className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
-            >
-              Messages
-            </Link>
-            <div className="size-10 rounded-full bg-gray-100 overflow-hidden">
-              <img
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUserName || "User")}`}
-                alt="User"
-              />
-            </div>
-          </nav>
-        </div>
-      </header>
+    <main className="flex-1 max-w-[1000px] mx-auto w-full px-4 py-10">
+      <div className="flex flex-col gap-8">
 
-      <main className="flex-1 max-w-[1000px] mx-auto w-full px-4 py-10">
-        <div className="flex flex-col gap-8">
           <div>
             <h1 className="text-3xl font-bold text-[#120e1b] dark:text-white mb-2">
               My Requests
@@ -482,8 +443,16 @@ const MyRequestsPage: React.FC = () => {
                                 Last invite declined
                               </p>
                               <p className="text-xs font-semibold text-gray-500 mt-1">
-                                {req.lastDeclinedWorker} declined your request.
+                                {req.lastDeclinedWorker} declined. Find another pro?
                               </p>
+                              <Link 
+                                to="/search-results" 
+                                state={{ category: req.category }}
+                                className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
+                              >
+                                View Recommended Pros
+                                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                              </Link>
                             </div>
                           ) : (
                             <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
@@ -695,7 +664,7 @@ const MyRequestsPage: React.FC = () => {
           </button>
         </div>
       </Modal>
-    </div>
+    </main>
   );
 };
 

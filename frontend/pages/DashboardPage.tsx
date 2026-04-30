@@ -388,64 +388,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   ).length;
 
   return (
-    <div className="portal-shell dark:bg-background-dark text-[#120e1b] dark:text-white font-sans min-h-screen">
-      <div className="flex flex-col">
-        {/* Header */}
-        <header className="sticky top-0 z-30 w-full portal-topbar border-x-0 border-t-0 px-6 py-3">
-          <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-white shadow-md shadow-primary/20">
-                <span className="material-symbols-outlined font-semibold text-xl">
-                  handyman
-                </span>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-base font-bold leading-none dark:text-white tracking-tight">
-                  FixIt Hawassa
-                </h1>
-                <p className="text-xs font-medium text-primary mt-1">Client</p>
-              </div>
-            </Link>
+    <div className="mx-auto w-full max-w-7xl px-6 py-8">
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate("/worker-hub")}
-                className="hidden md:flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary hover:bg-primary-dark text-white transition-all text-sm font-medium shadow-sm shadow-primary/20"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  engineering
-                </span>
-                Switch to Worker
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenNotifications}
-                aria-label="Open notifications"
-                className="relative size-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-surface-dark dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors"
-              >
-                <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">
-                  notifications
-                </span>
-                {unreadCount > 0 ? (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                ) : null}
-              </button>
-              <button
-                onClick={onLogout}
-                aria-label="Log out"
-                className="size-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-surface-dark dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors"
-              >
-                <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">
-                  logout
-                </span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <main className="mx-auto w-full max-w-7xl px-6 py-8">
           <div className="flex flex-col gap-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Hero / Greeting */}
@@ -491,7 +435,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Active Requests
                   </p>
-                  <p className="text-2xl font-bold text-[#120e1b] dark:text-white mt-1">
+                  <p className="text-xl font-semibold text-[#120e1b] dark:text-white mt-1">
                     {activeRequestsCount}
                   </p>
                 </div>
@@ -499,7 +443,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Pending Replies
                   </p>
-                  <p className="text-2xl font-bold text-[#120e1b] dark:text-white mt-1">
+                  <p className="text-xl font-semibold text-[#120e1b] dark:text-white mt-1">
                     {pendingResponsesCount}
                   </p>
                 </div>
@@ -507,7 +451,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Completed Jobs
                   </p>
-                  <p className="text-2xl font-bold text-[#120e1b] dark:text-white mt-1">
+                  <p className="text-xl font-semibold text-[#120e1b] dark:text-white mt-1">
                     {completedRequestsCount}
                   </p>
                 </div>

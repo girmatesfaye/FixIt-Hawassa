@@ -138,54 +138,57 @@ const MessagesPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-white dark:bg-background-dark font-sans flex flex-col overflow-hidden">
-      {/* Navbar */}
-      <header className="shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-        <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <Link to={homePath} className="flex items-center gap-2">
-              <div className="size-9 bg-primary rounded-lg flex items-center justify-center text-white">
-                <span className="material-symbols-outlined font-bold">
-                  handyman
-                </span>
-              </div>
-              <h2 className="text-base font-bold tracking-tight dark:text-white">
-                FixIt Hawassa
-              </h2>
-            </Link>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              to={homePath}
-              className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
-            >
-              {currentRole === "worker" ? "Worker Hub" : "Home"}
-            </Link>
-            {currentRole === "client" ? (
+    <div className="h-full bg-white dark:bg-background-dark font-sans flex flex-col overflow-hidden">
+      {/* Navbar - only show for workers as clients have it in ClientLayout */}
+      {currentRole === "worker" && (
+        <header className="shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+          <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <Link to={homePath} className="flex items-center gap-2">
+                <div className="size-9 bg-primary rounded-lg flex items-center justify-center text-white">
+                  <span className="material-symbols-outlined font-bold">
+                    handyman
+                  </span>
+                </div>
+                <h2 className="text-base font-bold tracking-tight dark:text-white">
+                  FixIt Hawassa
+                </h2>
+              </Link>
+            </div>
+            <nav className="hidden md:flex items-center gap-8">
               <Link
-                to="/my-requests"
+                to={homePath}
                 className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
               >
-                My Requests
+                {currentRole === "worker" ? "Worker Hub" : "Home"}
               </Link>
-            ) : null}
-            <Link to="/messages" className="text-sm font-bold text-primary">
-              Messages
-            </Link>
-            <div className="size-10 rounded-full bg-gray-100 overflow-hidden">
-              <img
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`}
-                alt="User"
-              />
-            </div>
-          </nav>
-        </div>
-      </header>
+              {currentRole === "client" ? (
+                <Link
+                  to="/my-requests"
+                  className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
+                >
+                  My Requests
+                </Link>
+              ) : null}
+              <Link to="/messages" className="text-sm font-bold text-primary">
+                Messages
+              </Link>
+              <div className="size-10 rounded-full bg-gray-100 overflow-hidden">
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`}
+                  alt="User"
+                />
+              </div>
+            </nav>
+          </div>
+        </header>
+      )}
+
 
       {/* Chat Container */}
       <main className="flex-1 flex overflow-hidden max-w-[1440px] mx-auto w-full border-x border-gray-100 dark:border-gray-800 bg-white dark:bg-surface-dark">
         {/* Sidebar */}
-        <aside className="w-80 border-r border-gray-100 dark:border-gray-800 flex flex-col shrink-0">
+        <aside className="w-64 border-r border-gray-100 dark:border-gray-800 flex flex-col shrink-0">
           <div className="p-4 border-b border-gray-100 dark:border-gray-800">
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">
@@ -214,10 +217,10 @@ const MessagesPage: React.FC = () => {
                 <div
                   key={contact.id}
                   onClick={() => setSelectedContact(idx)}
-                  className={`p-4 flex gap-3 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-800/50 ${selectedContact === idx ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}
+                  className={`p-3 flex gap-2 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-800/50 ${selectedContact === idx ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}
                 >
                   <div className="relative shrink-0">
-                    <div className="size-12 rounded-full overflow-hidden bg-gray-100">
+                    <div className="size-10 rounded-full overflow-hidden bg-gray-100">
                       <img
                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`}
                         alt={getContactName(contact)}
@@ -226,10 +229,10 @@ const MessagesPage: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-0.5">
-                      <h4 className="text-sm font-bold text-[#120e1b] dark:text-white truncate">
+                      <h4 className="text-xs font-semibold text-[#120e1b] dark:text-white truncate">
                         {getContactName(contact)}
                       </h4>
-                      <span className="text-[10px] font-semibold text-gray-400">
+                      <span className="text-[9px] font-medium text-gray-400">
                         Request
                       </span>
                     </div>

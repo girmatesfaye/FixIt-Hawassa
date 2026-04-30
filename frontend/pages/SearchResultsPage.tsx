@@ -382,61 +382,8 @@ const SearchResultsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md dark:bg-surface-dark/90 border-b border-gray-200 dark:border-gray-800 px-6 py-3">
-        <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6">
-          <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-            <div className="size-9 bg-primary rounded-lg flex items-center justify-center text-white shadow-md">
-              <span className="material-symbols-outlined font-semibold text-xl">
-                handyman
-              </span>
-            </div>
-            <h2 className="text-base font-bold tracking-tight dark:text-white hidden sm:block">
-              FixIt Hawassa
-            </h2>
-          </Link>
+    <div className="w-full flex flex-col">
 
-          <div className="flex-grow max-w-xl">
-            <div className="relative group">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary text-[20px]">
-                search
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`${requestDraft?.category ?? "Search by name, skill or area"}${requestDraft?.area ? ` in ${requestDraft.area}` : ""}`}
-                className="w-full h-10 pl-10 pr-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:text-white text-sm transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 shrink-0">
-            <button
-              onClick={() => navigate("/request-service")}
-              className="hidden sm:flex px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium shadow-sm hover:bg-primary-dark transition-all"
-            >
-              New Request
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenMessages}
-              className="relative size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-200 hover:text-primary hover:border-primary transition-colors flex items-center justify-center"
-              aria-label="Open chat notifications"
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                notifications
-              </span>
-              {unreadCount > 0 ? (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              ) : null}
-            </button>
-          </div>
-        </div>
-      </header>
 
       <div className="flex-1 flex max-w-[1440px] mx-auto w-full p-6 gap-8">
         {/* Sidebar Filters */}

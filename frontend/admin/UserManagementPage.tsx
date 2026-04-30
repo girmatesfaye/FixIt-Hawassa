@@ -396,7 +396,7 @@ const UserManagementPage: React.FC = () => {
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#120e1b]">User Management</h1>
+        <h1 className="text-lg font-semibold text-[#120e1b]">User Management</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -407,11 +407,11 @@ const UserManagementPage: React.FC = () => {
           >
             <div className="flex justify-between items-start">
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-gray-500">
+                <p className="text-[10px] font-normal text-gray-400 uppercase tracking-wider">
                   {stat.label}
                 </p>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-[#120e1b]">
+                  <span className="text-xl font-semibold text-[#120e1b]">
                     {stat.value}
                   </span>
                 </div>
@@ -443,7 +443,7 @@ const UserManagementPage: React.FC = () => {
             <span className="material-symbols-outlined text-red-500">
               warning
             </span>
-            <h3 className="text-base font-semibold text-[#120e1b]">
+            <h3 className="text-sm font-semibold text-[#120e1b]">
               Recent User Reports
             </h3>
           </div>

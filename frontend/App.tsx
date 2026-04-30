@@ -19,6 +19,7 @@ import MyRequestsPage from "./pages/MyRequestsPage";
 import WorkerHubPage from "./pages/WorkerHubPage";
 import EditWorkerProfilePage from "./pages/EditWorkerProfilePage";
 import AdminLayout from "./admin/AdminLayout";
+import ClientLayout from "./components/ClientLayout";
 import UserManagementPage from "./admin/UserManagementPage";
 import ReportManagementPage from "./admin/ReportManagementPage";
 import AnalyticsPage from "./admin/AnalyticsPage";
@@ -195,58 +196,41 @@ const App: React.FC = () => {
         />
         <Route path="/verify" element={<VerifyPage onVerify={handleLogin} />} />
 
-        {/* Client & Worker Routes */}
+        {/* Client Routes */}
         <Route
-          path="/dashboard"
           element={
             isAuthenticated && userRole === "client" ? (
-              <DashboardPage onLogout={handleLogout} />
+              <ClientLayout onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )
           }
-        />
-        <Route
-          path="/request-service"
-          element={
-            isAuthenticated && userRole === "client" ? (
-              <ServiceRequestPage />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/search-results"
-          element={
-            isAuthenticated && userRole === "client" ? (
-              <SearchResultsPage />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+        >
+          <Route
+            path="/dashboard"
+            element={<DashboardPage onLogout={handleLogout} />}
+          />
+          <Route path="/request-service" element={<ServiceRequestPage />} />
+          <Route path="/search-results" element={<SearchResultsPage />} />
+          <Route path="/my-requests" element={<MyRequestsPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/worker/:id" element={<WorkerProfilePage />} />
+        </Route>
+
+
+        {/* Worker & Shared Routes */}
         <Route
           path="/messages"
           element={
-            isAuthenticated &&
-            (userRole === "client" || userRole === "worker") ? (
+            isAuthenticated && userRole === "worker" ? (
               <MessagesPage />
             ) : (
               <Navigate to="/login" />
             )
           }
         />
-        <Route
-          path="/my-requests"
-          element={
-            isAuthenticated && userRole === "client" ? (
-              <MyRequestsPage />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+
+
         <Route
           path="/worker-hub"
           element={
@@ -257,6 +241,7 @@ const App: React.FC = () => {
             )
           }
         />
+
         <Route
           path="/worker/edit-profile"
           element={
@@ -267,7 +252,7 @@ const App: React.FC = () => {
             )
           }
         />
-        <Route path="/worker/:id" element={<WorkerProfilePage />} />
+
 
         {/* Admin Routes */}
         <Route

@@ -172,7 +172,7 @@ const AnalyticsPage: React.FC = () => {
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#120e1b]">Analytics Overview</h1>
+        <h1 className="text-lg font-semibold text-[#120e1b]">Analytics Overview</h1>
         <div className="flex items-center gap-3">
           <select
             value={dateRange}
@@ -211,11 +211,11 @@ const AnalyticsPage: React.FC = () => {
                     {stat.icon}
                   </span>
                 </div>
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-xs font-normal text-gray-500">
                   {stat.label}
                 </p>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-[#120e1b]">
+                  <span className="text-xl font-semibold text-[#120e1b]">
                     {stat.value}
                   </span>
                   <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full flex items-center gap-0.5">
@@ -235,10 +235,10 @@ const AnalyticsPage: React.FC = () => {
         <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-semibold text-[#120e1b]">
+              <h3 className="text-base font-medium text-[#120e1b]">
                 Service Requests Trend
               </h3>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 Real request volume from the database
               </p>
             </div>
@@ -284,10 +284,10 @@ const AnalyticsPage: React.FC = () => {
         <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-semibold text-[#120e1b]">
+              <h3 className="text-base font-medium text-[#120e1b]">
                 User Growth
               </h3>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 New registrations from clients and workers
               </p>
             </div>
@@ -351,10 +351,10 @@ const AnalyticsPage: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-[#120e1b]">
+            <h3 className="text-base font-medium text-[#120e1b]">
               Recent Activity
             </h3>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-400 mt-0.5">
               Client and worker actions pulled from live records
             </p>
           </div>
@@ -375,10 +375,10 @@ const AnalyticsPage: React.FC = () => {
                     {new Date(item.timestamp).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm font-semibold text-[#120e1b]">
+                <p className="text-xs font-medium text-[#120e1b]">
                   {item.title}
                 </p>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="text-xs text-gray-500 leading-relaxed">
                   {item.description}
                 </p>
                 <p className="text-xs text-gray-500">Actor: {item.actor}</p>

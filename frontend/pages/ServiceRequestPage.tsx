@@ -257,31 +257,9 @@ const ServiceRequestPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark font-sans flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-xl font-bold">
-                handyman
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <h2 className="text-sm font-bold leading-tight">FixIt Hawassa</h2>
-              <p className="text-[10px] text-gray-500 font-medium">
-                Service Request
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleBack}
-            className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
-          >
-            Save & Exit
-          </button>
-        </div>
-      </header>
+    <div className="w-full">
+
+
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-10">
         {/* Stepper */}

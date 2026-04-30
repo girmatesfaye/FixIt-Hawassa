@@ -207,7 +207,7 @@ const CategoryManagementPage: React.FC = () => {
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#120e1b]">
+        <h1 className="text-lg font-semibold text-[#120e1b]">
           Category Management
         </h1>
       </div>

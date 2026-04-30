@@ -137,7 +137,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
       toast.success(
         decision === "accept"
           ? "Invitation accepted! Job moved to Active Jobs."
-          : "Invitation declined.",
+          : "Invitation declined. The client has been notified to look for other recommended pros.",
       );
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
@@ -529,14 +529,14 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                         <span>•</span>
                         <span>{request.maintenanceLevel}</span>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
                         <button
                           onClick={() =>
                             navigate("/messages", {
                               state: { requestId: request.id },
                             })
                           }
-                          className="h-9 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all"
+                          className="flex-1 h-9 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all"
                         >
                           Open Chat
                         </button>
@@ -548,7 +548,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                             requestActionId === request.id ||
                             Boolean(request.workerMarkedCompleteAt)
                           }
-                          className="h-9 rounded-lg bg-green-100 hover:bg-green-600 text-green-700 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex-1 h-9 rounded-lg bg-green-100 hover:bg-green-600 text-green-700 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {request.workerMarkedCompleteAt
                             ? "Awaiting Confirm"

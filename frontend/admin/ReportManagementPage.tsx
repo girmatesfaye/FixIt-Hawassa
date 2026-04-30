@@ -288,7 +288,7 @@ const ReportManagementPage: React.FC = () => {
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#120e1b]">Report Management</h1>
+        <h1 className="text-lg font-semibold text-[#120e1b]">Report Management</h1>
       </div>
 
       {/* Stats Cards */}
@@ -300,11 +300,11 @@ const ReportManagementPage: React.FC = () => {
           >
             <div className="flex justify-between items-start">
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-gray-500 tracking-wider uppercase">
+                <p className="text-[10px] font-normal text-gray-400 tracking-wider uppercase">
                   {stat.label}
                 </p>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-[#120e1b]">
+                  <span className="text-xl font-semibold text-[#120e1b]">
                     {stat.value}
                   </span>
                   {stat.success && (
@@ -407,7 +407,7 @@ const ReportManagementPage: React.FC = () => {
                   <span className="px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 text-[10px] font-semibold uppercase tracking-wider rounded-md">
                     {report.category}
                   </span>
-                  <h3 className="text-lg font-semibold text-[#120e1b] mt-2 block">
+                  <h3 className="text-base font-semibold text-[#120e1b] mt-2 block">
                     {report.title}
                   </h3>
                   <p className="text-[10px] font-medium text-gray-500 uppercase">
