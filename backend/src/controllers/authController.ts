@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env } from "../config/env";
 import { User } from "../models";
 import { UserRole } from "../types";
+import { sendResetPasswordEmail } from "../services/emailService";
 
 const loginSchema = z.object({
   phone: z.string().min(9),
@@ -16,6 +17,7 @@ const registerSchema = z
   .object({
     fullName: z.string().min(2),
     phone: z.string().min(9),
+    email: z.string().email(),
     password: z.string().min(6),
     role: z.enum(["client", "worker", "admin"]).optional(),
     area: z.string().min(2).optional(),
@@ -284,13 +286,16 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
-    const existingUser = await User.findOne({ phone: normalizedPhone })
-      .select("_id")
+    const existingUser = await User.findOne({ 
+      $or: [{ phone: normalizedPhone }, { email: parsed.data.email.toLowerCase() }] 
+    })
+      .select("_id phone email")
       .lean();
 
     if (existingUser) {
+      const field = existingUser.phone === normalizedPhone ? "Phone number" : "Email";
       return res.status(409).json({
-        message: "Phone number already registered",
+        message: `${field} already registered`,
         source: "mongodb",
       });
     }
@@ -299,6 +304,7 @@ export const register = async (req: Request, res: Response) => {
     const createdUser = await User.create({
       phone: normalizedPhone,
       fullName: normalizedName,
+      email: parsed.data.email.toLowerCase(),
       passwordHash: hashPassword(parsed.data.password),
       role,
       area: normalizedArea,
@@ -466,4 +472,64 @@ export const verify = (req: Request, res: Response) => {
     }),
     role,
   });
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { phone } = req.body;
+  if (!phone) {
+    return res.status(400).json({ message: "Phone number is required" });
+  }
+
+  try {
+    const user = await User.findOne({ phone: phone.trim() });
+    if (!user) {
+      // We return 200 even if user not found for security (prevent enumeration)
+      // But we can add a log or a specific response if the user prefers
+      return res.json({ message: "If an account exists with this phone, a recovery email has been sent." });
+    }
+
+    if (!user.email) {
+      return res.status(400).json({ message: "No recovery email associated with this account. Please contact support." });
+    }
+
+    const token = randomBytes(32).toString("hex");
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+    await user.save();
+
+    await sendResetPasswordEmail(user.email, token);
+
+    return res.json({ message: "Recovery email sent successfully." });
+  } catch (error) {
+    console.error("[auth] Forgot password failed", error);
+    return res.status(500).json({ message: "Failed to process request" });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ message: "Token and new password are required" });
+  }
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    user.passwordHash = hashPassword(password);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    return res.json({ message: "Password reset successful. You can now login with your new password." });
+  } catch (error) {
+    console.error("[auth] Reset password failed", error);
+    return res.status(500).json({ message: "Failed to reset password" });
+  }
 };

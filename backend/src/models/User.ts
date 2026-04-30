@@ -4,6 +4,7 @@ const userSchema = new Schema(
   {
     phone: { type: String, required: true, unique: true, trim: true },
     fullName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true },
     passwordHash: { type: String, required: true },
     role: {
       type: String,
@@ -19,6 +20,8 @@ const userSchema = new Schema(
     },
     area: { type: String, default: "" },
     nationalId: { type: String, default: "" },
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   {
     timestamps: true,

@@ -6,6 +6,8 @@ import {
   register,
   updateMe,
   verify,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController";
 import { requireAuth } from "../middleware/auth";
 
@@ -17,5 +19,7 @@ authRouter.post("/refresh", requireAuth, refresh);
 authRouter.post("/register", register);
 authRouter.post("/login", login);
 authRouter.post("/verify", verify);
+authRouter.post("/forgot-password", forgotPassword);
+authRouter.post("/reset-password", resetPassword);
 
 export default authRouter;

@@ -16,6 +16,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
   const [role, setRole] = useState<"client" | "worker">("client");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [locationValue, setLocationValue] = useState(" ");
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
@@ -115,6 +116,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFormError("Please enter a valid email address for recovery.");
+      return;
+    }
+
     if (locationValue.trim().length < 2) {
       setFormError("Please enter your neighborhood or area.");
       return;
@@ -153,6 +159,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
         body: JSON.stringify({
           fullName: fullName.trim(),
           phone: normalizedPhone,
+          email: email.trim().toLowerCase(),
           password: password.trim(),
           role,
           location: locationValue.trim(),
@@ -377,6 +384,25 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                         type="tel"
                       />
                     </div>
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
+                      Recovery Email
+                    </span>
+                    <input
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (formError) setFormError("");
+                      }}
+                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
+                      placeholder="e.g. recovery@example.com"
+                      type="email"
+                    />
+                    <p className="text-[10px] text-gray-500 font-medium italic">
+                      Used for password recovery if you forget your password.
+                    </p>
                   </label>
                   <label className="flex flex-col gap-2">
                     <span className="text-[#40513b] dark:text-white text-sm font-semibold">

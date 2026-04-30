@@ -10,6 +10,8 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import VerifyPage from "./pages/VerifyPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import ServiceRequestPage from "./pages/ServiceRequestPage";
 import SearchResultsPage from "./pages/SearchResultsPage";
@@ -197,6 +199,8 @@ const App: React.FC = () => {
           element={<RegisterPage onRegisterSuccess={handleLogin} />}
         />
         <Route path="/verify" element={<VerifyPage onVerify={handleLogin} />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Client Routes */}
         <Route
