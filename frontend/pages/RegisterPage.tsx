@@ -331,7 +331,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                     placeholder="ETH-WORKER-XXXX"
                     type="text"
                   />
-                </div>
+                  </div>
+                </>
               )}
 
               <div className="space-y-1.5">
