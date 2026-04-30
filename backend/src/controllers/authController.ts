@@ -3,12 +3,12 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { env } from "../config/env";
-import { User } from "../models";
+import { User, WorkerProfile } from "../models";
 import { UserRole } from "../types";
 import { sendResetPasswordEmail } from "../services/emailService";
 
 const loginSchema = z.object({
-  phone: z.string().min(9),
+  email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(["client", "worker", "admin"]).optional(),
 });
@@ -16,13 +16,14 @@ const loginSchema = z.object({
 const registerSchema = z
   .object({
     fullName: z.string().min(2),
-    phone: z.string().min(9),
     email: z.string().email(),
     password: z.string().min(6),
     role: z.enum(["client", "worker", "admin"]).optional(),
     area: z.string().min(2).optional(),
     location: z.string().min(2).optional(),
     nationalId: z.string().optional(),
+    phone: z.string().trim().min(9).max(20).optional(),
+    category: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -46,12 +47,14 @@ const updateMeSchema = z
     fullName: z.string().trim().min(2).max(120).optional(),
     area: z.string().trim().min(2).max(120).optional(),
     location: z.string().trim().min(2).max(120).optional(),
+    phone: z.string().trim().min(9).max(20).optional(),
   })
   .refine(
     (data) =>
       data.fullName !== undefined ||
       data.area !== undefined ||
-      data.location !== undefined,
+      data.location !== undefined ||
+      data.phone !== undefined,
     {
       message: "At least one field is required",
       path: ["fullName"],
@@ -61,14 +64,14 @@ const updateMeSchema = z
 type OtpSession = {
   userId: string;
   role: UserRole;
-  phone: string;
+  email: string;
   expiresAt: number;
 };
 
 const signAccessToken = (payload: {
   sub: string;
   role: UserRole;
-  phone?: string;
+  email: string;
 }) => {
   return jwt.sign(payload, env.jwtSecret, {
     algorithm: "HS256",
@@ -94,12 +97,12 @@ const verifyPassword = (password: string, encodedHash: string): boolean => {
 
 const otpSessions = new Map<string, OtpSession>();
 
-const createOtpSession = (role: UserRole, userId: string, phone: string) => {
+const createOtpSession = (role: UserRole, userId: string, email: string) => {
   const sessionId = `sess_${Date.now()}_${randomBytes(4).toString("hex")}`;
   otpSessions.set(sessionId, {
     userId,
     role,
-    phone,
+    email,
     expiresAt: Date.now() + 5 * 60 * 1000,
   });
   return sessionId;
@@ -165,7 +168,7 @@ export const updateMe = async (req: Request, res: Response) => {
     });
   }
 
-  const updatePayload: { fullName?: string; area?: string } = {};
+  const updatePayload: { fullName?: string; area?: string; phone?: string } = {};
   if (parsed.data.fullName !== undefined) {
     updatePayload.fullName = parsed.data.fullName;
   }
@@ -173,6 +176,11 @@ export const updateMe = async (req: Request, res: Response) => {
   const normalizedArea = (parsed.data.location ?? parsed.data.area)?.trim();
   if (normalizedArea !== undefined) {
     updatePayload.area = normalizedArea;
+  }
+
+  if (parsed.data.phone !== undefined) {
+    const trimmedPhone = parsed.data.phone.trim();
+    updatePayload.phone = trimmedPhone === "" ? undefined : trimmedPhone;
   }
 
   try {
@@ -239,7 +247,7 @@ export const refresh = async (req: Request, res: Response) => {
       token: signAccessToken({
         sub: String(user._id),
         role: user.role,
-        phone: user.phone,
+        email: user.email,
       }),
       role: user.role,
       source: "mongodb",
@@ -260,7 +268,6 @@ export const register = async (req: Request, res: Response) => {
   }
 
   const role: UserRole = parsed.data.role ?? "client";
-  const normalizedPhone = parsed.data.phone.trim();
   const normalizedName = parsed.data.fullName.trim();
   const normalizedArea = (
     parsed.data.location ??
@@ -286,38 +293,48 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
-    const existingUser = await User.findOne({ 
-      $or: [{ phone: normalizedPhone }, { email: parsed.data.email.toLowerCase() }] 
-    })
-      .select("_id phone email")
+    const existingUser = await User.findOne({ email: parsed.data.email.toLowerCase() })
+      .select("_id email")
       .lean();
 
     if (existingUser) {
-      const field = existingUser.phone === normalizedPhone ? "Phone number" : "Email";
       return res.status(409).json({
-        message: `${field} already registered`,
+        message: "Email already registered",
         source: "mongodb",
       });
     }
 
     const requiresOtp = role !== "client";
     const createdUser = await User.create({
-      phone: normalizedPhone,
-      fullName: normalizedName,
       email: parsed.data.email.toLowerCase(),
+      fullName: normalizedName,
       passwordHash: hashPassword(parsed.data.password),
       role,
       area: normalizedArea,
       nationalId: role === "worker" ? normalizedNationalId : "",
+      phone: parsed.data.phone ? parsed.data.phone.trim() : undefined,
       isVerified: !requiresOtp,
       status: "active",
     });
+
+    // CRITICAL FIX: Create WorkerProfile if the user is a worker
+    if (role === "worker") {
+      const initialCategory = parsed.data.category || "General";
+      await WorkerProfile.create({
+        userId: createdUser._id,
+        area: normalizedArea,
+        title: `${initialCategory} Specialist`, // Temporary title
+        skills: [initialCategory], // Add the initial category as a skill
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(normalizedName)}&background=random`, // Default avatar
+        isActive: true,
+      });
+    }
 
     const sessionId = requiresOtp
       ? createOtpSession(
           createdUser.role,
           String(createdUser._id),
-          createdUser.phone,
+          createdUser.email,
         )
       : undefined;
     const token = requiresOtp
@@ -325,7 +342,7 @@ export const register = async (req: Request, res: Response) => {
       : signAccessToken({
           sub: String(createdUser._id),
           role: createdUser.role,
-          phone: createdUser.phone,
+          email: createdUser.email,
         });
 
     return res.status(201).json({
@@ -369,16 +386,16 @@ export const login = (req: Request, res: Response) => {
     });
   }
 
-  const normalizedPhone = parsed.data.phone.trim();
+  const normalizedEmail = parsed.data.email.trim().toLowerCase();
   const providedRole = parsed.data.role;
 
-  return User.findOne({ phone: normalizedPhone })
-    .select("_id phone role status passwordHash")
+  return User.findOne({ email: normalizedEmail })
+    .select("_id email role status passwordHash")
     .lean()
     .then((user) => {
       if (!user) {
         return res.status(401).json({
-          message: "Invalid phone or password",
+          message: "Invalid email or password",
           source: "mongodb",
         });
       }
@@ -399,7 +416,7 @@ export const login = (req: Request, res: Response) => {
 
       if (!verifyPassword(parsed.data.password, user.passwordHash)) {
         return res.status(401).json({
-          message: "Invalid phone or password",
+          message: "Invalid email or password",
           source: "mongodb",
         });
       }
@@ -407,7 +424,7 @@ export const login = (req: Request, res: Response) => {
       const sessionId = createOtpSession(
         user.role,
         String(user._id),
-        user.phone,
+        user.email,
       );
       return res.json({
         message: "Login accepted. OTP sent.",
@@ -468,24 +485,23 @@ export const verify = (req: Request, res: Response) => {
     token: signAccessToken({
       sub: session.userId,
       role,
-      phone: session.phone,
+      email: session.email,
     }),
     role,
   });
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
-  const { phone } = req.body;
-  if (!phone) {
-    return res.status(400).json({ message: "Phone number is required" });
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
   }
 
   try {
-    const user = await User.findOne({ phone: phone.trim() });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       // We return 200 even if user not found for security (prevent enumeration)
-      // But we can add a log or a specific response if the user prefers
-      return res.json({ message: "If an account exists with this phone, a recovery email has been sent." });
+      return res.json({ message: "If an account exists with this email, a recovery email has been sent." });
     }
 
     if (!user.email) {

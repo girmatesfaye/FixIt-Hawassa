@@ -91,8 +91,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const [myUserId, setMyUserId] = useState("");
   const [currentUserName, setCurrentUserName] = useState("");
   const [currentUserArea, setCurrentUserArea] = useState("");
+  const [currentUserPhone, setCurrentUserPhone] = useState("");
   const [profileNameInput, setProfileNameInput] = useState("");
   const [profileAreaInput, setProfileAreaInput] = useState("");
+  const [profilePhoneInput, setProfilePhoneInput] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaveError, setProfileSaveError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
@@ -178,7 +180,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         }
 
         const result = (await response.json().catch(() => null)) as {
-          user?: { id?: string; name?: string; area?: string };
+          user?: { id?: string; name?: string; area?: string; phone?: string };
         } | null;
 
         if (!result?.user?.id) {
@@ -188,6 +190,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         setMyUserId(result.user.id);
         setCurrentUserName(result.user.name ?? "");
         setCurrentUserArea(result.user.area ?? "");
+        setCurrentUserPhone(result.user.phone ?? "");
       })
       .catch(() => {
         setMyUserId("");
@@ -290,8 +293,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
 
     setProfileNameInput(currentUserName);
     setProfileAreaInput(currentUserArea);
+    setProfilePhoneInput(currentUserPhone);
     setProfileSaveError("");
-  }, [isProfileModalOpen, currentUserName, currentUserArea]);
+  }, [isProfileModalOpen, currentUserName, currentUserArea, currentUserPhone]);
 
   const handleSaveProfile = async () => {
     const nextName = profileNameInput.trim();
@@ -326,12 +330,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         body: JSON.stringify({
           fullName: nextName,
           area: nextArea,
+          phone: profilePhoneInput.trim(),
         }),
       });
 
       const result = (await response.json().catch(() => null)) as {
         message?: string;
-        user?: { name?: string; area?: string };
+        user?: { name?: string; area?: string; phone?: string };
       } | null;
 
       if (response.status === 401) {
@@ -345,6 +350,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
 
       setCurrentUserName(result?.user?.name ?? nextName);
       setCurrentUserArea(result?.user?.area ?? nextArea);
+      setCurrentUserPhone(result?.user?.phone ?? profilePhoneInput.trim());
       setIsProfileModalOpen(false);
     } catch (error) {
       setProfileSaveError(
@@ -459,71 +465,65 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
             </div>
 
             {/* Service Grid */}
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold dark:text-white tracking-tight">
+                  <h3 className="text-xl font-bold dark:text-white tracking-tight">
                     Service Categories
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Pick a service to start a request fast
                   </p>
                 </div>
                 <Link
                   to="/search-results"
-                  className="text-sm font-medium text-primary hover:underline shrink-0"
+                  className="text-sm font-semibold text-primary hover:underline shrink-0 bg-primary/5 px-4 py-2 rounded-full transition-all"
                 >
                   View All
                 </Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                {(categories.length > 0
-                  ? categories
-                  : [
-                      { name: "Plumbing", icon: "plumbing" },
-                      { name: "Electrical", icon: "bolt" },
-                      { name: "Carpentry", icon: "carpenter" },
-                      { name: "Painting", icon: "format_paint" },
-                      { name: "Cleaning", icon: "cleaning_services" },
-                      { name: "Masonry", icon: "foundation" },
-                    ]
-                ).map((svc, index) => {
-                  const colors = [
-                    "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
-                    "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
-                    "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
-                    "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
-                    "bg-green-50 text-green-500 dark:bg-green-500/10",
-                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
-                  ];
-                  const color = colors[index % colors.length];
-                  return (
-                    <button
-                      key={svc.name}
-                      onClick={() => handleServiceClick(svc.name)}
-                      className="group flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-md transition-all duration-300 text-left"
-                    >
-                      <div
-                        className={`size-10 rounded-xl ${color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
+                {categories.length > 0 ? (
+                  categories.map((svc, index) => {
+                    const colors = [
+                      "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
+                      "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
+                      "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
+                      "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
+                      "bg-green-50 text-green-500 dark:bg-green-500/10",
+                      "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
+                    ];
+                    const color = colors[index % colors.length];
+                    return (
+                      <button
+                        key={svc.id || svc.name}
+                        onClick={() => handleServiceClick(svc.name)}
+                        className="group flex flex-col items-center text-center gap-4 p-5 rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                       >
-                        <span className="material-symbols-outlined text-xl">
-                          {svc.icon || "build"}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold dark:text-white truncate">
-                          {svc.name}
-                        </p>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                          Start request
-                        </p>
-                      </div>
-                      <span className="material-symbols-outlined text-gray-300 group-hover:text-primary text-[18px]">
-                        chevron_right
-                      </span>
-                    </button>
-                  );
-                })}
+                        <div
+                          className={`size-14 rounded-2xl ${color} flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform shadow-sm`}
+                        >
+                          <span className="material-symbols-outlined text-3xl">
+                            {svc.icon || "build"}
+                          </span>
+                        </div>
+                        <div className="space-y-1 w-full">
+                          <p className="text-sm font-bold dark:text-white leading-tight">
+                            {svc.name}
+                          </p>
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 group-hover:text-primary transition-colors">
+                            Request Now
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="col-span-full py-12 text-center portal-panel bg-gray-50/50 border-dashed">
+                    <p className="text-gray-500 font-medium">No categories available yet.</p>
+                    <p className="text-xs text-gray-400 mt-1">Admin will add services soon.</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -791,6 +791,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 placeholder="Neighborhood / Area"
               />
             </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Phone Number
+            </label>
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">
+                call
+              </span>
+              <input
+                className="w-full h-10 pl-9 pr-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:text-white text-sm"
+                type="tel"
+                value={profilePhoneInput}
+                onChange={(event) => setProfilePhoneInput(event.target.value)}
+                placeholder="+251 9XX XXX XXX"
+              />
+            </div>
+            <p className="text-[10px] text-gray-500 italic">
+              Providing a phone number helps workers contact you faster.
+            </p>
           </div>
           {profileSaveError ? (
             <p className="text-sm font-medium text-red-600">

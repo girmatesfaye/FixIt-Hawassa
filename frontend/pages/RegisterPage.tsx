@@ -15,11 +15,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
   const navigate = useNavigate();
   const [role, setRole] = useState<"client" | "worker">("client");
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [locationValue, setLocationValue] = useState(" ");
-  const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [locationValue, setLocationValue] = useState("");
+  const [category, setCategory] = useState("Plumbing"); // Default category for workers
+  const [nationalId, setNationalId] = useState("");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -110,14 +111,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
       return;
     }
 
-    const phoneDigits = phone.replace(/\D/g, "");
-    if (!/^9\d{8}$/.test(phoneDigits)) {
-      setFormError("Enter a valid Ethiopian mobile number (9XXXXXXXX).");
-      return;
-    }
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFormError("Please enter a valid email address for recovery.");
+      setFormError("Please enter a valid email address.");
       return;
     }
 
@@ -150,7 +145,6 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
           navigate("/dashboard");
         }
       };
-      const normalizedPhone = `+251${phoneDigits}`;
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
@@ -158,12 +152,13 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
         },
         body: JSON.stringify({
           fullName: fullName.trim(),
-          phone: normalizedPhone,
           email: email.trim().toLowerCase(),
           password: password.trim(),
           role,
           location: locationValue.trim(),
           area: locationValue.trim(),
+          phone: phone.trim(),
+          category: role === "worker" ? category : undefined,
           nationalId: role === "worker" ? normalizedNationalId : undefined,
         }),
       });
@@ -217,318 +212,197 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-background-dark font-sans text-[#40513b] dark:text-white min-h-screen flex flex-col">
-      <header className="w-full bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-[#9dc08b66] dark:border-gray-800 px-6 py-4 flex items-center justify-between fixed top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="size-8 text-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl font-bold">
-              handyman
-            </span>
-          </div>
-          <h2 className="text-[#40513b] dark:text-white text-lg font-bold leading-tight">
-            FixIt Hawassa
-          </h2>
-        </div>
-        <a
-          className="text-sm font-medium text-[#609966] dark:text-gray-400 hover:text-primary transition-colors"
-          href="#"
-        >
-          Help
-        </a>
-      </header>
-
-      <main className="flex-grow flex pt-[68px]">
-        <div className="flex w-full min-h-[calc(100vh-68px)]">
-          <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900">
-            <img
-              alt="Skilled worker"
-              className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay"
-              src="https://picsum.photos/id/1/1600/1200"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#40513b] via-[#40513b]/20 to-transparent"></div>
-            <div className="relative z-10 p-16 flex flex-col justify-end h-full max-w-2xl">
-              <div className="flex flex-col gap-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 border border-primary/30 rounded-full w-fit">
-                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                  <span className="text-white text-xs font-bold uppercase tracking-wider">
-                    Join our growing community
-                  </span>
-                </div>
-                <h2 className="text-white text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-                  Empowering Hawassa's skilled hands.
-                </h2>
-                <p className="text-white/80 text-xl leading-relaxed">
-                  Connecting local expertise with residential and commercial
-                  projects. Your next big opportunity or your quick fix is just
-                  a click away.
-                </p>
-              </div>
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-white dark:bg-background-dark font-sans overflow-x-hidden">
+      {/* Left Column: Form Section */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24">
+        <div className="max-w-md w-full mx-auto space-y-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="size-10 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
+              <span className="material-symbols-outlined text-3xl font-bold">handyman</span>
             </div>
+            <h2 className="text-[#40513b] dark:text-white text-xl font-black tracking-tight">FixIt Hawassa</h2>
           </div>
 
-          <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-background-light dark:bg-background-dark overflow-y-auto">
-            <div className="w-full max-w-[480px] bg-white dark:bg-surface-dark rounded-2xl shadow-xl lg:shadow-2xl border border-[#9dc08b66] dark:border-gray-800 p-8 sm:p-10 flex flex-col gap-8">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-[#40513b] dark:text-white text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
-                  Join FixIt Hawassa
-                </h1>
-                <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base font-medium">
-                  Start connecting with skilled workers today.
-                </p>
-              </div>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black text-[#40513b] dark:text-white tracking-tight">Create Account</h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">Join our community of skilled professionals and clients.</p>
+          </div>
 
-              <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-                <div className="flex flex-col gap-3">
-                  <label className="text-[#40513b] dark:text-white text-sm font-semibold">
-                    I am joining as a...
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div
-                      className="relative group cursor-pointer"
-                      onClick={() => {
-                        setRole("client");
-                        setNationalId("");
-                        if (formError) setFormError("");
-                      }}
-                    >
-                      <div
-                        className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "client" ? "border-primary bg-[#edf1d6] dark:bg-primary/10 text-primary" : "border-[#9dc08b66] dark:border-gray-700 bg-white dark:bg-background-dark text-[#609966] dark:text-gray-400"}`}
-                      >
-                        <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: "32px" }}
-                        >
-                          person
-                        </span>
-                        <span className="text-sm font-semibold">Client</span>
-                      </div>
-                      {role === "client" && (
-                        <div className="absolute top-3 right-3 text-primary">
-                          <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: "20px" }}
-                          >
-                            check_circle
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="relative group cursor-pointer"
-                      onClick={() => {
-                        setRole("worker");
-                        if (formError) setFormError("");
-                      }}
-                    >
-                      <div
-                        className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all ${role === "worker" ? "border-primary bg-[#edf1d6] dark:bg-primary/10 text-primary" : "border-[#9dc08b66] dark:border-gray-700 bg-white dark:bg-background-dark text-[#609966] dark:text-gray-400"}`}
-                      >
-                        <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: "32px" }}
-                        >
-                          home_repair_service
-                        </span>
-                        <span className="text-sm font-semibold">Worker</span>
-                      </div>
-                      {role === "worker" && (
-                        <div className="absolute top-3 right-3 text-primary">
-                          <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: "20px" }}
-                          >
-                            check_circle
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
-                      Full Name
-                    </span>
-                    <input
-                      required
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (formError) setFormError("");
-                      }}
-                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
-                      placeholder="e.g. Abebe Bikila"
-                      type="text"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
-                      Phone Number
-                    </span>
-                    <div className="relative flex w-full">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-[#609966] dark:text-gray-400 font-medium border-r border-gray-300 dark:border-gray-600 pr-2 mr-2 text-sm">
-                          +251
-                        </span>
-                      </div>
-                      <input
-                        required
-                        value={phone}
-                        onChange={(e) => {
-                          setPhone(e.target.value);
-                          if (formError) setFormError("");
-                        }}
-                        className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-16 pr-4 text-base dark:text-white placeholder-[#609966]"
-                        placeholder="911 234 567"
-                        type="tel"
-                      />
-                    </div>
-                  </label>
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
-                      Recovery Email
-                    </span>
-                    <input
-                      required
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (formError) setFormError("");
-                      }}
-                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
-                      placeholder="e.g. recovery@example.com"
-                      type="email"
-                    />
-                    <p className="text-[10px] text-gray-500 font-medium italic">
-                      Used for password recovery if you forget your password.
-                    </p>
-                  </label>
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
-                      Location (Neighborhood/Area)
-                    </span>
-                    <input
-                      required
-                      value={locationValue}
-                      onChange={(e) => {
-                        setLocationValue(e.target.value);
-                        if (formError) setFormError("");
-                      }}
-                      className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
-                      placeholder="e.g., Piazza or Tabor"
-                      type="text"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleUseCurrentLocation}
-                      disabled={isLocating}
-                      className="self-start mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary disabled:text-gray-400"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        my_location
-                      </span>
-                      {isLocating
-                        ? "Detecting location..."
-                        : "Use current location"}
-                    </button>
-                    {locationHint ? (
-                      <p className="text-xs text-[#609966] dark:text-gray-400">
-                        {locationHint}
-                      </p>
-                    ) : null}
-                  </label>
-                  {role === "worker" ? (
-                    <label className="flex flex-col gap-2">
-                      <span className="text-[#40513b] dark:text-white text-sm font-semibold">
-                        National ID (Worker)
-                      </span>
-                      <input
-                        required
-                        value={nationalId}
-                        onChange={(e) => {
-                          setNationalId(e.target.value.toUpperCase());
-                          if (formError) setFormError("");
-                        }}
-                        className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966]"
-                        placeholder="e.g. ETH-WORKER-1001"
-                        type="text"
-                      />
-                    </label>
-                  ) : null}
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#40513b] dark:text-white text-sm font-semibold">
-                      Password
-                    </span>
-                    <div className="relative">
-                      <input
-                        required
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          if (formError) setFormError("");
-                        }}
-                        className="form-input flex w-full rounded-lg border border-[#9dc08b] dark:border-gray-700 bg-[#edf1d6] dark:bg-gray-800 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base dark:text-white placeholder-[#609966] pr-10"
-                        placeholder="Create a strong password"
-                        type="password"
-                      />
-                      <button
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#609966] dark:text-gray-400 hover:text-primary"
-                        type="button"
-                      >
-                        <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: "20px" }}
-                        >
-                          visibility_off
-                        </span>
-                      </button>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="pt-2 flex flex-col gap-4">
-                  {formError ? (
-                    <p className="text-sm font-medium text-red-600">
-                      {formError}
-                    </p>
-                  ) : null}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              {/* Role Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Joining as</label>
+                <div className="grid grid-cols-2 gap-4">
                   <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex items-center justify-center w-full h-12 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium text-base transition-colors shadow-sm shadow-primary/20"
+                    type="button"
+                    onClick={() => setRole("client")}
+                    className={`h-14 rounded-2xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${role === "client" ? "border-primary bg-primary/5 text-primary shadow-lg shadow-primary/10" : "border-gray-100 dark:border-gray-800 text-gray-400"}`}
                   >
-                    {isSubmitting ? "Creating Account..." : "Create Account"}
+                    <span className="material-symbols-outlined text-xl">person</span>
+                    Client
                   </button>
-                  <p className="text-center text-xs text-[#609966] dark:text-gray-500">
-                    By continuing, you agree to our{" "}
-                    <a className="underline hover:text-primary" href="#">
-                      Terms of Service
-                    </a>{" "}
-                    and{" "}
-                    <a className="underline hover:text-primary" href="#">
-                      Privacy Policy
-                    </a>
-                    .
-                  </p>
-                </div>
-              </form>
-
-              <div className="border-t border-[#9dc08b66] dark:border-gray-800 pt-6 text-center">
-                <p className="text-sm text-[#40513b] dark:text-gray-300">
-                  Already have an account?
-                  <Link
-                    className="text-primary font-bold hover:underline ml-1"
-                    to="/login"
+                  <button
+                    type="button"
+                    onClick={() => setRole("worker")}
+                    className={`h-14 rounded-2xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${role === "worker" ? "border-primary bg-primary/5 text-primary shadow-lg shadow-primary/10" : "border-gray-100 dark:border-gray-800 text-gray-400"}`}
                   >
-                    Log in
-                  </Link>
+                    <span className="material-symbols-outlined text-xl">engineering</span>
+                    Worker
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Full Name</label>
+                <input
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
+                  placeholder="Abebe Kebede"
+                  type="text"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Email Address</label>
+                <input
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
+                  placeholder="name@example.com"
+                  type="email"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Location</label>
+                <div className="relative">
+                  <input
+                    required
+                    value={locationValue}
+                    onChange={(e) => setLocationValue(e.target.value)}
+                    className="w-full h-14 pl-12 pr-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
+                    placeholder="Neighborhood or Area"
+                    type="text"
+                  />
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">location_on</span>
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-primary hover:text-primary-dark transition-colors"
+                    title="Use my location"
+                  >
+                    <span className="material-symbols-outlined">my_location</span>
+                  </button>
+                </div>
+              </div>
+
+              {role === "worker" && (
+                <>
+                  <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                    <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Main Service Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white appearance-none"
+                    >
+                      <option value="Plumbing">Plumbing</option>
+                      <option value="Electrical">Electrical</option>
+                      <option value="Carpentry">Carpentry</option>
+                      <option value="Cleaning">Cleaning</option>
+                      <option value="Painting">Painting</option>
+                      <option value="Construction">Construction</option>
+                      <option value="Appliances">Appliances</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+
+                  <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">National ID</label>
+                  <input
+                    required
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value.toUpperCase())}
+                    className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
+                    placeholder="ETH-WORKER-XXXX"
+                    type="text"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Password</label>
+                <input
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
+                  placeholder="••••••••"
+                  type="password"
+                />
+              </div>
+            </div>
+
+            {formError && (
+              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
+                <p className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  {formError}
                 </p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-lg transition-all shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] disabled:opacity-50"
+            >
+              {isSubmitting ? "Creating Account..." : "Create Account"}
+            </button>
+          </form>
+
+          <div className="pt-4 flex flex-col items-center gap-6">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              Already have an account?
+              <Link to="/login" className="text-primary font-black hover:underline ml-1.5">Log in</Link>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Column: Visual Section */}
+      <div className="hidden lg:block lg:w-1/2 relative bg-[#40513b]">
+        <img
+          alt="Community"
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+          src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1974&auto=format&fit=crop"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#40513b] via-transparent to-transparent"></div>
+        <div className="absolute inset-0 flex flex-col justify-end p-20 text-white">
+          <div className="max-w-xl space-y-6">
+            <h2 className="text-5xl font-black leading-[1.1] tracking-tight">
+              Build your career, <br/>serve your city.
+            </h2>
+            <p className="text-lg font-medium text-white/80 leading-relaxed max-w-md">
+              Whether you are looking for work or looking for help, FixIt is the bridge that connects you to the best of Hawassa.
+            </p>
+            <div className="pt-10 grid grid-cols-2 gap-10">
+              <div className="flex flex-col gap-1">
+                <span className="text-3xl font-black">100%</span>
+                <span className="text-[10px] uppercase font-black tracking-widest text-white/50">Verified Users</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-3xl font-black">Free</span>
+                <span className="text-[10px] uppercase font-black tracking-widest text-white/50">To Get Started</span>
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

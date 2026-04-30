@@ -25,7 +25,7 @@ const SearchResultsPage: React.FC = () => {
   const PAGE_SIZE = 12;
   const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
   const [distance, setDistance] = useState(5);
-  const [minRating, setMinRating] = useState(4.4);
+  const [minRating, setMinRating] = useState(4.0);
   const [onlyActive, setOnlyActive] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);

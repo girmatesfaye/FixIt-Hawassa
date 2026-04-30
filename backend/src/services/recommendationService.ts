@@ -59,25 +59,30 @@ export const rankWorkers = (
 
   return filtered
     .map((w) => {
-      const categoryBoost = request
+      const categoryMatch = request
         ? w.skills.some((skill) =>
             skill.toLowerCase().includes(request.category.toLowerCase()),
           )
-          ? 1
-          : 0
-        : 0;
+        : false;
+
+      const areaMatch = request && w.area && request.area
+        ? w.area.toLowerCase() === request.area.toLowerCase()
+        : false;
 
       const distanceScore =
         1 - normalize(w.distanceKm, minDistance, maxDistance);
       const reviewScore = normalize(w.reviews, minReviews, maxReviews);
 
+      // New weighted formula:
+      // Category match is now a massive boost (+3.0)
+      // Area match is a significant boost (+1.5)
       const score =
-        w.rating * 0.35 +
-        distanceScore * 5 * 0.25 +
-        w.completionRate * 5 * 0.2 +
-        (1 - Math.min(w.responseMinutes, 30) / 30) * 5 * 0.1 +
-        reviewScore * 5 * 0.1 +
-        categoryBoost * 0.5;
+        (categoryMatch ? 3.0 : 0) +     // Primary factor: Can they do the job?
+        (areaMatch ? 1.5 : 0) +         // Secondary factor: Are they in the neighborhood?
+        (w.rating * 0.4) +              // Quality factor
+        (distanceScore * 1.5) +         // Proximity factor
+        (w.completionRate * 1.0) +      // Reliability factor
+        (reviewScore * 0.5);            // Popularity factor
 
       return {
         ...w,

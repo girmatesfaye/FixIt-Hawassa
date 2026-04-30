@@ -7,26 +7,24 @@ const API_BASE_URL =
   "http://localhost:4000";
 
 const ForgotPasswordPage: React.FC = () => {
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const phoneDigits = phone.replace(/\D/g, "");
-    if (!/^9\d{8}$/.test(phoneDigits)) {
-      toast.error("Enter a valid Ethiopian mobile number (9XXXXXXXX).");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const normalizedPhone = `+251${phoneDigits}`;
       const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: normalizedPhone }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
 
       const data = await response.json();
@@ -58,7 +56,7 @@ const ForgotPasswordPage: React.FC = () => {
           Forgot Password?
         </h2>
         <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
-          Enter your phone number and we'll send a recovery link to your registered email.
+          Enter your email address and we'll send a recovery link.
         </p>
       </div>
 
@@ -68,23 +66,16 @@ const ForgotPasswordPage: React.FC = () => {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-sm font-semibold text-[#40513b] dark:text-gray-200 mb-2">
-                  Phone Number
+                  Email Address
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-[#609966] dark:text-gray-400 font-medium border-r border-gray-300 dark:border-gray-600 pr-2 mr-2 text-sm">
-                      +251
-                    </span>
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="block w-full pl-16 pr-3 py-3 border border-[#9dc08b] dark:border-gray-700 rounded-xl leading-5 bg-[#edf1d6] dark:bg-gray-800 text-gray-900 dark:text-white placeholder-[#609966] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                    placeholder="911 234 567"
-                  />
-                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full px-4 py-3 border border-[#9dc08b] dark:border-gray-700 rounded-xl leading-5 bg-[#edf1d6] dark:bg-gray-800 text-gray-900 dark:text-white placeholder-[#609966] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                  placeholder="yourname@example.com"
+                />
               </div>
 
               <div>
@@ -105,7 +96,7 @@ const ForgotPasswordPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                If an account exists for this number, we have sent a reset link to your email.
+                If an account exists with that email, we have sent a reset link.
               </p>
               <p className="text-xs text-gray-500">
                 Please check your inbox (and spam folder). The link is valid for 1 hour.

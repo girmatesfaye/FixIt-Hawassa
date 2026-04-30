@@ -15,7 +15,7 @@ type AuthenticatedRequest = Request & { userId?: string };
 
 const querySchema = z.object({
   maxDistanceKm: z.coerce.number().min(1).max(20).default(5),
-  minRating: z.coerce.number().min(3).max(5).default(4.4),
+  minRating: z.coerce.number().min(3).max(5).default(4.0),
   onlyActive: z.coerce.boolean().default(true),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(12),
