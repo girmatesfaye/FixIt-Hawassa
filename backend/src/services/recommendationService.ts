@@ -42,6 +42,8 @@ export const rankWorkers = (
   onlyActive: boolean,
 ): Array<WorkerRecommendation & { score: number; reasons: string[] }> => {
   const filtered = workers.filter((w) => {
+    // If distance is the default 99, we only filter it if maxDistanceKm is less than 99
+    // This allows default workers to show up unless the user specifically filters for close ones
     const passDistance = w.distanceKm <= maxDistanceKm;
     const passRating = w.rating >= minRating;
     const passActive = onlyActive ? w.isActive : true;
@@ -52,9 +54,9 @@ export const rankWorkers = (
     return [];
   }
 
-  const maxReviews = Math.max(...filtered.map((w) => w.reviews));
+  const maxReviews = Math.max(...filtered.map((w) => w.reviews), 1);
   const minReviews = Math.min(...filtered.map((w) => w.reviews));
-  const maxDistance = Math.max(...filtered.map((w) => w.distanceKm));
+  const maxDistance = Math.max(...filtered.map((w) => w.distanceKm), 1);
   const minDistance = Math.min(...filtered.map((w) => w.distanceKm));
 
   return filtered
@@ -66,23 +68,26 @@ export const rankWorkers = (
         : false;
 
       const areaMatch = request && w.area && request.area
-        ? w.area.toLowerCase() === request.area.toLowerCase()
+        ? w.area.toLowerCase().trim() === request.area.toLowerCase().trim()
         : false;
 
-      const distanceScore =
-        1 - normalize(w.distanceKm, minDistance, maxDistance);
-      const reviewScore = normalize(w.reviews, minReviews, maxReviews);
+      // Handle normalization more safely
+      const distanceScore = maxDistance === minDistance 
+        ? (w.distanceKm < 10 ? 1 : 0.5) // If all same, give boost to those clearly marked as "close"
+        : 1 - normalize(w.distanceKm, minDistance, maxDistance);
 
-      // New weighted formula:
-      // Category match is now a massive boost (+3.0)
-      // Area match is a significant boost (+1.5)
+      const reviewScore = maxReviews === minReviews 
+        ? 0.5 
+        : normalize(w.reviews, minReviews, maxReviews);
+
+      // Final weighted formula:
       const score =
-        (categoryMatch ? 3.0 : 0) +     // Primary factor: Can they do the job?
-        (areaMatch ? 1.5 : 0) +         // Secondary factor: Are they in the neighborhood?
-        (w.rating * 0.4) +              // Quality factor
-        (distanceScore * 1.5) +         // Proximity factor
-        (w.completionRate * 1.0) +      // Reliability factor
-        (reviewScore * 0.5);            // Popularity factor
+        (categoryMatch ? 5.0 : 0) +     // Primary: Category (Increased to 5.0)
+        (areaMatch ? 3.0 : 0) +         // Secondary: Area (Increased to 3.0)
+        (w.rating * 1.0) +              // Quality (Increased weight)
+        (distanceScore * 2.0) +         // Proximity
+        (w.completionRate * 1.5) +      // Reliability
+        (reviewScore * 0.5);            // Popularity
 
       return {
         ...w,

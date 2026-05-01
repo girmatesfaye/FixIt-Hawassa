@@ -13,28 +13,17 @@ const loginSchema = z.object({
   role: z.enum(["client", "worker", "admin"]).optional(),
 });
 
-const registerSchema = z
-  .object({
-    fullName: z.string().min(2),
-    email: z.string().email(),
-    password: z.string().min(6),
-    role: z.enum(["client", "worker", "admin"]).optional(),
-    area: z.string().min(2).optional(),
-    location: z.string().min(2).optional(),
-    nationalId: z.string().optional(),
-    phone: z.string().trim().min(9).max(20).optional(),
-    category: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      const normalized = (data.location ?? data.area ?? "").trim();
-      return normalized.length >= 2;
-    },
-    {
-      message: "Location (Neighborhood/Area) is required",
-      path: ["location"],
-    },
-  );
+const registerSchema = z.object({
+  fullName: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.string().optional(),
+  area: z.string().optional(),
+  location: z.string().optional(),
+  nationalId: z.string().optional(),
+  phone: z.string().optional(),
+  category: z.string().optional(),
+});
 
 /*
 const verifySchema = z.object({
@@ -267,8 +256,13 @@ export const refresh = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const errorMsg = Object.entries(fieldErrors)
+      .map(([field, msgs]) => `${field}: ${msgs?.join(", ")}`)
+      .join("; ");
+    
     return res.status(400).json({
-      message: "Invalid registration payload",
+      message: `Invalid registration payload: ${errorMsg}`,
       errors: parsed.error.flatten(),
     });
   }

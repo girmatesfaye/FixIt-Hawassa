@@ -98,22 +98,45 @@ const EditWorkerProfilePage: React.FC = () => {
     latitude: number,
     longitude: number,
   ): Promise<string | null> => {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-    );
-    if (!response.ok) {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+      );
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = (await response.json().catch(() => null)) as {
+        display_name?: string;
+        address?: {
+          city?: string;
+          town?: string;
+          suburb?: string;
+          state?: string;
+          country?: string;
+        };
+      } | null;
+
+      if (!data?.address) {
+        return null;
+      }
+
+      // Bounding box for Hawassa area
+      // Roughly: Lat [6.9, 7.2], Lon [38.3, 38.6]
+      const isWithinHawassaBounds = 
+        latitude >= 6.9 && latitude <= 7.2 && 
+        longitude >= 38.3 && longitude <= 38.6;
+
+      if (!isWithinHawassaBounds) {
+        toast.error("FixIt is currently optimized for Hawassa. Please ensure your location is within the city limits.");
+        return null;
+      }
+
+      return data.display_name?.trim() || null;
+    } catch (error) {
+      console.error("Geocoding error:", error);
       return null;
     }
-
-    const data = (await response.json().catch(() => null)) as {
-      display_name?: string;
-    } | null;
-
-    if (!data?.display_name?.trim()) {
-      return null;
-    }
-
-    return data.display_name.trim();
   };
 
   const handleUseCurrentLocation = () => {
