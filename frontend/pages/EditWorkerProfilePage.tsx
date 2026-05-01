@@ -460,32 +460,37 @@ const EditWorkerProfilePage: React.FC = () => {
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Loading categories from the admin dashboard...
                   </p>
-                ) : categories.length ? (
+                ) : (
                   <div className="flex flex-wrap gap-2">
-                    {categories.map((c) => {
-                      const selected = skills.includes(c.name);
+                    {(() => {
+                      const defaultCategoryNames = [
+                        "Plumbing",
+                        "Electrical",
+                        "Painting",
+                        "Cleaning",
+                        "Carpentry",
+                        "Masonry",
+                        "General Fixes",
+                      ];
+                      
+                      const dynamicNames = categories.map(c => c.name);
+                      const allNames = Array.from(new Set([...defaultCategoryNames, ...dynamicNames]));
+                      
+                      return allNames;
+                    })().map((catName) => {
+                      const selected = skills.includes(catName);
                       return (
                         <button
-                          key={c.id}
+                          key={catName}
                           type="button"
-                          onClick={() => toggleCategory(c.name)}
+                          onClick={() => toggleCategory(catName)}
                           className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${selected ? "bg-green-600 text-white" : "border border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-primary hover:text-primary"}`}
                         >
                           {selected ? "✓ " : ""}
-                          {c.name}
+                          {catName}
                         </button>
                       );
                     })}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-3">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      No categories found yet.
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Create categories in the admin dashboard and they will
-                      appear here.
-                    </p>
                   </div>
                 )}
               </div>

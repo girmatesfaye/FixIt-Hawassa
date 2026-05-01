@@ -299,10 +299,10 @@ const MyRequestsPage: React.FC = () => {
       <div className="flex flex-col gap-8">
 
           <div>
-            <h1 className="text-3xl font-bold text-[#120e1b] dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white mb-2">
               My Requests
             </h1>
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               Manage and track your service calls
             </p>
           </div>

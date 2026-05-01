@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { saveSession } from "../services/auth";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:4000";
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  onLoginSuccess: (role: "client" | "worker" | "admin") => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -44,24 +49,36 @@ const LoginPage: React.FC = () => {
 
       const result = (await response.json().catch(() => null)) as {
         message?: string;
-        sessionId?: string;
+        token?: string;
         role?: "client" | "worker" | "admin";
+        next?: string;
       } | null;
 
-      if (!response.ok || !result?.sessionId) {
+      if (!response.ok || !result?.token) {
         const msg = result?.message ?? "Login failed. Please try again.";
         setFormError(msg);
         toast.error(msg);
         return;
       }
 
-      toast.success("Login successful! Sending verification code.");
-      navigate("/verify", {
-        state: {
-          role: result.role ?? "client",
-          sessionId: result.sessionId,
-        },
-      });
+      toast.success("Login successful!");
+      const resolvedRole = result.role ?? "client";
+      const token = result.token;
+      
+      // Save session
+      saveSession(token, resolvedRole);
+
+      // Update global auth state
+      onLoginSuccess(resolvedRole);
+
+      // Navigate to destination
+      if (resolvedRole === "admin") {
+        navigate("/admin/users");
+      } else if (resolvedRole === "worker") {
+        navigate("/worker-hub");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (_error) {
       setFormError("Could not connect to server. Please try again.");
     } finally {
@@ -161,7 +178,8 @@ const LoginPage: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => setFormError("Admin access requires OTP verification.")}
+              // onClick={() => setFormError("Admin access requires OTP verification.")}
+              onClick={() => setFormError("Admin access is restricted.")}
               className="inline-flex items-center gap-1.5 text-[11px] font-black text-gray-400 hover:text-primary uppercase tracking-widest transition-all"
             >
               <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>

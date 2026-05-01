@@ -483,47 +483,60 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                 </Link>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
-                {categories.length > 0 ? (
-                  categories.map((svc, index) => {
-                    const colors = [
-                      "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
-                      "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
-                      "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
-                      "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
-                      "bg-green-50 text-green-500 dark:bg-green-500/10",
-                      "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
-                    ];
-                    const color = colors[index % colors.length];
-                    return (
-                      <button
-                        key={svc.id || svc.name}
-                        onClick={() => handleServiceClick(svc.name)}
-                        className="group flex flex-col items-center text-center gap-4 p-5 rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                {(() => {
+                  const defaultCategories = [
+                    { id: "default-1", name: "Plumbing", icon: "plumbing" },
+                    { id: "default-2", name: "Electrical", icon: "bolt" },
+                    { id: "default-3", name: "Painting", icon: "format_paint" },
+                    { id: "default-4", name: "Cleaning", icon: "cleaning_services" },
+                    { id: "default-5", name: "Carpentry", icon: "carpenter" },
+                    { id: "default-6", name: "Masonry", icon: "architecture" },
+                    { id: "default-7", name: "General Fixes", icon: "build" },
+                  ];
+
+                  // Merge dynamic categories with defaults, avoiding duplicates by name
+                  const merged = [...defaultCategories];
+                  categories.forEach((dynamic) => {
+                    if (!merged.find((m) => m.name.toLowerCase() === dynamic.name.toLowerCase())) {
+                      merged.push(dynamic);
+                    }
+                  });
+
+                  return merged;
+                })().map((svc, index) => {
+                  const colors = [
+                    "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
+                    "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
+                    "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
+                    "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
+                    "bg-green-50 text-green-500 dark:bg-green-500/10",
+                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
+                  ];
+                  const color = colors[index % colors.length];
+                  return (
+                    <button
+                      key={svc.id || svc.name}
+                      onClick={() => handleServiceClick(svc.name)}
+                      className="group flex flex-col items-center text-center gap-4 p-5 rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                    >
+                      <div
+                        className={`size-14 rounded-2xl ${color} flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform shadow-sm`}
                       >
-                        <div
-                          className={`size-14 rounded-2xl ${color} flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform shadow-sm`}
-                        >
-                          <span className="material-symbols-outlined text-3xl">
-                            {svc.icon || "build"}
-                          </span>
-                        </div>
-                        <div className="space-y-1 w-full">
-                          <p className="text-sm font-bold dark:text-white leading-tight">
-                            {svc.name}
-                          </p>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 group-hover:text-primary transition-colors">
-                            Request Now
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="col-span-full py-12 text-center portal-panel bg-gray-50/50 border-dashed">
-                    <p className="text-gray-500 font-medium">No categories available yet.</p>
-                    <p className="text-xs text-gray-400 mt-1">Admin will add services soon.</p>
-                  </div>
-                )}
+                        <span className="material-symbols-outlined text-3xl">
+                          {svc.icon || "build"}
+                        </span>
+                      </div>
+                      <div className="space-y-1 w-full">
+                        <p className="text-sm font-bold dark:text-white leading-tight">
+                          {svc.name}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 group-hover:text-primary transition-colors">
+                          Request Now
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

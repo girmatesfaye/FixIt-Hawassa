@@ -36,11 +36,13 @@ const registerSchema = z
     },
   );
 
+/*
 const verifySchema = z.object({
   sessionId: z.string().min(6),
   otp: z.string().length(6),
   role: z.enum(["client", "worker", "admin"]).optional(),
 });
+*/
 
 const updateMeSchema = z
   .object({
@@ -61,12 +63,14 @@ const updateMeSchema = z
     },
   );
 
+/*
 type OtpSession = {
   userId: string;
   role: UserRole;
   email: string;
   expiresAt: number;
 };
+*/
 
 const signAccessToken = (payload: {
   sub: string;
@@ -95,8 +99,9 @@ const verifyPassword = (password: string, encodedHash: string): boolean => {
   return candidateHash === expectedHash;
 };
 
-const otpSessions = new Map<string, OtpSession>();
+// const otpSessions = new Map<string, OtpSession>();
 
+/*
 const createOtpSession = (role: UserRole, userId: string, email: string) => {
   const sessionId = `sess_${Date.now()}_${randomBytes(4).toString("hex")}`;
   otpSessions.set(sessionId, {
@@ -107,6 +112,7 @@ const createOtpSession = (role: UserRole, userId: string, email: string) => {
   });
   return sessionId;
 };
+*/
 
 const DUMMY_WORKER_NATIONAL_IDS = new Set([
   "ETH-WORKER-1001",
@@ -304,7 +310,7 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const requiresOtp = role !== "client";
+    const requiresOtp = false; // OTP DISABLED
     const createdUser = await User.create({
       email: parsed.data.email.toLowerCase(),
       fullName: normalizedName,
@@ -313,7 +319,7 @@ export const register = async (req: Request, res: Response) => {
       area: normalizedArea,
       nationalId: role === "worker" ? normalizedNationalId : "",
       phone: parsed.data.phone ? parsed.data.phone.trim() : undefined,
-      isVerified: !requiresOtp,
+      isVerified: true, // OTP DISABLED
       status: "active",
     });
 
@@ -330,20 +336,12 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const sessionId = requiresOtp
-      ? createOtpSession(
-          createdUser.role,
-          String(createdUser._id),
-          createdUser.email,
-        )
-      : undefined;
-    const token = requiresOtp
-      ? undefined
-      : signAccessToken({
-          sub: String(createdUser._id),
-          role: createdUser.role,
-          email: createdUser.email,
-        });
+    const sessionId = undefined;
+    const token = signAccessToken({
+      sub: String(createdUser._id),
+      role: createdUser.role,
+      email: createdUser.email,
+    });
 
     return res.status(201).json({
       message: requiresOtp
@@ -421,16 +419,17 @@ export const login = (req: Request, res: Response) => {
         });
       }
 
-      const sessionId = createOtpSession(
-        user.role,
-        String(user._id),
-        user.email,
-      );
-      return res.json({
-        message: "Login accepted. OTP sent.",
-        sessionId,
-        next: "/auth/verify",
+      const token = signAccessToken({
+        sub: String(user._id),
         role: user.role,
+        email: user.email,
+      });
+
+      return res.json({
+        message: "Login successful",
+        token,
+        role: user.role,
+        next: user.role === "admin" ? "/admin/users" : user.role === "worker" ? "/worker-hub" : "/dashboard",
         source: "mongodb",
       });
     })
@@ -442,6 +441,7 @@ export const login = (req: Request, res: Response) => {
     });
 };
 
+/*
 export const verify = (req: Request, res: Response) => {
   const parsed = verifySchema.safeParse(req.body);
   if (!parsed.success) {
@@ -490,6 +490,7 @@ export const verify = (req: Request, res: Response) => {
     role,
   });
 };
+*/
 
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;

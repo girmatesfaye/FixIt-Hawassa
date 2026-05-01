@@ -193,12 +193,12 @@ const App: React.FC = () => {
       />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage onLoginSuccess={handleLogin} />} />
         <Route
           path="/register"
           element={<RegisterPage onRegisterSuccess={handleLogin} />}
         />
-        <Route path="/verify" element={<VerifyPage onVerify={handleLogin} />} />
+        {/* <Route path="/verify" element={<VerifyPage onVerify={handleLogin} />} /> */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 

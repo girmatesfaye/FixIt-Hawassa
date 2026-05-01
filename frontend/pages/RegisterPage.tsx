@@ -181,27 +181,24 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
       toast.success("Registration successful!");
 
       const resolvedRole = result?.user?.role ?? role;
-      const requiresOtp = result?.requiresOtp ?? true;
-
-      if (requiresOtp) {
-        navigate("/verify", {
-          state: {
-            role: resolvedRole,
-            sessionId: result?.sessionId ?? "",
-          },
-        });
-        return;
-      }
-
       const token = typeof result?.token === "string" ? result.token : "";
+      
       if (!token) {
-        setFormError("Registration succeeded, but login token was missing.");
+        // Fallback if token wasn't returned for some reason
+        navigate("/login");
         return;
       }
 
       saveSession(token, resolvedRole);
       onRegisterSuccess(resolvedRole);
-      navigateToRoleHome(resolvedRole);
+      
+      if (resolvedRole === "admin") {
+        navigate("/admin/users");
+      } else if (resolvedRole === "worker") {
+        navigate("/worker-hub");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (_error) {
       setFormError(
         `Could not reach backend at ${API_BASE_URL}. Make sure backend is running, then try again.`,
