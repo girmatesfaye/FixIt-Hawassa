@@ -166,10 +166,10 @@ const MessagesPage: React.FC = () => {
               </Link>
               {currentRole === "client" ? (
                 <Link
-                  to="/my-requests"
+                  to="/bookings"
                   className="text-sm font-bold text-gray-500 hover:text-primary transition-colors"
                 >
-                  My Requests
+                  My Bookings
                 </Link>
               ) : null}
               <Link to="/messages" className="text-sm font-bold text-primary">

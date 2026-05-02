@@ -285,7 +285,7 @@ const WorkerProfilePage: React.FC = () => {
         await assignWorkerToRequest(existingRequestId, id);
         toast.success("Invitation sent! Tracking enabled.");
         fetchWorker(); // Refresh engagement status
-        navigate("/my-requests");
+        navigate("/bookings");
         return;
       }
 
@@ -311,7 +311,7 @@ const WorkerProfilePage: React.FC = () => {
       if (res.ok) {
         toast.success("Invitation sent! Tracking enabled.");
         fetchWorker(); // Refresh engagement status
-        navigate("/my-requests");
+        navigate("/bookings");
       } else {
         toast.error("Failed to submit request.");
       }

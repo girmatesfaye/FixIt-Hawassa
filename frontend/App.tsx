@@ -242,7 +242,7 @@ const App: React.FC = () => {
           <Route path="reports" element={<ClientReportsPage />} />
           <Route path="request-service" element={<ServiceRequestPage />} />
           <Route path="search-results" element={<SearchResultsPage />} />
-          <Route path="my-requests" element={<MyRequestsPage />} />
+          <Route path="bookings" element={<MyRequestsPage />} />
           <Route path="worker/:id" element={<WorkerProfilePage />} />
         </Route>
 

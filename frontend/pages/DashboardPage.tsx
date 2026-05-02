@@ -507,7 +507,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   </p>
                 </div>
                 <Link
-                  to="/search-results"
+                  to="/bookings"
                   className="text-sm font-semibold text-primary hover:underline shrink-0 bg-primary/5 px-4 py-2 rounded-full transition-all"
                 >
                   View All
@@ -583,7 +583,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   </p>
                 </div>
                 <Link
-                  to="/my-requests"
+                  to="/bookings"
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   View All
@@ -629,10 +629,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                         </span>
                       </div>
                       <button
-                        onClick={() => navigate("/my-requests")}
+                        onClick={() => navigate("/bookings")}
                         className="h-9 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-semibold transition-all"
                       >
-                        Open Request
+                        Open Booking
                       </button>
                     </div>
                   ))

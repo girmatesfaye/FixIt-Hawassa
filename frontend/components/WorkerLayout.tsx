@@ -9,13 +9,59 @@ import {
 
 interface WorkerLayoutProps {
   onLogout: () => void;
-  unreadCount?: number;
 }
 
-const WorkerLayout: React.FC<WorkerLayoutProps> = ({ onLogout, unreadCount = 0 }) => {
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
+
+const WorkerLayout: React.FC<WorkerLayoutProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("fixit_auth_token");
+    if (!token) return;
+
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/requests/mine`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const requests = (await res.json()) as any[];
+        const requestsWithChat = requests.filter((r: any) => r.assignedWorkerId);
+
+        const totals = await Promise.all(
+          requestsWithChat.map(async (req: any) => {
+            const markerKey = `${UNREAD_MARKER_PREFIX}${req.id}`;
+            const lastSeenAt = localStorage.getItem(markerKey);
+            const msgRes = await fetch(`${API_BASE_URL}/messages/${req.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!msgRes.ok) return 0;
+            const data = await msgRes.json();
+            const messages = data.messages || [];
+            return messages.filter((m: any) => {
+              if (m.senderRole === "worker") return false;
+              if (!lastSeenAt) return true;
+              return new Date(m.createdAt).getTime() > new Date(lastSeenAt).getTime();
+            }).length;
+          })
+        );
+        setUnreadCount(totals.reduce((a, b) => a + b, 0));
+      } catch (err) {
+        console.error("Layout badge poll failed", err);
+      }
+    };
+
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const menuItems = [
     { icon: "construction", label: "Worker Hub", path: "/worker-hub" },

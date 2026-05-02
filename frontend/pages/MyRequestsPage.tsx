@@ -302,7 +302,7 @@ const MyRequestsPage: React.FC = () => {
 
           <div>
             <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white mb-2">
-              My Requests
+              My Bookings
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               Manage and track your service calls
@@ -466,6 +466,35 @@ const MyRequestsPage: React.FC = () => {
                           )}
                         </div>
                       )}
+                    </div>
+
+                    {/* Completion Alert Banner */}
+                    {req.apiStatus === "IN_PROGRESS" && req.workerMarkedCompleteAt && (
+                      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-900/30 rounded-2xl animate-in fade-in zoom-in duration-300">
+                        <div className="flex items-center gap-3">
+                          <div className="size-10 rounded-xl bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/20">
+                            <span className="material-symbols-outlined">done_all</span>
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-green-700 dark:text-green-400">
+                              Job Marked as Completed!
+                            </p>
+                            <p className="text-[10px] font-medium text-green-600/70 dark:text-green-500/50">
+                              The worker has finished the job. Please confirm to finalize.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => void handleConfirmCompletion(req.id)}
+                          disabled={confirmingRequestId === req.id}
+                          className="h-10 px-6 bg-green-500 hover:bg-green-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {confirmingRequestId === req.id ? "Confirming..." : "Confirm & Pay"}
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end">
                       <ActionMenu
                         actions={(() => {
                           const base = [
