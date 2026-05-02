@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
+import { getUploadedImageUrl } from "../services/upload";
 import toast from "react-hot-toast";
 
 const API_BASE_URL =
@@ -139,7 +140,7 @@ const UserManagementPage: React.FC = () => {
                 ? u.workerProfile.skills.filter(Boolean)
                 : []
               : [],
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
+          avatar: getUploadedImageUrl(u.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
         })),
       );
 

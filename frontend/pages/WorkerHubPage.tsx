@@ -13,6 +13,11 @@ import { getMyWorkerProfile, updateMyWorkerProfile } from "../services/worker";
 import Modal from "../components/Modal";
 import toast from "react-hot-toast";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000";
+const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
+
 interface WorkerHubPageProps {
   onLogout: () => void;
 }
@@ -42,9 +47,12 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
     null,
   );
   const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [myUserId, setMyUserId] = useState("");
 
   const profileAvatar =
-    getUploadedImageUrl(avatar) || "https://picsum.photos/id/64/200/200";
+    getUploadedImageUrl(avatar) ||
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(workerName || "Worker")}`;
 
   useEffect(() => {
     const fetchWorkerData = async () => {
@@ -98,6 +106,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         setWorkerReports(workerReportsData);
         setRating(Number((workerProfile as any).rating ?? 0));
         setReviewCount(Number((workerProfile as any).reviews ?? 0));
+        setMyUserId(profile.id || "");
       } catch (error) {
         console.error("Failed to load worker data", error);
         setRequestError("Could not load invitations right now.");
@@ -107,6 +116,87 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
     };
     fetchWorkerData();
   }, []);
+
+  useEffect(() => {
+    if (!myUserId || !requests.length) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const requestsWithChat = requests.filter((request) =>
+      Boolean(request.assignedWorkerId),
+    );
+
+    if (!requestsWithChat.length) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const refreshUnreadCount = async () => {
+      const token = localStorage.getItem("fixit_auth_token");
+      if (!token) return;
+
+      try {
+        const unreadTotals = await Promise.all(
+          requestsWithChat.slice(0, 10).map(async (request) => {
+            const markerKey = `${UNREAD_MARKER_PREFIX}${request.id}`;
+            const lastSeenAt = localStorage.getItem(markerKey);
+
+            const response = await fetch(
+              `${API_BASE_URL}/messages/${request.id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
+
+            if (!response.ok) return 0;
+
+            const result = (await response.json()) as {
+              messages?: Array<{ senderId?: string; createdAt?: string }>;
+            };
+            const messages = result.messages || [];
+
+            return messages.filter((m) => {
+              if (!m.createdAt || !m.senderId || m.senderId === myUserId)
+                return false;
+              if (!lastSeenAt) return true;
+              return (
+                new Date(m.createdAt).getTime() > new Date(lastSeenAt).getTime()
+              );
+            }).length;
+          }),
+        );
+
+        setUnreadCount(unreadTotals.reduce((sum, count) => sum + count, 0));
+      } catch (err) {
+        console.error("Failed to fetch unread messages for worker", err);
+      }
+    };
+
+    refreshUnreadCount();
+    const intervalId = window.setInterval(refreshUnreadCount, 5000);
+    return () => window.clearInterval(intervalId);
+  }, [requests, myUserId]);
+
+  const handleOpenMessages = () => {
+    const requestsWithChat = requests.filter((request) =>
+      Boolean(request.assignedWorkerId),
+    );
+    const now = new Date().toISOString();
+
+    requestsWithChat.forEach((request) => {
+      localStorage.setItem(`${UNREAD_MARKER_PREFIX}${request.id}`, now);
+    });
+
+    setUnreadCount(0);
+
+    if (requestsWithChat.length) {
+      navigate("/messages", { state: { requestId: requestsWithChat[0].id } });
+      return;
+    }
+
+    navigate("/messages");
+  };
 
   const pendingInvites = requests.filter(
     (request) => request.status === "PENDING",
@@ -192,26 +282,43 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
   return (
     <div className="flex flex-col min-h-full">
       <main className="flex-1 overflow-y-auto">
-        <div className="px-10 py-8 border-b border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="px-6 sm:px-10 py-6 sm:py-8 border-b border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col">
-              <h1 className="text-2xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">
                 Shop Presence
               </h1>
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs sm:text-sm font-bold text-gray-500">
                 How clients see you in Hawassa.
               </p>
             </div>
-            <button
-              onClick={() => navigate("/worker/edit-profile")}
-              className="h-11 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md shadow-primary/20"
-            >
-              Update Profile
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleOpenMessages}
+                className="relative h-11 px-4 bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2 hover:shadow-md transition-all"
+              >
+                <span className="material-symbols-outlined text-primary">mail</span>
+                <span className="hidden sm:inline">Messages</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-[9px] font-bold items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => navigate("/worker/edit-profile")}
+                className="h-11 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md shadow-primary/20 flex-1 sm:flex-none"
+              >
+                Update Profile
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto p-10 flex flex-col gap-10">
+        <div className="max-w-6xl mx-auto p-6 sm:p-10 flex flex-col gap-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Availability Toggle */}
             <div
@@ -357,9 +464,18 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                           <p className="text-xs font-extrabold text-[#120e1b] dark:text-white">
                             {request.category}
                           </p>
-                          <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mt-0.5">
-                            Client: {request.clientUserId?.name ?? "Client"}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="size-5 rounded-full overflow-hidden border border-gray-100">
+                              <img
+                                src={getUploadedImageUrl((request.clientUserId as any)?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(request.clientUserId?.name || "Client")}`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-[10px] font-semibold text-primary uppercase tracking-widest">
+                              {request.clientUserId?.name ?? "Client"}
+                            </p>
+                          </div>
                         </div>
                         <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold uppercase tracking-widest">
                           Pending
@@ -453,9 +569,18 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                           <p className="text-xs font-extrabold text-[#120e1b] dark:text-white">
                             {request.category}
                           </p>
-                          <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mt-0.5">
-                            Client: {request.clientUserId?.name ?? "Client"}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="size-5 rounded-full overflow-hidden border border-gray-100">
+                              <img
+                                src={getUploadedImageUrl((request.clientUserId as any)?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(request.clientUserId?.name || "Client")}`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-[10px] font-semibold text-primary uppercase tracking-widest">
+                              {request.clientUserId?.name ?? "Client"}
+                            </p>
+                          </div>
                         </div>
                         <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold uppercase tracking-widest">
                           In Progress

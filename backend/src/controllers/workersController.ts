@@ -174,7 +174,7 @@ export const getWorkerById = async (req: Request, res: Response) => {
       userId: resolvedWorkerUserId,
     }).lean();
     const reviews = await Review.find({ workerId: resolvedWorkerUserId })
-      .populate("clientId", "fullName")
+      .populate("clientId", "fullName avatar")
       .sort({ createdAt: -1 })
       .lean();
 

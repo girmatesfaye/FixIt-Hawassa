@@ -1,7 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { UserRole } from "../services/auth";
 
-const LandingPage: React.FC = () => {
+interface LandingPageProps {
+  isAuthenticated: boolean;
+  userRole: UserRole | null;
+  onLogout: () => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({
+  isAuthenticated,
+  userRole,
+  onLogout,
+}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"client" | "worker">("client");
 
@@ -12,6 +23,12 @@ const LandingPage: React.FC = () => {
     { name: "Services", href: "#services" },
     { name: "About", href: "#about" },
   ];
+
+  const getDashboardPath = () => {
+    if (userRole === "admin") return "/admin";
+    if (userRole === "worker") return "/worker-hub";
+    return "/dashboard";
+  };
 
   const clientSteps = [
     {
@@ -40,14 +57,16 @@ const LandingPage: React.FC = () => {
       bg: "bg-purple-50",
       visual: (
         <div className="w-full h-16 flex items-center justify-around">
-          {[1, 2, 3].map((i) => (
+          {["Alex", "Sarah", "Jordan"].map((name, i) => (
             <div
-              key={i}
-              className={`size-10 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-gray-700 shadow-sm flex items-center justify-center ${i === 2 ? "ring-2 ring-primary scale-110 z-10 bg-white dark:bg-gray-700" : "opacity-60"}`}
+              key={name}
+              className={`size-10 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-gray-700 shadow-sm overflow-hidden ${i === 1 ? "ring-2 ring-primary scale-110 z-10 bg-white dark:bg-gray-700" : "opacity-60"}`}
             >
-              <span className="material-symbols-outlined text-sm">
-                {i === 2 ? "check_circle" : "person"}
-              </span>
+              <img
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             </div>
           ))}
         </div>
@@ -190,19 +209,37 @@ const LandingPage: React.FC = () => {
                     {link.name}
                   </a>
                 ))}
-                <Link
-                  className="text-sm font-medium hover:text-primary transition-colors text-[#120e1b] dark:text-white"
-                  to="/login"
-                >
-                  Login
-                </Link>
+                {!isAuthenticated ? (
+                  <Link
+                    className="text-sm font-medium hover:text-primary transition-colors text-[#120e1b] dark:text-white"
+                    to="/login"
+                  >
+                    Login
+                  </Link>
+                ) : (
+                  <Link
+                    className="text-sm font-medium hover:text-primary transition-colors text-[#120e1b] dark:text-white"
+                    to={getDashboardPath()}
+                  >
+                    Dashboard
+                  </Link>
+                )}
               </nav>
-              <Link
-                to="/register"
-                className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary hover:bg-primary-dark transition-colors text-white text-sm font-bold leading-normal tracking-wide shadow-md shadow-primary/20"
-              >
-                Sign Up
-              </Link>
+              {!isAuthenticated ? (
+                <Link
+                  to="/register"
+                  className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary hover:bg-primary-dark transition-colors text-white text-sm font-bold leading-normal tracking-wide shadow-md shadow-primary/20"
+                >
+                  Sign Up
+                </Link>
+              ) : (
+                <button
+                  onClick={onLogout}
+                  className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-red-500 hover:bg-red-600 transition-colors text-white text-sm font-bold leading-normal tracking-wide shadow-md shadow-red-500/20"
+                >
+                  Logout
+                </button>
+              )}
             </div>
 
             <button
@@ -252,13 +289,43 @@ const LandingPage: React.FC = () => {
                 {link.name}
               </a>
             ))}
-            <Link
-              className="text-lg font-bold text-[#120e1b] dark:text-white"
-              to="/login"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Login
-            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link
+                  className="text-lg font-bold text-[#120e1b] dark:text-white"
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  className="text-lg font-bold text-primary"
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  className="text-lg font-bold text-[#120e1b] dark:text-white"
+                  to={getDashboardPath()}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-left text-lg font-bold text-red-500"
+                >
+                  Logout
+                </button>
+              </>
+            )}
           </nav>
         </div>
       </div>
@@ -295,18 +362,22 @@ const LandingPage: React.FC = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  to="/login"
+                  to={!isAuthenticated ? "/login" : getDashboardPath()}
                   className="h-14 px-8 bg-white text-primary rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg hover:bg-gray-50 transition-all"
                 >
-                  <span className="material-symbols-outlined">search</span> I
-                  Need a Pro
+                  <span className="material-symbols-outlined">
+                    {!isAuthenticated ? "search" : "dashboard"}
+                  </span>
+                  {!isAuthenticated ? "I Need a Pro" : "My Dashboard"}
                 </Link>
                 <Link
-                  to="/register"
+                  to={!isAuthenticated ? "/register" : getDashboardPath()}
                   className="h-14 px-8 bg-primary text-white rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg hover:bg-primary-dark transition-all"
                 >
-                  <span className="material-symbols-outlined">engineering</span>{" "}
-                  I Want Work
+                  <span className="material-symbols-outlined">
+                    {!isAuthenticated ? "engineering" : "hub"}
+                  </span>
+                  {!isAuthenticated ? "I Want Work" : "Worker Hub"}
                 </Link>
               </div>
             </div>
@@ -432,12 +503,16 @@ const LandingPage: React.FC = () => {
 
             <div className="mt-20 text-center">
               <Link
-                to={activeTab === "client" ? "/login" : "/register"}
+                to={!isAuthenticated ? (activeTab === "client" ? "/login" : "/register") : getDashboardPath()}
                 className="inline-flex h-14 px-8 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold uppercase tracking-wider items-center gap-3 shadow-lg shadow-primary/20 transition-all transform hover:scale-105 active:scale-95"
               >
-                {activeTab === "client"
-                  ? "Hire a Professional"
-                  : "Start Working Today"}
+                {!isAuthenticated ? (
+                  activeTab === "client"
+                    ? "Hire a Professional"
+                    : "Start Working Today"
+                ) : (
+                  "Go to My Dashboard"
+                )}
                 <span className="material-symbols-outlined">chevron_right</span>
               </Link>
             </div>

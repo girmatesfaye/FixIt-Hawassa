@@ -10,6 +10,7 @@ import {
   fetchMyReports,
 } from "../services/clientRequests";
 import { getAuthToken } from "../services/auth";
+import { getUploadedImageUrl } from "../services/upload";
 
 interface DashboardPageProps {
   onLogout: () => void;
@@ -92,6 +93,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const [currentUserName, setCurrentUserName] = useState("");
   const [currentUserArea, setCurrentUserArea] = useState("");
   const [currentUserPhone, setCurrentUserPhone] = useState("");
+  const [currentUserAvatar, setCurrentUserAvatar] = useState("");
   const [profileNameInput, setProfileNameInput] = useState("");
   const [profileAreaInput, setProfileAreaInput] = useState("");
   const [profilePhoneInput, setProfilePhoneInput] = useState("");
@@ -180,7 +182,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         }
 
         const result = (await response.json().catch(() => null)) as {
-          user?: { id?: string; name?: string; area?: string; phone?: string };
+          user?: { id?: string; name?: string; area?: string; phone?: string; avatar?: string };
         } | null;
 
         if (!result?.user?.id) {
@@ -191,6 +193,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
         setCurrentUserName(result.user.name ?? "");
         setCurrentUserArea(result.user.area ?? "");
         setCurrentUserPhone(result.user.phone ?? "");
+        setCurrentUserAvatar(result.user.avatar ?? "");
       })
       .catch(() => {
         setMyUserId("");
@@ -402,35 +405,63 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <div className="flex flex-col justify-between gap-6 portal-panel p-6 sm:p-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
 
-                <div className="relative z-10 flex items-center gap-5">
-                  {/* Profile Edit Trigger Icon */}
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    {/* Profile Edit Trigger Icon */}
+                    <button
+                      onClick={() => setIsProfileModalOpen(true)}
+                      className="group relative size-14 shrink-0 rounded-2xl bg-white dark:bg-surface-dark flex items-center justify-center text-primary hover:ring-2 hover:ring-primary transition-all duration-300 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800"
+                      aria-label="Edit Profile"
+                    >
+                      <img
+                        src={getUploadedImageUrl(currentUserAvatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUserName || "User")}`}
+                        alt="Profile"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                      />
+                      <div className="absolute -bottom-1 -right-1 size-5 bg-white dark:bg-surface-dark rounded-full flex items-center justify-center border border-primary/20 shadow-sm">
+                        <span className="material-symbols-outlined text-primary text-[12px] font-bold">
+                          edit
+                        </span>
+                      </div>
+                    </button>
+
+                    <div className="space-y-1">
+                      <h2 className="text-xl font-bold tracking-tight text-[#120e1b] dark:text-white">
+                        Hi, {currentUserName || "there"}! 👋
+                      </h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Need help in{" "}
+                        <span className="text-primary font-medium">
+                          {currentUserArea || "your area"}
+                        </span>
+                        ?
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Message Notification Button */}
                   <button
-                    onClick={() => setIsProfileModalOpen(true)}
-                    className="group relative size-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all duration-300"
-                    aria-label="Edit Profile"
+                    onClick={handleOpenNotifications}
+                    className="relative flex items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group"
                   >
-                    <span className="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">
-                      account_circle
-                    </span>
-                    <div className="absolute -bottom-1 -right-1 size-5 bg-white dark:bg-surface-dark rounded-full flex items-center justify-center border border-primary/20 shadow-sm">
-                      <span className="material-symbols-outlined text-primary text-[12px] font-bold">
-                        edit
+                    <div className="size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                      <span className="material-symbols-outlined">mail</span>
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-bold text-[#120e1b] dark:text-white">Messages</span>
+                      <span className="text-[10px] font-medium text-gray-500">
+                        {unreadCount > 0 ? `${unreadCount} new notifications` : "No new messages"}
                       </span>
                     </div>
-                  </button>
-
-                  <div className="space-y-1">
-                    <h2 className="text-xl sm:text-xl font-bold tracking-tight text-[#120e1b] dark:text-white">
-                      Hi, {currentUserName || "there"}! 👋
-                    </h2>
-                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                      Need help in{" "}
-                      <span className="text-primary font-medium">
-                        {currentUserArea || "your area"}
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-6 w-6">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-[10px] font-bold items-center justify-center">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
                       </span>
-                      ?
-                    </p>
-                  </div>
+                    )}
+                  </button>
                 </div>
 
 

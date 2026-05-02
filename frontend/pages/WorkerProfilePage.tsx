@@ -8,6 +8,7 @@ import {
   submitWorkerReport,
   submitWorkerReview,
 } from "../services/clientRequests";
+import { getUploadedImageUrl } from "../services/upload";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -158,7 +159,7 @@ const WorkerProfilePage: React.FC = () => {
           resolvedReviews.map((r) => ({
             id: r._id || `${workerData.id}-${r.createdAt || Math.random()}`,
             name: r.clientId?.fullName || "Client",
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.clientId?._id || "A"}`,
+            avatar: getUploadedImageUrl(r.clientId?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.clientId?.fullName || "A")}`,
             date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "",
             rating: Number(r.rating ?? 0),
             comment: r.comment || "",

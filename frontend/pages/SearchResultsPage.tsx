@@ -7,6 +7,7 @@ import {
   fetchClientRequests,
 } from "../services/clientRequests";
 import { getAuthToken } from "../services/auth";
+import { getUploadedImageUrl } from "../services/upload";
 import {
   fetchRecommendations,
   fetchTopWorkers,
@@ -598,8 +599,8 @@ const SearchResultsPage: React.FC = () => {
                           <div className="flex flex-col items-center gap-3 text-center">
                             <div className="relative">
                               <img
-                                src={worker.avatar}
-                                className="size-20 rounded-2xl object-cover shadow-sm border-2 border-white dark:border-gray-700"
+                                src={getUploadedImageUrl(worker.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(worker.name)}`}
+                                className="size-20 rounded-2xl object-cover shadow-sm border-2 border-white dark:border-gray-700 bg-white"
                                 alt={worker.name}
                               />
                               <div className="absolute -bottom-1 -right-1 size-6 bg-green-500 text-white rounded-full flex items-center justify-center border-2 border-white dark:border-surface-dark shadow-sm">

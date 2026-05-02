@@ -34,18 +34,17 @@ const verifySchema = z.object({
 */
 
 const updateMeSchema = z
-  .object({
-    fullName: z.string().trim().min(2).max(120).optional(),
-    area: z.string().trim().min(2).max(120).optional(),
     location: z.string().trim().min(2).max(120).optional(),
     phone: z.string().trim().min(9).max(20).optional(),
+    avatar: z.string().optional(),
   })
   .refine(
     (data) =>
       data.fullName !== undefined ||
       data.area !== undefined ||
       data.location !== undefined ||
-      data.phone !== undefined,
+      data.phone !== undefined ||
+      data.avatar !== undefined,
     {
       message: "At least one field is required",
       path: ["fullName"],
@@ -120,7 +119,7 @@ export const getMe = async (req: Request, res: Response) => {
 
   try {
     const user = await User.findById(userId)
-      .select("_id fullName role phone area status isVerified")
+      .select("_id fullName role phone area status isVerified avatar")
       .lean();
 
     if (!user) {
@@ -138,6 +137,7 @@ export const getMe = async (req: Request, res: Response) => {
         area: user.area,
         status: user.status,
         isVerified: user.isVerified,
+        avatar: user.avatar,
       },
       source: "mongodb",
     });
@@ -163,7 +163,7 @@ export const updateMe = async (req: Request, res: Response) => {
     });
   }
 
-  const updatePayload: { fullName?: string; area?: string; phone?: string } = {};
+  const updatePayload: { fullName?: string; area?: string; phone?: string; avatar?: string } = {};
   if (parsed.data.fullName !== undefined) {
     updatePayload.fullName = parsed.data.fullName;
   }
@@ -178,13 +178,17 @@ export const updateMe = async (req: Request, res: Response) => {
     updatePayload.phone = trimmedPhone === "" ? undefined : trimmedPhone;
   }
 
+  if (parsed.data.avatar !== undefined) {
+    updatePayload.avatar = parsed.data.avatar;
+  }
+
   try {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updatePayload },
       { new: true },
     )
-      .select("_id fullName role phone area status isVerified")
+      .select("_id fullName role phone area status isVerified avatar")
       .lean();
 
     if (!updatedUser) {
@@ -203,6 +207,7 @@ export const updateMe = async (req: Request, res: Response) => {
         area: updatedUser.area,
         status: updatedUser.status,
         isVerified: updatedUser.isVerified,
+        avatar: updatedUser.avatar,
       },
       source: "mongodb",
     });

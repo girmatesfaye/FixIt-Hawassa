@@ -56,12 +56,12 @@ const resolveWorkerUserId = async (
 
 const mapUserRef = (
   value: unknown,
-): { _id: string; name: string | null } | null => {
+): { _id: string; name: string | null; avatar: string | null } | null => {
   if (!value || typeof value !== "object") {
     return null;
   }
 
-  const record = value as { _id?: unknown; fullName?: unknown };
+  const record = value as { _id?: unknown; fullName?: unknown; avatar?: unknown };
   if (!record._id) {
     return null;
   }
@@ -69,6 +69,7 @@ const mapUserRef = (
   return {
     _id: String(record._id),
     name: typeof record.fullName === "string" ? record.fullName : null,
+    avatar: typeof record.avatar === "string" ? record.avatar : null,
   };
 };
 
@@ -146,9 +147,9 @@ export const getMyRequests = async (req: Request, res: Response) => {
         { assignedWorkerId: new Types.ObjectId(authenticatedUserId) },
       ],
     })
-      .populate("clientUserId", "fullName")
-      .populate("assignedWorkerId", "fullName")
-      .populate("lastDeclinedWorkerId", "fullName")
+      .populate("clientUserId", "fullName avatar")
+      .populate("assignedWorkerId", "fullName avatar")
+      .populate("lastDeclinedWorkerId", "fullName avatar")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -433,9 +434,9 @@ export const assignWorker = async (req: Request, res: Response) => {
     await request.save();
 
     const updatedRequest = await ServiceRequest.findById(request._id)
-      .populate("clientUserId", "fullName")
-      .populate("assignedWorkerId", "fullName")
-      .populate("lastDeclinedWorkerId", "fullName")
+      .populate("clientUserId", "fullName avatar")
+      .populate("assignedWorkerId", "fullName avatar")
+      .populate("lastDeclinedWorkerId", "fullName avatar")
       .lean();
 
     if (!updatedRequest) {
@@ -523,9 +524,9 @@ export const workerResponse = async (req: Request, res: Response) => {
     await request.save();
 
     const updatedRequest = await ServiceRequest.findById(request._id)
-      .populate("clientUserId", "fullName")
-      .populate("assignedWorkerId", "fullName")
-      .populate("lastDeclinedWorkerId", "fullName")
+      .populate("clientUserId", "fullName avatar")
+      .populate("assignedWorkerId", "fullName avatar")
+      .populate("lastDeclinedWorkerId", "fullName avatar")
       .lean();
 
     if (!updatedRequest) {
@@ -602,9 +603,9 @@ export const workerComplete = async (req: Request, res: Response) => {
     await request.save();
 
     const updatedRequest = await ServiceRequest.findById(request._id)
-      .populate("clientUserId", "fullName")
-      .populate("assignedWorkerId", "fullName")
-      .populate("lastDeclinedWorkerId", "fullName")
+      .populate("clientUserId", "fullName avatar")
+      .populate("assignedWorkerId", "fullName avatar")
+      .populate("lastDeclinedWorkerId", "fullName avatar")
       .lean();
 
     if (!updatedRequest) {
@@ -682,9 +683,9 @@ export const clientConfirmCompletion = async (req: Request, res: Response) => {
     await request.save();
 
     const updatedRequest = await ServiceRequest.findById(request._id)
-      .populate("clientUserId", "fullName")
-      .populate("assignedWorkerId", "fullName")
-      .populate("lastDeclinedWorkerId", "fullName")
+      .populate("clientUserId", "fullName avatar")
+      .populate("assignedWorkerId", "fullName avatar")
+      .populate("lastDeclinedWorkerId", "fullName avatar")
       .lean();
 
     if (!updatedRequest) {

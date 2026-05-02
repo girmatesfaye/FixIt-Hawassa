@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { getAuthToken } from "../services/auth";
+import { getUploadedImageUrl } from "../services/upload";
 import toast from "react-hot-toast";
 
 const API_BASE_URL =
@@ -95,7 +96,7 @@ const ReportManagementPage: React.FC = () => {
           content: `"${r.text}"`,
           reporter: {
             name: r.reporterUserId?.fullName || "Reporter",
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.reporterUserId?._id || "reporter"}`,
+            avatar: getUploadedImageUrl(r.reporterUserId?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.reporterUserId?.fullName || "reporter")}`,
             phone:
               typeof r.reporterUserId?.phone === "string"
                 ? r.reporterUserId.phone
@@ -103,7 +104,7 @@ const ReportManagementPage: React.FC = () => {
           },
           reported: {
             name: r.reportedUserId?.fullName || "Reported",
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.reportedUserId?._id || "reported"}`,
+            avatar: getUploadedImageUrl(r.reportedUserId?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.reportedUserId?.fullName || "reported")}`,
             phone:
               typeof r.reportedUserId?.phone === "string"
                 ? r.reportedUserId.phone

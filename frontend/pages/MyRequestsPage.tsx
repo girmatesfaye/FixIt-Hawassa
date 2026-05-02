@@ -13,6 +13,7 @@ import {
   submitWorkerReview,
 } from "../services/clientRequests";
 import { getAuthToken } from "../services/auth";
+import { getUploadedImageUrl } from "../services/upload";
 
 type RequestCard = {
   id: string;
@@ -64,7 +65,8 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
     lastDeclinedWorker: request.lastDeclinedWorkerId?.name ?? null,
     lastDeclinedAt: request.lastDeclinedAt ?? null,
     avatar: request.assignedWorkerId
-      ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.assignedWorkerId._id}`
+      ? getUploadedImageUrl(request.assignedWorkerId.avatar) ||
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(request.assignedWorkerId.name)}`
       : undefined,
     cost: "Pending Quotes",
     hasMessagesAccess: Boolean(request.assignedWorkerId),

@@ -192,7 +192,16 @@ const App: React.FC = () => {
         }}
       />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              isAuthenticated={isAuthenticated}
+              userRole={userRole}
+              onLogout={handleLogout}
+            />
+          }
+        />
         <Route path="/login" element={<LoginPage onLoginSuccess={handleLogin} />} />
         <Route
           path="/register"
@@ -202,7 +211,25 @@ const App: React.FC = () => {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Client Routes */}
+        {/* Shared Authenticated Routes */}
+        <Route
+          element={
+            isAuthenticated ? (
+              userRole === "worker" ? (
+                <WorkerLayout onLogout={handleLogout} />
+              ) : (
+                <ClientLayout onLogout={handleLogout} />
+              )
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        >
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="dashboard" element={<DashboardPage onLogout={handleLogout} />} />
+        </Route>
+
+        {/* Client-Only Routes */}
         <Route
           element={
             isAuthenticated && userRole === "client" ? (
@@ -213,19 +240,13 @@ const App: React.FC = () => {
           }
         >
           <Route path="reports" element={<ClientReportsPage />} />
-          <Route
-            path="dashboard"
-            element={<DashboardPage onLogout={handleLogout} />}
-          />
           <Route path="request-service" element={<ServiceRequestPage />} />
           <Route path="search-results" element={<SearchResultsPage />} />
           <Route path="my-requests" element={<MyRequestsPage />} />
-          <Route path="messages" element={<MessagesPage />} />
           <Route path="worker/:id" element={<WorkerProfilePage />} />
         </Route>
 
-
-        {/* Worker & Shared Routes */}
+        {/* Worker-Only Routes */}
         <Route
           element={
             isAuthenticated && userRole === "worker" ? (
@@ -237,8 +258,6 @@ const App: React.FC = () => {
         >
           <Route path="worker-hub" element={<WorkerHubPage onLogout={handleLogout} />} />
           <Route path="worker/edit-profile" element={<EditWorkerProfilePage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="dashboard" element={<DashboardPage onLogout={handleLogout} />} />
         </Route>
 
 

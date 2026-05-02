@@ -20,6 +20,7 @@ const userSchema = new Schema(
     },
     area: { type: String, default: "" },
     nationalId: { type: String, default: "" },
+    avatar: { type: String, default: "" },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpires: { type: Date, default: null },
   },

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getAuthToken, getStoredRole } from "../services/auth";
+import { getUploadedImageUrl } from "../services/upload";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -14,6 +15,7 @@ const MessagesPage: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [me, setMe] = useState<any>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const currentRole = getStoredRole();
   const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
   const requestedThreadId =
@@ -173,10 +175,11 @@ const MessagesPage: React.FC = () => {
               <Link to="/messages" className="text-sm font-bold text-primary">
                 Messages
               </Link>
-              <div className="size-10 rounded-full bg-gray-100 overflow-hidden">
+              <div className="size-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 dark:border-gray-700">
                 <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`}
+                  src={getUploadedImageUrl(me?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`}
                   alt="User"
+                  className="w-full h-full object-cover"
                 />
               </div>
             </nav>
@@ -186,11 +189,15 @@ const MessagesPage: React.FC = () => {
 
 
       {/* Chat Container */}
-      <main className="flex-1 flex overflow-hidden max-w-[1440px] mx-auto w-full border-x border-gray-100 dark:border-gray-800 bg-white dark:bg-surface-dark">
+      <main className="flex-1 flex overflow-hidden max-w-[1440px] mx-auto w-full border-x border-gray-100 dark:border-gray-800 bg-white dark:bg-surface-dark relative">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-gray-100 dark:border-gray-800 flex flex-col shrink-0">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-            <div className="relative">
+        <aside
+          className={`${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 absolute lg:relative z-20 w-full sm:w-72 lg:w-80 h-full border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-surface-dark flex flex-col shrink-0 transition-transform duration-300 ease-in-out shadow-xl lg:shadow-none`}
+        >
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div className="relative flex-1">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">
                 search
               </span>
@@ -199,9 +206,15 @@ const MessagesPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search conversations..."
-                className="w-full h-10 pl-10 pr-4 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-xs focus:ring-1 focus:ring-primary"
+                className="w-full h-10 pl-10 pr-4 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-xs focus:ring-1 focus:ring-primary dark:text-white"
               />
             </div>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden ml-2 size-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
           </div>
           <div className="flex-1 overflow-y-auto">
             {requests
@@ -216,14 +229,25 @@ const MessagesPage: React.FC = () => {
               .map(({ contact, idx }) => (
                 <div
                   key={contact.id}
-                  onClick={() => setSelectedContact(idx)}
-                  className={`p-3 flex gap-2 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-800/50 ${selectedContact === idx ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}
+                  onClick={() => {
+                    setSelectedContact(idx);
+                    if (window.innerWidth < 1024) {
+                      setIsSidebarOpen(false);
+                    }
+                  }}
+                  className={`p-4 flex gap-3 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-800/50 ${selectedContact === idx ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}
                 >
                   <div className="relative shrink-0">
-                    <div className="size-10 rounded-full overflow-hidden bg-gray-100">
+                    <div className="size-10 rounded-full overflow-hidden bg-gray-100 border border-gray-100 dark:border-gray-700">
                       <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(contact)}`}
+                        src={
+                          (() => {
+                            const contactObj = contact.assignedWorkerId || contact.clientUserId;
+                            return getUploadedImageUrl(contactObj?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(getContactName(contact))}`;
+                          })()
+                        }
                         alt={getContactName(contact)}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
@@ -252,12 +276,24 @@ const MessagesPage: React.FC = () => {
           {selectedContact !== null ? (
             <>
               {/* Chat Header */}
-              <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 flex items-center justify-between">
+              <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 sm:px-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-full overflow-hidden bg-gray-100">
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="lg:hidden size-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500 mr-1"
+                  >
+                    <span className="material-symbols-outlined">menu</span>
+                  </button>
+                  <div className="size-10 rounded-full overflow-hidden bg-gray-100 border border-gray-100 dark:border-gray-700">
                     <img
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${getContactName(requests[selectedContact])}`}
+                      src={
+                        (() => {
+                          const contactObj = requests[selectedContact].assignedWorkerId || requests[selectedContact].clientUserId;
+                          return getUploadedImageUrl(contactObj?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(getContactName(requests[selectedContact]))}`;
+                        })()
+                      }
                       alt=""
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
