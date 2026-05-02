@@ -24,8 +24,8 @@ const SearchResultsPage: React.FC = () => {
   const location = useLocation();
   const PAGE_SIZE = 12;
   const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
-  const [distance, setDistance] = useState(5);
-  const [minRating, setMinRating] = useState(4.0);
+  const [distance, setDistance] = useState(100);
+  const [minRating, setMinRating] = useState(0);
   const [onlyActive, setOnlyActive] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -395,8 +395,8 @@ const SearchResultsPage: React.FC = () => {
               </h2>
               <button
                 onClick={() => {
-                  setDistance(5);
-                  setMinRating(4.4);
+                  setDistance(100);
+                  setMinRating(0);
                   setOnlyActive(true);
                   setSortBy("recommended");
                   setSearchQuery("");

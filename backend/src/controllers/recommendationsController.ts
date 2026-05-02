@@ -72,25 +72,34 @@ const loadRankedWorkers = async (
         const liveReviewStats = reviewStatsByWorkerId.get(
           String(profile.userId),
         );
-        return {
+        
+        const worker = {
           id: String(profile.userId),
           name: linkedUser?.fullName ?? "Worker",
           location: `Hawassa, ${profile.area}`,
           area: profile.area,
-          rating: liveReviewStats?.rating ?? 0,
-          reviews: liveReviewStats?.reviews ?? 0,
+          rating: liveReviewStats?.rating ?? profile.rating ?? 0,
+          reviews: liveReviewStats?.reviews ?? profile.reviews ?? 0,
           isActive: profile.isActive,
-          distanceKm: profile.distanceKm,
-          completionRate: profile.completionRate,
-          responseMinutes: profile.responseMinutes,
-          skills: profile.skills,
+          distanceKm: profile.distanceKm ?? 99,
+          completionRate: profile.completionRate ?? 0,
+          responseMinutes: profile.responseMinutes ?? 30,
+          skills: profile.skills ?? [],
           avatar: profile.avatar,
         };
+
+        return worker;
       })
       .filter((worker) => {
         const linkedUser = usersById.get(worker.id);
-        return linkedUser?.status === "active";
+        const isActive = linkedUser?.status === "active";
+        if (!isActive) {
+          console.warn(`[recommendations] Worker ${worker.name} (${worker.id}) excluded because user status is ${linkedUser?.status}`);
+        }
+        return isActive;
       });
+
+    console.log(`[recommendations] Loaded ${workersFromMongo.length} active workers for ranking.`);
 
     return {
       ranked: rankWorkers(
