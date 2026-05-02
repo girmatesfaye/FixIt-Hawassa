@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "seed": "tsx src/seed.ts",
     "db:clear": "tsx src/scripts/clear-db.ts",
+    "db:clear:snapshots": "tsx src/scripts/clear-snapshots.ts",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

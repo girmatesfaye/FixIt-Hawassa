@@ -34,6 +34,9 @@ const verifySchema = z.object({
 */
 
 const updateMeSchema = z
+  .object({
+    fullName: z.string().trim().min(1).max(100).optional(),
+    area: z.string().trim().min(2).max(100).optional(),
     location: z.string().trim().min(2).max(120).optional(),
     phone: z.string().trim().min(9).max(20).optional(),
     avatar: z.string().optional(),
