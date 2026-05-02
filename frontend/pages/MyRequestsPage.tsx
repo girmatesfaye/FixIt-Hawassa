@@ -416,7 +416,10 @@ const MyRequestsPage: React.FC = () => {
 
                     <div className="flex items-center flex-wrap gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-50 dark:border-gray-800">
                       {req.worker ? (
-                        <div className="flex items-center gap-3 mr-4">
+                        <div 
+                          className="flex items-center gap-3 mr-4 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate(`/worker/${req.workerId}`, { state: { requestId: req.id } })}
+                        >
                           <div className="text-right hidden sm:block">
                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                               {req.status === RequestStatus.PENDING

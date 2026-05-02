@@ -116,10 +116,20 @@ const WorkerProfilePage: React.FC = () => {
 
   const [clientRequests, setClientRequests] = useState<any[]>([]);
   
-  // Engagement levels
-  const currentEngagement = clientRequests.find(r => 
-    String(r.assignedWorkerId?._id || r.assignedWorkerId) === String(id)
-  );
+  // Engagement levels - Improved to find the MOST RELEVANT request
+  const currentEngagement = React.useMemo(() => {
+    // 1. If we came from a specific request, that's our source of truth
+    if (existingRequestId) {
+      return clientRequests.find(r => r.id === existingRequestId || r._id === existingRequestId);
+    }
+    
+    // 2. Otherwise, find the LATEST request with this worker
+    const workerRequests = clientRequests
+      .filter(r => String(r.assignedWorkerId?._id || r.assignedWorkerId) === String(id))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+    return workerRequests[0]; // Latest one
+  }, [clientRequests, id, existingRequestId]);
   
   const isEngagementAccepted = currentEngagement && 
     (currentEngagement.status === "IN_PROGRESS" || currentEngagement.status === "COMPLETED");
