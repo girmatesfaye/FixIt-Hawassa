@@ -114,9 +114,38 @@ const WorkerProfilePage: React.FC = () => {
   const existingRequestId =
     (location.state as { requestId?: string } | null)?.requestId ?? "";
 
+  const [clientRequests, setClientRequests] = useState<any[]>([]);
+  
+  // Engagement levels
+  const currentEngagement = clientRequests.find(r => 
+    String(r.assignedWorkerId?._id || r.assignedWorkerId) === String(id)
+  );
+  
+  const isEngagementAccepted = currentEngagement && 
+    (currentEngagement.status === "IN_PROGRESS" || currentEngagement.status === "COMPLETED");
+    
+  const isEngagementCompleted = currentEngagement && 
+    currentEngagement.status === "COMPLETED";
+
   const fetchWorker = async () => {
     try {
       if (!id) return;
+      
+      // Also fetch client's own requests to check for engagement
+      const token = getAuthToken();
+      if (token) {
+        fetch(`${API_BASE_URL}/requests/mine`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.requests)) {
+            setClientRequests(data.requests);
+          }
+        })
+        .catch(() => {});
+      }
+
       const res = await fetch(`${API_BASE_URL}/workers/${id}`);
       if (res.ok) {
         const data = (await res.json()) as WorkerApiResponse;
@@ -213,14 +242,19 @@ const WorkerProfilePage: React.FC = () => {
 
   const submitReport = async () => {
     try {
-      if (!existingRequestId || !id) {
-        toast.error("Open this profile from your completed request to submit a report.");
+      // Validate based on engagement
+      const needsJobToReport = ["Overcharging", "Poor Quality of Work", "No-show / Delay"].includes(reportReason);
+      
+      if (needsJobToReport && !currentEngagement) {
+        toast.error(`You can only report for "${reportReason}" if you have an active or completed request with this worker.`);
         return;
       }
 
+      if (!id) return;
+
       await submitWorkerReport({
         workerId: id,
-        requestId: existingRequestId,
+        requestId: currentEngagement?.id || currentEngagement?._id || "PROFILE_REPORT",
         type: reportReason,
         text: reportDescription,
       });
@@ -250,6 +284,7 @@ const WorkerProfilePage: React.FC = () => {
       if (existingRequestId && id) {
         await assignWorkerToRequest(existingRequestId, id);
         toast.success("Invitation sent! Tracking enabled.");
+        fetchWorker(); // Refresh engagement status
         navigate("/my-requests");
         return;
       }
@@ -275,6 +310,7 @@ const WorkerProfilePage: React.FC = () => {
       });
       if (res.ok) {
         toast.success("Invitation sent! Tracking enabled.");
+        fetchWorker(); // Refresh engagement status
         navigate("/my-requests");
       } else {
         toast.error("Failed to submit request.");
@@ -311,7 +347,7 @@ const WorkerProfilePage: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           {/* Left Column */}
           <div className="flex-grow flex flex-col gap-6">
             <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-start gap-8">
@@ -402,9 +438,22 @@ const WorkerProfilePage: React.FC = () => {
                 <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">
                   Proof of Work
                 </h3>
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
-                  {portfolioItems.length} Projects
-                </span>
+                <div className="flex items-center gap-4">
+                  {worker.tiktokProfile && (
+                    <a
+                      href={worker.tiktokProfile}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs font-bold text-[#120e1b] dark:text-white hover:text-primary transition-colors border border-gray-100 dark:border-gray-700"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">smart_display</span>
+                      TikTok Portfolio
+                    </a>
+                  )}
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+                    {portfolioItems.length} Projects
+                  </span>
+                </div>
               </div>
               {portfolioItems.length ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -466,131 +515,191 @@ const WorkerProfilePage: React.FC = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="w-full lg:w-[360px] flex flex-col gap-6">
+          <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-6">
             <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
               <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-6">
                 Contact {worker.name.split(" ")[0]}
               </h3>
 
               <div className="flex flex-col gap-3 mb-6">
-                <button
-                  onClick={() => setIsContactOpen(!isContactOpen)}
-                  className={`h-14 w-full flex items-center justify-between px-6 rounded-xl font-bold uppercase tracking-widest transition-all ${
-                    isContactOpen
-                      ? "bg-gray-100 dark:bg-gray-800 text-primary"
-                      : "bg-primary hover:bg-primary-dark text-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[20px]">
-                      {isContactOpen ? "contact_mail" : "person_add"}
-                    </span>
-                    Contact Worker
+                {!isEngagementAccepted ? (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 flex flex-col gap-5">
+                    <div className="flex flex-col gap-2">
+                      <h4 className="text-sm font-bold text-[#120e1b] dark:text-white flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
+                        Secure Booking
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                        To protect your privacy and ensure safety, we hide contact details until a formal request is made and accepted.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Step 1 */}
+                      <div className="flex gap-4">
+                        <div className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${currentEngagement?.status === "PENDING" ? "bg-green-500 text-white" : "bg-primary text-white"}`}>
+                          {currentEngagement?.status === "PENDING" ? "✓" : "1"}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <p className={`text-xs font-bold ${currentEngagement?.status === "PENDING" ? "text-green-600 dark:text-green-400" : "text-[#120e1b] dark:text-white"}`}>
+                            Send Invitation
+                          </p>
+                          <p className="text-[10px] font-medium text-gray-400">Describe your needs and invite {worker.name.split(" ")[0]}.</p>
+                        </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className="flex gap-4">
+                        <div className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${currentEngagement?.status === "PENDING" ? "bg-amber-500 text-white animate-pulse" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}>
+                          2
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <p className={`text-xs font-bold ${currentEngagement?.status === "PENDING" ? "text-amber-600 dark:text-amber-400" : "text-gray-400"}`}>
+                            Worker Acceptance
+                          </p>
+                          <p className="text-[10px] font-medium text-gray-400">
+                            {currentEngagement?.status === "PENDING" 
+                              ? "Waiting for response..." 
+                              : "Once accepted, contact details reveal automatically."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {currentEngagement?.status === "PENDING" ? (
+                      <div className="flex flex-col gap-3">
+                        <div className="p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30 flex gap-2">
+                          <span className="material-symbols-outlined text-amber-500 text-[18px]">info</span>
+                          <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-tight">
+                            Invitation is active! We'll notify you once they accept.
+                          </p>
+                        </div>
+                        <button
+                          disabled
+                          className="h-12 w-full bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-xl font-bold uppercase tracking-widest text-[11px] flex items-center justify-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                          Waiting for Worker
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={hireDirectly}
+                        disabled={isHiring}
+                        className="h-14 w-full bg-primary hover:bg-primary-dark text-white rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-primary/25 transition-all active:scale-95 flex items-center justify-center gap-3"
+                      >
+                        <span className="material-symbols-outlined">person_add</span>
+                        {isHiring ? "Sending..." : "Send Work Request"}
+                      </button>
+                    )}
                   </div>
-                  <span
-                    className={`material-symbols-outlined transition-transform duration-300 ${isContactOpen ? "rotate-180" : ""}`}
-                  >
-                    expand_more
-                  </span>
-                </button>
+                ) : (
+                  <div className="bg-green-50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-100 dark:border-green-900/30 flex flex-col gap-5">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/30">
+                        <span className="material-symbols-outlined">check_circle</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <h4 className="text-sm font-bold text-green-700 dark:text-green-400">Contact Unlocked</h4>
+                        <p className="text-[10px] font-bold text-green-600/70 dark:text-green-400/70 uppercase tracking-widest">Request Accepted</p>
+                      </div>
+                    </div>
 
-                <div
-                  className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${
-                    isContactOpen
-                      ? "max-h-[300px] opacity-100 mt-2"
-                      : "max-h-0 opacity-0 pointer-events-none"
-                  }`}
-                >
-                  <a
-                    href={worker.phone ? `tel:${worker.phone}` : "#"}
-                    className="group relative h-14 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-green-500/25 active:scale-95 overflow-hidden text-sm"
-                  >
-                    <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                    <span className="material-symbols-outlined relative z-10 text-[20px]">
-                      call
-                    </span>
-                    <span className="relative z-10">
-                      {worker.phone
-                        ? `Call ${worker.phone}`
-                        : "Phone not available"}
-                    </span>
-                  </a>
-                  <button
-                    onClick={hireDirectly}
-                    disabled={isHiring}
-                    className="group relative h-14 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-500/25 active:scale-95 overflow-hidden text-sm"
-                  >
-                    <span className="material-symbols-outlined relative z-10 text-[20px]">
-                      work
-                    </span>
-                    <span className="relative z-10">
-                      {isHiring ? "Sending..." : "Send Work Request"}
-                    </span>
-                  </button>
+                    <div className="flex flex-col gap-3">
+                      <a
+                        href={worker.phone ? `tel:${worker.phone}` : "#"}
+                        className="h-12 bg-white dark:bg-gray-800 border-2 border-green-500/20 hover:border-green-500 text-green-600 dark:text-green-400 rounded-xl font-bold flex items-center justify-center gap-3 transition-all hover:bg-green-500 hover:text-white active:scale-95 text-xs shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">call</span>
+                        {worker.phone || "Phone Hidden"}
+                      </a>
 
-                  {worker.telegramUsername ? (
-                    <a
-                      href={toTelegramUrl(worker.telegramUsername)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative h-14 bg-[#26a5e4] hover:bg-[#1e8ec5] text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#26a5e4]/25 active:scale-95 overflow-hidden text-sm"
-                    >
-                      <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                      <span className="material-symbols-outlined relative z-10 text-[20px]">
-                        send
-                      </span>
-                      <span className="relative z-10">Telegram Message</span>
-                    </a>
-                  ) : null}
+                      {worker.telegramUsername && (
+                        <a
+                          href={toTelegramUrl(worker.telegramUsername)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="h-12 bg-[#26a5e4] hover:bg-[#1e8ec5] text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 text-xs shadow-md shadow-[#26a5e4]/20"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">send</span>
+                          Telegram Message
+                        </a>
+                      )}
 
-                  {worker.tiktokProfile ? (
-                    <a
-                      href={worker.tiktokProfile}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative h-14 bg-[#111827] hover:bg-black text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-black/25 active:scale-95 overflow-hidden text-sm"
-                    >
-                      <span className="material-symbols-outlined relative z-10 text-[20px]">
-                        smart_display
-                      </span>
-                      <span className="relative z-10">View TikTok</span>
-                    </a>
-                  ) : null}
-                </div>
+                      <button
+                        onClick={() => navigate("/messages", { state: { requestId: currentEngagement?._id || currentEngagement?.id } })}
+                        className="h-12 w-full bg-primary text-white hover:bg-primary-dark rounded-xl font-bold flex items-center justify-center gap-3 transition-all text-xs shadow-md shadow-primary/20"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">chat</span>
+                        Open FixIt Chat
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <button
-                onClick={() => setIsReviewModalOpen(true)}
-                className="w-full h-14 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 hover:border-amber-500 dark:hover:border-amber-500 text-[#120e1b] dark:text-white hover:text-amber-500 rounded-xl font-bold uppercase tracking-widest text-xs transition-colors active:scale-95 flex items-center justify-center gap-2 mb-6"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  star
-                </span>
-                Write a Review
-              </button>
-
-              {!existingRequestId ? (
-                <p className="text-[11px] text-amber-600 font-semibold mb-4">
-                  Open this worker from your completed request to submit review
-                  or report.
-                </p>
-              ) : null}
-
-              <div className="flex justify-center">
+              <div className="space-y-4">
                 <button
-                  onClick={() => setIsReportModalOpen(true)}
-                  className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+                  onClick={() => {
+                    if (!isEngagementCompleted) {
+                      toast.error("You can only review a worker after a job is COMPLETED.");
+                      return;
+                    }
+                    setIsReviewModalOpen(true);
+                  }}
+                  className={`w-full h-14 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                    isEngagementCompleted
+                      ? "bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20"
+                      : "bg-gray-50 dark:bg-gray-900/50 border-2 border-transparent text-gray-400 cursor-not-allowed"
+                  }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">
-                    flag
+                  <span className="material-symbols-outlined text-[18px]">
+                    star
                   </span>
-                  Report Profile
+                  Write a Review
                 </button>
+                
+                <button
+                  onClick={() => {
+                    if (!isEngagementCompleted) {
+                      toast.error("You can only report an issue after the job is COMPLETED.");
+                      return;
+                    }
+                    setIsReportModalOpen(true);
+                  }}
+                  className={`w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
+                    isEngagementCompleted
+                      ? "bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 hover:border-red-500 text-gray-500 hover:text-red-500"
+                      : "bg-gray-50 dark:bg-gray-900/50 border-2 border-transparent text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">flag</span>
+                  Report a Problem
+                </button>
+
+                {!isEngagementCompleted && (
+                  <p className="text-[10px] text-center text-gray-400 font-medium px-4">
+                    {currentEngagement 
+                      ? "Reviewing & reporting will unlock once the job is marked as completed."
+                      : "Reviewing & reporting are locked until a service request is marked as completed."}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Trust Footer */}
+            <div className="p-6 bg-gray-50/50 dark:bg-gray-900/10 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-gray-400 text-lg">verified</span>
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                  Every job booked through FixIt Hawassa is protected by our professional service guidelines. 
+                </p>
               </div>
             </div>
           </div>
         </div>
       </main>
+
 
       {/* Lightbox Modal */}
       {selectedGalleryIdx !== null && (
