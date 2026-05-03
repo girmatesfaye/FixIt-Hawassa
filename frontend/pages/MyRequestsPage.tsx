@@ -30,6 +30,8 @@ type RequestCard = {
   cost: string;
   hasMessagesAccess: boolean;
   workerMarkedCompleteAt: string | null;
+  hasReview: boolean;
+  hasReport: boolean;
 };
 
 const mapStatus = (status: ApiRequestStatus): RequestStatus => {
@@ -74,6 +76,8 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
       (request.status === "IN_PROGRESS" || request.status === "COMPLETED")
     ),
     workerMarkedCompleteAt: request.workerMarkedCompleteAt ?? null,
+    hasReview: request.hasReview ?? false,
+    hasReport: request.hasReport ?? false,
   };
 };
 
@@ -107,7 +111,19 @@ const MyRequestsPage: React.FC = () => {
 
     try {
       const data = await fetchClientRequests();
-      setRequests(data.map(toRequestCard));
+      const mapped = data.map(toRequestCard);
+      setRequests(mapped);
+
+      // Initialize already reviewed/reported lists from backend data
+      const reviewedIds = data
+        .filter((r) => r.hasReview)
+        .map((r) => r.id);
+      const reportedIds = data
+        .filter((r) => r.hasReport)
+        .map((r) => r.id);
+
+      setReviewedRequestIds(reviewedIds);
+      setReportedRequestIds(reportedIds);
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
         navigate("/login");

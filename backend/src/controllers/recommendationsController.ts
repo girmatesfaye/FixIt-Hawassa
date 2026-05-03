@@ -37,7 +37,7 @@ const loadRankedWorkers = async (
     const userIds = profiles.map((profile) => profile.userId);
     const [users, reviewStats] = await Promise.all([
       User.find({ _id: { $in: userIds } })
-        .select("fullName status")
+        .select("fullName status avatar")
         .lean(),
       Review.aggregate<{
         _id: unknown;
@@ -85,7 +85,7 @@ const loadRankedWorkers = async (
           completionRate: profile.completionRate ?? 0,
           responseMinutes: profile.responseMinutes ?? 30,
           skills: profile.skills ?? [],
-          avatar: profile.avatar,
+          avatar: linkedUser?.avatar || profile.avatar,
         };
 
         return worker;

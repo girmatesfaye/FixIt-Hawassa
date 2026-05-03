@@ -33,6 +33,8 @@ export interface ClientRequestItem {
   createdAt: string;
   updatedAt: string;
   assignedWorkerId: RequestUserRef | null;
+  hasReview?: boolean;
+  hasReport?: boolean;
 }
 
 export interface ClientReportItem {

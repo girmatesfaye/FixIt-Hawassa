@@ -94,6 +94,9 @@ export const updateMyWorkerProfile = async (req: Request, res: Response) => {
     if (phone !== undefined) {
       workerUser.phone = phone;
     }
+    if (avatar !== undefined) {
+      workerUser.avatar = avatar;
+    }
     await workerUser.save();
 
     const workerProfile = await WorkerProfile.findOne({ userId });
@@ -206,6 +209,7 @@ export const getWorkerById = async (req: Request, res: Response) => {
         id: workerUser._id,
         name: workerUser.fullName,
         phone: workerUser.phone,
+        avatar: workerUser.avatar,
         profile: workerProfile
           ? {
               ...workerProfile,

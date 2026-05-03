@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { Report, ServiceRequest, User, WorkerProfile } from "../models";
+import { Report, Review, ServiceRequest, User, WorkerProfile } from "../models";
 
 type AuthenticatedRequest = Request & {
   userId?: string;
@@ -88,9 +88,10 @@ const mapRequestResponse = (request: {
   maintenanceLevel: "New" | "Medium" | "Old";
   hasPhotos: boolean;
   photoUrls?: string[];
-  status: "SEARCHING" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
   createdAt: Date | string;
   updatedAt: Date | string;
+  hasReview?: boolean;
+  hasReport?: boolean;
 }) => ({
   id: String(request._id),
   clientUserId: mapUserRef(request.clientUserId),
@@ -127,6 +128,8 @@ const mapRequestResponse = (request: {
     request.updatedAt instanceof Date
       ? request.updatedAt.toISOString()
       : new Date(request.updatedAt).toISOString(),
+  hasReview: request.hasReview ?? false,
+  hasReport: request.hasReport ?? false,
 });
 
 export const getMyRequests = async (req: Request, res: Response) => {
@@ -153,9 +156,28 @@ export const getMyRequests = async (req: Request, res: Response) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    const requestIds = requests.map((r) => r._id);
+    const [reviews, reports] = await Promise.all([
+      Review.find({ requestId: { $in: requestIds } })
+        .select("requestId")
+        .lean(),
+      Report.find({ requestId: { $in: requestIds } })
+        .select("requestId")
+        .lean(),
+    ]);
+
+    const reviewedIds = new Set(reviews.map((r) => String(r.requestId)));
+    const reportedIds = new Set(reports.map((r) => String(r.requestId)));
+
     return res.json({
       total: requests.length,
-      requests: requests.map(mapRequestResponse),
+      requests: requests.map((r) =>
+        mapRequestResponse({
+          ...r,
+          hasReview: reviewedIds.has(String(r._id)),
+          hasReport: reportedIds.has(String(r._id)),
+        }),
+      ),
       source: "mongodb",
     });
   } catch (error) {

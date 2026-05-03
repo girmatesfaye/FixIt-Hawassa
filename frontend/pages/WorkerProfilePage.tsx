@@ -171,11 +171,12 @@ const WorkerProfilePage: React.FC = () => {
           : [];
 
         const fallbackAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${workerData.id}`;
-        const profileAvatar = toPublicAssetUrl(profile?.avatar ?? "");
+        const profileAvatar = toPublicAssetUrl(workerData.avatar || profile?.avatar || "");
 
         setWorker({
           id: workerData.id,
           name: workerData.name,
+          avatar: profileAvatar || fallbackAvatar,
           title: profile?.title || profile?.skills?.[0] || "",
           skills: Array.isArray(profile?.skills)
             ? profile.skills.filter(Boolean)
