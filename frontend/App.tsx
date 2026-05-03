@@ -21,6 +21,7 @@ import MyRequestsPage from "./pages/MyRequestsPage";
 import ClientReportsPage from "./pages/ClientReportsPage";
 import WorkerHubPage from "./pages/WorkerHubPage";
 import EditWorkerProfilePage from "./pages/EditWorkerProfilePage";
+import HelpPage from "./pages/HelpPage";
 import AdminLayout from "./admin/AdminLayout";
 import ClientLayout from "./components/ClientLayout";
 import WorkerLayout from "./components/WorkerLayout";
@@ -227,6 +228,7 @@ const App: React.FC = () => {
         >
           <Route path="messages" element={<MessagesPage />} />
           <Route path="dashboard" element={<DashboardPage onLogout={handleLogout} />} />
+          <Route path="help" element={<HelpPage />} />
         </Route>
 
         {/* Client-Only Routes */}

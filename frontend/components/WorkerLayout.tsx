@@ -66,7 +66,7 @@ const WorkerLayout: React.FC<WorkerLayoutProps> = ({ onLogout }) => {
   const menuItems = [
     { icon: "construction", label: "Worker Hub", path: "/worker-hub" },
     { icon: "chat", label: "Messages", path: "/messages", badge: unreadCount },
-    { icon: "person_search", label: "Find Help", path: "/dashboard" },
+    { icon: "person_search", label: "Find Help", path: "/help" },
   ];
 
   const systemItems = [

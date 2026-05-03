@@ -90,7 +90,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         setPhone(profile.phone || "");
         setTelegramUsername(workerProfile.telegramUsername || "");
         setTiktokProfile(workerProfile.tiktokProfile || "");
-        setAvatar(workerProfile.avatar || "");
+        setAvatar(profile.avatar || workerProfile.avatar || "");
         setPortfolio(nextPortfolio);
         setSkills(nextSkills);
         setIsAvailable(workerProfile.isActive ?? true);

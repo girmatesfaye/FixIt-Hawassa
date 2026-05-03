@@ -63,7 +63,7 @@ const EditWorkerProfilePage: React.FC = () => {
         setTiktokProfile(data.profile.tiktokProfile || "");
         setBio(data.profile.bio || "");
         setSkills(data.profile.skills || []);
-        setAvatar(data.profile.avatar || "");
+        setAvatar(data.avatar || data.profile.avatar || "");
         setPortfolio(data.profile.portfolio || []);
       })
       .catch((err) => console.error("Failed to fetch profile", err))
@@ -209,7 +209,7 @@ const EditWorkerProfilePage: React.FC = () => {
 
   const getImageUrl = (path: string) => {
     if (!path)
-      return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&h=256&auto=format&fit=crop";
+      return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName || "Worker")}`;
     if (path.startsWith("http")) return path;
     const API_BASE_URL =
       (import.meta.env.VITE_API_BASE_URL as string | undefined) ??

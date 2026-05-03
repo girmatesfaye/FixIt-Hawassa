@@ -54,6 +54,7 @@ export const getMyWorkerProfile = async (req: Request, res: Response) => {
         id: workerUser._id,
         name: workerUser.fullName,
         phone: workerUser.phone,
+        avatar: workerUser.avatar,
         profile: workerProfile,
       },
     });
