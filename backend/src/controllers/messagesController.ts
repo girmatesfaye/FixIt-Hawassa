@@ -22,6 +22,12 @@ export const getMessagesByRequest = async (req: Request, res: Response) => {
         .json({ error: "Forbidden: You are not part of this request" });
     }
 
+    if (request.status !== "IN_PROGRESS" && request.status !== "COMPLETED") {
+      return res.status(403).json({ 
+        error: "Forbidden: Chat is only available for accepted or completed requests" 
+      });
+    }
+
     const messages = await Message.find({ requestId })
       .sort({ createdAt: 1 })
       .lean();
@@ -54,6 +60,12 @@ export const sendMessage = async (req: Request, res: Response) => {
       return res
         .status(403)
         .json({ error: "Forbidden: You are not part of this request" });
+    }
+
+    if (request.status !== "IN_PROGRESS" && request.status !== "COMPLETED") {
+      return res.status(403).json({ 
+        error: "Forbidden: Chat is only available for accepted or completed requests" 
+      });
     }
 
     const newMessage = new Message({

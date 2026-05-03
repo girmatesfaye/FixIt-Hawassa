@@ -69,7 +69,10 @@ const toRequestCard = (request: ClientRequestItem): RequestCard => {
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(request.assignedWorkerId.name)}`
       : undefined,
     cost: "Pending Quotes",
-    hasMessagesAccess: Boolean(request.assignedWorkerId),
+    hasMessagesAccess: Boolean(
+      request.assignedWorkerId && 
+      (request.status === "IN_PROGRESS" || request.status === "COMPLETED")
+    ),
     workerMarkedCompleteAt: request.workerMarkedCompleteAt ?? null,
   };
 };
@@ -502,15 +505,29 @@ const MyRequestsPage: React.FC = () => {
                         actions={(() => {
                           const base = [
                             {
-                              label: req.hasMessagesAccess
+                              label: req.apiStatus === "PENDING"
+                                ? "View Pro Profile"
+                                : req.hasMessagesAccess
                                 ? "Open Chat"
-                                : "Track Order",
-                              onClick: () =>
-                                req.hasMessagesAccess
-                                  ? navigate("/messages", {
-                                      state: { requestId: req.id },
-                                    })
-                                  : navigate("/search-results"),
+                                : "Find Professionals",
+                              onClick: () => {
+                                if (req.apiStatus === "PENDING" && req.workerId) {
+                                  navigate(`/worker/${req.workerId}`, {
+                                    state: { requestId: req.id },
+                                  });
+                                } else if (req.hasMessagesAccess) {
+                                  navigate("/messages", {
+                                    state: { requestId: req.id },
+                                  });
+                                } else {
+                                  navigate("/search-results", {
+                                    state: { 
+                                      requestId: req.id,
+                                      category: req.category 
+                                    }
+                                  });
+                                }
+                              }
                             },
                           ];
 
