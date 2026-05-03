@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { Report, Review, ServiceRequest, User, WorkerProfile } from "../models";
+import { sendNewRequestEmail, sendBookingAcceptedEmail } from "../services/emailService";
 
 type AuthenticatedRequest = Request & {
   userId?: string;
@@ -358,10 +359,18 @@ export const createRequest = async (req: Request, res: Response) => {
       hasPhotos: parsed.data.hasPhotos || parsed.data.photoUrls.length > 0,
       photoUrls: parsed.data.photoUrls,
       status: normalizedAssignedWorkerId ? "PENDING" : "SEARCHING",
-      assignedWorkerId: normalizedAssignedWorkerId
+        assignedWorkerId: normalizedAssignedWorkerId
         ? new Types.ObjectId(normalizedAssignedWorkerId)
         : null,
     });
+
+    // Notify worker if assigned
+    if (normalizedAssignedWorkerId) {
+      const worker = await User.findById(normalizedAssignedWorkerId).select("email fullName").lean();
+      if (worker?.email) {
+        void sendNewRequestEmail(worker.email, worker.fullName, created.category, created.area);
+      }
+    }
 
     return res.status(201).json({
       id: String(created._id),
@@ -455,6 +464,11 @@ export const assignWorker = async (req: Request, res: Response) => {
     request.clientConfirmedCompleteAt = null;
     await request.save();
 
+    // Notify worker of the invitation
+    if (worker.email) {
+      void sendNewRequestEmail(worker.email, worker.fullName, request.category, request.area);
+    }
+
     const updatedRequest = await ServiceRequest.findById(request._id)
       .populate("clientUserId", "fullName avatar")
       .populate("assignedWorkerId", "fullName avatar")
@@ -544,6 +558,15 @@ export const workerResponse = async (req: Request, res: Response) => {
     }
 
     await request.save();
+
+    // Notify client if accepted
+    if (parsed.data.decision === "accept") {
+      const client = await User.findById(request.clientUserId).select("email fullName").lean();
+      const worker = await User.findById(request.assignedWorkerId).select("fullName").lean();
+      if (client?.email && worker) {
+        void sendBookingAcceptedEmail(client.email, client.fullName, worker.fullName);
+      }
+    }
 
     const updatedRequest = await ServiceRequest.findById(request._id)
       .populate("clientUserId", "fullName avatar")

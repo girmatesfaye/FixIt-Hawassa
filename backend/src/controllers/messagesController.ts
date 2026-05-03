@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Message, ServiceRequest } from "../models";
+import { io } from "../socket";
 
 type AuthenticatedRequest = Request & { userId?: string };
 
@@ -76,7 +77,16 @@ export const sendMessage = async (req: Request, res: Response) => {
     });
     await newMessage.save();
 
-    return res.status(201).json({ message: newMessage });
+    // Populate sender info for the socket event
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate("senderId", "fullName role")
+      .lean();
+
+    if (io) {
+      io.to(requestId).emit("new_message", populatedMessage);
+    }
+
+    return res.status(201).json({ message: populatedMessage });
   } catch (error) {
     console.error("[messages] Failed to send message", error);
     return res.status(500).json({ error: "Failed to send message" });

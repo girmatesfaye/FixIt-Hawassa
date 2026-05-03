@@ -5,7 +5,7 @@ import { z } from "zod";
 import { env } from "../config/env";
 import { User, WorkerProfile } from "../models";
 import { UserRole } from "../types";
-import { sendResetPasswordEmail } from "../services/emailService";
+import { sendResetPasswordEmail, sendWelcomeEmail } from "../services/emailService";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -337,6 +337,9 @@ export const register = async (req: Request, res: Response) => {
         isActive: true,
       });
     }
+    
+    // Send Welcome Email
+    void sendWelcomeEmail(createdUser.email, createdUser.fullName);
 
     const sessionId = undefined;
     const token = signAccessToken({

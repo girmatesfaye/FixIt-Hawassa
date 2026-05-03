@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getAuthToken, getStoredRole } from "../services/auth";
 import { getUploadedImageUrl } from "../services/upload";
+import { io, Socket } from "socket.io-client";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -9,6 +10,7 @@ const API_BASE_URL =
 
 const MessagesPage: React.FC = () => {
   const location = useLocation();
+  const socketRef = useRef<Socket | null>(null);
   const [selectedContact, setSelectedContact] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
@@ -20,6 +22,30 @@ const MessagesPage: React.FC = () => {
   const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
   const requestedThreadId =
     (location.state as { requestId?: string } | null)?.requestId ?? "";
+
+  // Socket setup
+  useEffect(() => {
+    const socket = io(API_BASE_URL, {
+      auth: { token: getAuthToken() },
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      console.log("[Socket] Connected to server");
+    });
+
+    socket.on("new_message", (message: any) => {
+      setMessages((prev) => {
+        // Prevent duplicate messages if they arrive via socket AND fetch
+        if (prev.find((m) => m._id === message._id)) return prev;
+        return [...prev, message];
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // Fetch current user
   useEffect(() => {
@@ -96,11 +122,17 @@ const MessagesPage: React.FC = () => {
     if (selectedContact !== null && requests[selectedContact]) {
       const requestId = requests[selectedContact].id;
       fetchMessages(requestId);
-      // Setup simple polling for updates (in absence of websockets)
-      const interval = setInterval(() => {
-        fetchMessages(requestId);
-      }, 5000);
-      return () => clearInterval(interval);
+      
+      // Join socket room
+      if (socketRef.current) {
+        socketRef.current.emit("join_room", requestId);
+      }
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.emit("leave_room", requestId);
+        }
+      };
     }
   }, [selectedContact, requests]);
 
@@ -122,7 +154,8 @@ const MessagesPage: React.FC = () => {
       });
       if (res.ok) {
         setNewMessage("");
-        fetchMessages(requestId);
+        // No need to fetchMessages(requestId) here anymore, 
+        // the socket will broadcast it to us too!
       }
     } catch (err) {
       console.error("Failed to send message", err);

@@ -29,6 +29,9 @@ const userSchema = new Schema(
   },
 );
 
+userSchema.index({ role: 1 });
+userSchema.index({ status: 1 });
+
 export type UserDocument = InferSchemaType<typeof userSchema>;
 export type UserModel = Model<UserDocument>;
 

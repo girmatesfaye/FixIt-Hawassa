@@ -47,6 +47,11 @@ const serviceRequestSchema = new Schema(
   },
 );
 
+serviceRequestSchema.index({ clientUserId: 1 });
+serviceRequestSchema.index({ assignedWorkerId: 1 });
+serviceRequestSchema.index({ status: 1 });
+serviceRequestSchema.index({ category: 1 });
+
 export type ServiceRequestDocument = InferSchemaType<
   typeof serviceRequestSchema
 >;

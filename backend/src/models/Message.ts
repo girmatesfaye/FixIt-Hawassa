@@ -27,4 +27,8 @@ const messageSchema = new Schema<IMessage>(
   { timestamps: true }
 );
 
+// Performance Indices
+messageSchema.index({ requestId: 1, createdAt: 1 });
+messageSchema.index({ senderId: 1 });
+
 export const Message = mongoose.model<IMessage>("Message", messageSchema);
