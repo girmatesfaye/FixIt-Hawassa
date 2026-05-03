@@ -5,7 +5,7 @@ import { z } from "zod";
 import { env } from "../config/env";
 import { User, WorkerProfile } from "../models";
 import { UserRole } from "../types";
-import { sendResetPasswordEmail, sendWelcomeEmail } from "../services/emailService";
+import { sendResetPasswordEmail, sendWelcomeEmail, sendVerificationEmail } from "../services/emailService";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -321,9 +321,14 @@ export const register = async (req: Request, res: Response) => {
       area: normalizedArea,
       nationalId: role === "worker" ? normalizedNationalId : "",
       phone: parsed.data.phone ? parsed.data.phone.trim() : undefined,
-      isVerified: true, // OTP DISABLED
+      isVerified: false,
       status: "active",
+      emailVerificationToken: randomBytes(32).toString("hex"),
+      emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     });
+
+    // Send Verification Email instead of Welcome Email
+    void sendVerificationEmail(createdUser.email, createdUser.emailVerificationToken!);
 
     // CRITICAL FIX: Create WorkerProfile if the user is a worker
     if (role === "worker") {
@@ -393,12 +398,19 @@ export const login = (req: Request, res: Response) => {
   const providedRole = parsed.data.role;
 
   return User.findOne({ email: normalizedEmail })
-    .select("_id email role status passwordHash")
+    .select("_id email role status passwordHash isVerified")
     .lean()
     .then((user) => {
       if (!user) {
         return res.status(401).json({
           message: "Invalid email or password",
+          source: "mongodb",
+        });
+      }
+
+      if (!user.isVerified) {
+        return res.status(403).json({
+          message: "Please verify your email address. Check your inbox for the verification link.",
           source: "mongodb",
         });
       }
@@ -555,3 +567,35 @@ export const resetPassword = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to reset password" });
   }
 };
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ message: "Verification token is required" });
+  }
+
+  try {
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired verification token" });
+    }
+
+    user.isVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+    await user.save();
+
+    // Now send welcome email
+    void sendWelcomeEmail(user.email, user.fullName);
+
+    return res.json({ message: "Email verified successfully. You can now use all features." });
+  } catch (error) {
+    console.error("[auth] Email verification failed", error);
+    return res.status(500).json({ message: "Failed to verify email" });
+  }
+};
+

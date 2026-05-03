@@ -5,7 +5,7 @@ import {
   refresh,
   register,
   updateMe,
-  verify,
+  verifyEmail,
   forgotPassword,
   resetPassword,
 } from "../controllers/authController";
@@ -18,7 +18,7 @@ authRouter.put("/me", requireAuth, updateMe);
 authRouter.post("/refresh", requireAuth, refresh);
 authRouter.post("/register", register);
 authRouter.post("/login", login);
-// authRouter.post("/verify", verify);
+authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/forgot-password", forgotPassword);
 authRouter.post("/reset-password", resetPassword);
 

@@ -100,3 +100,31 @@ export const sendBookingAcceptedEmail = async (clientEmail: string, clientName: 
   };
   try { await transporter.sendMail(mailOptions); } catch (e) { console.error("Booking accepted email failed", e); }
 };
+
+export const sendVerificationEmail = async (email: string, token: string) => {
+  const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/#/verify-email?token=${token}`;
+
+  const mailOptions = {
+    from: process.env.FROM_EMAIL || '"FixIt Hawassa" <noreply@fixit-hawassa.com>',
+    to: email,
+    subject: "Verify Your Email - FixIt Hawassa",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #609966;">Action Required: Verify Your Email</h2>
+        <p>Thank you for signing up for FixIt Hawassa! Please click the button below to verify your email address. This link is valid for 24 hours.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verifyUrl}" style="background-color: #609966; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Verify Email Address</a>
+        </div>
+        <p style="color: #666; font-size: 14px;">If you didn't create an account, you can safely ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin-top: 30px;" />
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 FixIt Hawassa. All rights reserved.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+  }
+};
