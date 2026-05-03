@@ -29,6 +29,7 @@ export const getMessagesByRequest = async (req: Request, res: Response) => {
     }
 
     const messages = await Message.find({ requestId })
+      .populate("senderId", "fullName role")
       .sort({ createdAt: 1 })
       .lean();
     return res.json({ messages });

@@ -354,12 +354,12 @@ export const resolveReport = async (req: Request, res: Response) => {
 
       if (request && typeof adminUserId === "string" && adminUserId) {
         const notificationText = [
-          `Admin reviewed a ${report.type} report.`,
-          `Resolution: ${status}.`,
-          feedback ? `Note: ${feedback}` : null,
+          `[Official Notice] Admin has resolved the ${report.type} report.`,
+          `Status: ${status.toUpperCase()}.`,
+          feedback ? `Feedback: ${feedback}` : null,
         ]
           .filter((part): part is string => Boolean(part))
-          .join(" ");
+          .join("\n");
 
         await Message.create({
           requestId: request._id,

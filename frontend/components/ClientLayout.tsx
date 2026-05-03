@@ -69,6 +69,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ onLogout }) => {
     { icon: "chat", label: "Messages", path: "/messages", badge: unreadCount },
     { icon: "report", label: "Reports", path: "/reports" },
     { icon: "add_circle", label: "Request Service", path: "/request-service" },
+    { icon: "help", label: "Help", path: "/help" },
   ];
 
   const systemItems = [
@@ -148,7 +149,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ onLogout }) => {
             ))}
           </div>
 
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h3 className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-[2px] lg:max-w-0 lg:group-hover:max-w-[160px] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
               Switch
             </h3>
@@ -175,7 +176,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ onLogout }) => {
                 </NavLink>
               ))}
             </div>
-          </div>
+          </div> */}
         </nav>
 
         <div className="p-4 border-t border-[#e8edf7] dark:border-gray-800 overflow-hidden">

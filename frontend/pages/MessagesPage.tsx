@@ -307,23 +307,42 @@ const MessagesPage: React.FC = () => {
               {/* Messages List */}
               <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
                 {messages.map((msg) => {
-                  const isMe = msg.senderId === me?.id;
+                  const sender = typeof msg.senderId === "object" ? msg.senderId : null;
+                  const senderId = sender?._id || msg.senderId;
+                  const isMe = String(senderId) === String(me?.id || me?._id);
+                  const isAdmin = sender?.role === "admin";
+                  
                   return (
                     <div
                       key={msg._id}
                       className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-2xl p-4 shadow-sm ${isMe ? "bg-primary text-white rounded-tr-none" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"}`}
+                        className={`max-w-[85%] sm:max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}
                       >
-                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                        {!isMe && (
+                          <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 px-1 ${isAdmin ? "text-red-500" : "text-gray-400"}`}>
+                            {isAdmin ? "FixIt Admin" : (sender?.fullName || "Partner")}
+                          </span>
+                        )}
                         <div
-                          className={`text-[10px] mt-1 font-semibold uppercase opacity-60 ${isMe ? "text-right" : "text-left"}`}
+                          className={`rounded-2xl p-4 shadow-sm w-full ${
+                            isMe 
+                              ? "bg-primary text-white rounded-tr-none" 
+                              : isAdmin
+                                ? "bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100 border-2 border-red-500/30 rounded-tl-none"
+                                : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"
+                          }`}
                         >
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          <p className={`text-sm leading-relaxed ${isAdmin ? "font-bold" : ""}`}>{msg.text}</p>
+                          <div
+                            className={`text-[10px] mt-2 font-semibold uppercase opacity-60 ${isMe ? "text-right" : "text-left"}`}
+                          >
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>

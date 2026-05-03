@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getStoredRole, UserRole } from "../services/auth";
 
 interface FAQItem {
   q: string;
@@ -17,7 +18,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({ title, icon, iconColor, descr
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   return (
-    <div className="portal-panel rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
+    <div className="portal-panel rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
       <div className={`size-14 rounded-2xl ${iconColor} flex items-center justify-center mb-6`}>
         <span className="material-symbols-outlined text-3xl">{icon}</span>
       </div>
@@ -26,7 +27,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({ title, icon, iconColor, descr
         {description}
       </p>
       
-      <div className="space-y-3">
+      <div className="space-y-3 mt-auto">
         {questions.map((faq, idx) => (
           <div 
             key={idx}
@@ -49,7 +50,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({ title, icon, iconColor, descr
             </button>
             <div 
               className={`transition-all duration-300 ease-in-out ${
-                expandedIdx === idx ? "max-h-40 opacity-100 pb-5 px-5" : "max-h-0 opacity-0 pointer-events-none"
+                expandedIdx === idx ? "max-h-60 opacity-100 pb-5 px-5" : "max-h-0 opacity-0 pointer-events-none"
               }`}
             >
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -64,35 +65,59 @@ const HelpSection: React.FC<HelpSectionProps> = ({ title, icon, iconColor, descr
 };
 
 const HelpPage: React.FC = () => {
+  const [role, setRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    setRole(getStoredRole());
+  }, []);
+
   const accountQuestions = [
     {
-      q: "How do I change my profile picture?",
-      a: "Go to your 'Edit Profile' page, click the camera icon on your current photo, and upload a clear, professional image of yourself. Don't forget to click 'Save Changes' at the top."
+      q: "How do I change my profile info?",
+      a: "You can update your contact details and location settings directly from your dashboard. Click on your profile icon to access account settings."
     },
     {
-      q: "Updating my service categories",
-      a: "In your profile settings, you can select or deselect categories like 'Plumbing' or 'Electrical'. You can also type custom skills separated by commas to help clients find your specific expertise."
+      q: "Is my personal information safe?",
+      a: "Yes, FixIt Hawassa only shares your contact details with a professional AFTER a request is confirmed or explicitly accepted. Your location is kept private until then."
     },
     {
-      q: "How do I show as 'Available'?",
-      a: "On your Worker Hub, there is a large green toggle. When it's ON, you appear in search results. Turn it OFF if you are busy or on a break to stop receiving new requests."
+      q: "Can I use FixIt on mobile?",
+      a: "Absolutely! FixIt Hawassa is fully responsive and works perfectly on any smartphone browser. You can request services and chat on the go."
     }
   ];
 
-  const serviceQuestions = [
+  const clientBookingQuestions = [
     {
-      q: "Understanding request statuses",
-      a: "'Searching' means looking for a pro. 'Pending' means an invite was sent to you. 'In Progress' means you accepted the job. 'Completed' means the work is finished."
+      q: "How do I book a professional?",
+      a: "Search for a service like 'Plumbing', browse the recommended workers, and click 'Book Now' on a profile. You'll need to provide a short description and photos of the issue."
+    },
+    {
+      q: "What if the worker doesn't show up?",
+      a: "If a worker is a no-show, go to your 'Bookings' page and click 'Report'. Our support team will investigate and help you find a replacement professional."
+    },
+    {
+      q: "How do I pay the worker?",
+      a: "Currently, FixIt facilitates the connection. Payment is handled directly between you and the worker (Cash, Telebirr, etc.) once the work is completed and confirmed."
+    }
+  ];
+
+  const workerQuestions = [
+    {
+      q: "How to show as 'Available'?",
+      a: "On your Worker Hub, there is a large green toggle. When it's ON, you appear in search results. Turn it OFF if you are busy or on a break."
     },
     {
       q: "How to mark a job as completed?",
-      a: "Once you finish the physical work, go to your Worker Hub and click the 'Complete Job' button on that specific request. The client will then be notified to confirm and leave a review."
+      a: "Once you finish the work, go to your Worker Hub and click the 'Complete Job' button. The client will then be notified to confirm and leave a review."
     },
     {
-      q: "Messaging clients effectively",
-      a: "Always introduce yourself politely, confirm the appointment time, and ask for specific details about the location or the nature of the repair before you head out."
+      q: "Boosting my profile visibility",
+      a: "Complete your profile 100%, upload photos of your past work to the gallery, and ask satisfied clients to leave positive ratings."
     }
   ];
+
+  const isWorker = role === "worker";
+  const isClient = role === "client";
 
   return (
     <div className="min-h-full bg-[#f8faff] dark:bg-background-dark font-sans flex flex-col">
@@ -106,30 +131,43 @@ const HelpPage: React.FC = () => {
             Support Center
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-6">
-            How can we <span className="text-primary">help you</span> today?
+            How can we <span className="text-primary">help you</span>?
           </h1>
           <p className="text-lg sm:text-xl font-medium text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Find answers to common questions about the FixIt Hawassa platform or get in touch with our local support team.
+            {isWorker 
+              ? "Find answers to help you manage your professional presence and succeed as a worker in Hawassa." 
+              : "Find answers to help you find the best professionals and manage your service requests in Hawassa."}
           </p>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto w-full px-6 py-16 space-y-16">
-        {/* Quick Help Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <main className="max-w-7xl mx-auto w-full px-6 py-16 space-y-16">
+        {/* Role-Specific Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center max-w-5xl mx-auto">
+          {isClient && (
+            <HelpSection 
+              title="Booking & Services"
+              icon="shopping_cart"
+              iconColor="bg-blue-50 dark:bg-blue-900/20 text-blue-600"
+              description="Learn how to find professionals, book jobs, and manage your service history."
+              questions={clientBookingQuestions}
+            />
+          )}
+          {isWorker && (
+            <HelpSection 
+              title="Work & Reputation"
+              icon="construction"
+              iconColor="bg-green-50 dark:bg-green-900/20 text-green-600"
+              description="Manage your business, accept jobs, and grow your professional rating."
+              questions={workerQuestions}
+            />
+          )}
           <HelpSection 
-            title="Account & Profile"
-            icon="account_circle"
-            iconColor="bg-blue-50 dark:bg-blue-900/20 text-blue-600"
-            description="Manage your professional presence, security settings, and verification status in the Hawassa community."
+            title="Account & Safety"
+            icon="shield"
+            iconColor="bg-amber-50 dark:bg-amber-900/20 text-amber-600"
+            description="Details about your account security, privacy, and community guidelines."
             questions={accountQuestions}
-          />
-          <HelpSection 
-            title="Service Requests"
-            icon="construction"
-            iconColor="bg-green-50 dark:bg-green-900/20 text-green-600"
-            description="Guidelines on accepting invites, managing active jobs, and ensuring high-quality service delivery."
-            questions={serviceQuestions}
           />
         </div>
 
@@ -148,7 +186,7 @@ const HelpPage: React.FC = () => {
                 className="w-full sm:w-auto h-14 px-10 bg-primary hover:bg-primary-dark text-white rounded-2xl flex items-center justify-center gap-3 text-sm font-bold shadow-xl shadow-primary/30 transition-all active:scale-95"
               >
                 <span className="material-symbols-outlined">mail</span>
-                Send an Email
+                Email Support
               </a>
               <a 
                 href="tel:+251911111111"
@@ -161,22 +199,22 @@ const HelpPage: React.FC = () => {
           </div>
         </div>
 
-        {/* FAQ Section */}
+        {/* Community Standards (Shared) */}
         <div className="space-y-10">
-          <h2 className="text-3xl font-extrabold text-[#120e1b] dark:text-white text-center tracking-tight">General FAQ</h2>
+          <h2 className="text-3xl font-extrabold text-[#120e1b] dark:text-white text-center tracking-tight">Community Standards</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
-                q: "Is it free for workers?",
-                a: "Yes! Currently, joining FixIt and receiving requests in Hawassa is completely free for all verified professionals."
+                q: "Fair Pricing",
+                a: "Workers are encouraged to provide fair market rates. Clients should agree on pricing before the work starts to avoid disputes."
               },
               {
-                q: "How to get more jobs?",
-                a: "Complete your profile, upload a gallery of your best work, and maintain a fast response time to client messages."
+                q: "Respectful Behavior",
+                a: "Maintain professional communication at all times. Harassment or unprofessional conduct will lead to immediate account suspension."
               },
               {
-                q: "Client didn't confirm?",
-                a: "If you finished the work but the client hasn't clicked 'Confirm', contact support and we will verify the completion for you."
+                q: "Quality Guarantee",
+                a: "Workers should stand by their quality. Clients are encouraged to leave honest reviews to help maintain high standards in Hawassa."
               }
             ].map((faq, i) => (
               <div key={i} className="portal-panel rounded-3xl p-8 border border-gray-100 dark:border-gray-800 hover:border-primary/30 transition-colors">
