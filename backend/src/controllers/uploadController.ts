@@ -10,6 +10,8 @@ cloudinary.config({
   api_secret: env.cloudinary.apiSecret,
 });
 
+console.log("[upload] Cloudinary initialized with Cloud Name:", env.cloudinary.cloudName);
+
 // Use memory storage for Cloudinary uploads
 const storage = multer.memoryStorage();
 
