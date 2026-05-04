@@ -11,6 +11,7 @@ import {
   fetchClientRequests,
   submitWorkerReport,
   submitWorkerReview,
+  withdrawInvitation,
 } from "../services/clientRequests";
 import { getAuthToken } from "../services/auth";
 import { getUploadedImageUrl } from "../services/upload";
@@ -91,6 +92,7 @@ const MyRequestsPage: React.FC = () => {
   const [loadError, setLoadError] = useState("");
   const [requests, setRequests] = useState<RequestCard[]>([]);
   const [confirmingRequestId, setConfirmingRequestId] = useState("");
+  const [withdrawingRequestId, setWithdrawingRequestId] = useState("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedFeedbackRequest, setSelectedFeedbackRequest] =
@@ -191,6 +193,29 @@ const MyRequestsPage: React.FC = () => {
       toast.error(msg);
     } finally {
       setConfirmingRequestId("");
+    }
+  };
+
+  const handleWithdraw = async (requestId: string) => {
+    setWithdrawingRequestId(requestId);
+    setLoadError("");
+
+    try {
+      await withdrawInvitation(requestId);
+      await loadRequests();
+      toast.success("Invitation withdrawn successfully.");
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        navigate("/login");
+        return;
+      }
+
+      const msg =
+        error instanceof Error ? error.message : "Could not withdraw invitation.";
+      setLoadError(msg);
+      toast.error(msg);
+    } finally {
+      setWithdrawingRequestId("");
     }
   };
 
@@ -546,6 +571,14 @@ const MyRequestsPage: React.FC = () => {
                               }
                             },
                           ];
+
+                          if (req.apiStatus === "PENDING" && req.workerId) {
+                            base.push({
+                              label: withdrawingRequestId === req.id ? "Withdrawing..." : "Withdraw Invitation",
+                              onClick: () => void handleWithdraw(req.id),
+                              disabled: withdrawingRequestId === req.id,
+                            });
+                          }
 
                           if (req.apiStatus === "COMPLETED" && req.workerId) {
                             base.push(

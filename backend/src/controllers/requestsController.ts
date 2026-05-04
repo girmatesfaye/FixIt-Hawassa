@@ -493,6 +493,75 @@ export const assignWorker = async (req: Request, res: Response) => {
   }
 };
 
+export const withdrawInvitation = async (req: Request, res: Response) => {
+  const authenticatedUserId = (req as AuthenticatedRequest).userId;
+  const requestIdRaw = req.params.requestId;
+  const requestId = Array.isArray(requestIdRaw)
+    ? requestIdRaw[0]
+    : requestIdRaw;
+
+  if (
+    typeof authenticatedUserId !== "string" ||
+    !Types.ObjectId.isValid(authenticatedUserId)
+  ) {
+    return res.status(401).json({
+      message: "Unauthorized: valid user token required",
+    });
+  }
+
+  if (!Types.ObjectId.isValid(requestId)) {
+    return res.status(400).json({ message: "Invalid request ID" });
+  }
+
+  try {
+    const request = await ServiceRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (String(request.clientUserId) !== authenticatedUserId) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: request access denied" });
+    }
+
+    if (request.status !== "PENDING") {
+      return res.status(409).json({
+        message: "Only pending invitations can be withdrawn",
+      });
+    }
+
+    request.status = "SEARCHING";
+    request.lastDeclinedWorkerId = request.assignedWorkerId;
+    request.lastDeclinedAt = new Date();
+    request.assignedWorkerId = null;
+
+    await request.save();
+
+    const updatedRequest = await ServiceRequest.findById(request._id)
+      .populate("clientUserId", "fullName avatar")
+      .populate("assignedWorkerId", "fullName avatar")
+      .populate("lastDeclinedWorkerId", "fullName avatar")
+      .lean();
+
+    if (!updatedRequest) {
+      return res.status(500).json({
+        message: "Failed to load updated request",
+      });
+    }
+
+    return res.json({
+      message: "Invitation withdrawn",
+      request: mapRequestResponse(updatedRequest),
+    });
+  } catch (error) {
+    console.error("[requests] Failed to withdraw invitation", error);
+    return res.status(500).json({
+      message: "Failed to withdraw invitation",
+    });
+  }
+};
+
 export const workerResponse = async (req: Request, res: Response) => {
   const parsed = workerDecisionSchema.safeParse(req.body);
   if (!parsed.success) {

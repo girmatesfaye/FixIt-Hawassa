@@ -122,6 +122,39 @@ export const assignWorkerToRequest = async (
   return result.request;
 };
 
+export const withdrawInvitation = async (
+  requestId: string,
+): Promise<ClientRequestItem> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/requests/${requestId}/withdraw`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status === 401) {
+    clearSession();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+    request?: ClientRequestItem;
+  } | null;
+
+  if (!response.ok || !result?.request) {
+    throw new Error(result?.message ?? "WITHDRAW_FAILED");
+  }
+
+  return result.request;
+};
+
 export const respondToWorkerInvite = async (
   requestId: string,
   decision: "accept" | "decline",

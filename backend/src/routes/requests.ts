@@ -7,6 +7,7 @@ import {
   getMyRequests,
   workerComplete,
   workerResponse,
+  withdrawInvitation,
 } from "../controllers/requestsController";
 import { getCategories } from "../controllers/adminController";
 import { requireAuth, requireRole } from "../middleware/auth";
@@ -18,6 +19,7 @@ requestsRouter.get("/mine", requireAuth, getMyRequests);
 requestsRouter.get("/reports", requireAuth, getMyReports);
 requestsRouter.post("/", requireRole("client"), createRequest);
 requestsRouter.patch("/:requestId/assign", requireRole("client"), assignWorker);
+requestsRouter.patch("/:requestId/withdraw", requireRole("client"), withdrawInvitation);
 requestsRouter.patch(
   "/:requestId/worker-response",
   requireRole("worker"),
