@@ -398,8 +398,9 @@ const MyRequestsPage: React.FC = () => {
                 {filteredRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 group hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col group hover:shadow-md transition-shadow overflow-hidden"
                   >
+                    <div className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="flex items-center gap-5 flex-1">
                       <div
                         className={`size-14 rounded-2xl flex items-center justify-center ${
@@ -514,32 +515,6 @@ const MyRequestsPage: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Completion Alert Banner */}
-                    {req.apiStatus === "IN_PROGRESS" && req.workerMarkedCompleteAt && (
-                      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-900/30 rounded-2xl animate-in fade-in zoom-in duration-300">
-                        <div className="flex items-center gap-3">
-                          <div className="size-10 rounded-xl bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/20">
-                            <span className="material-symbols-outlined">done_all</span>
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-green-700 dark:text-green-400">
-                              Job Marked as Completed!
-                            </p>
-                            <p className="text-[10px] font-medium text-green-600/70 dark:text-green-500/50">
-                              The worker has finished the job. Please confirm to finalize.
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => void handleConfirmCompletion(req.id)}
-                          disabled={confirmingRequestId === req.id}
-                          className="h-10 px-6 bg-green-500 hover:bg-green-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
-                        >
-                          {confirmingRequestId === req.id ? "Confirming..." : "Confirm & Pay"}
-                        </button>
-                      </div>
-                    )}
-
                     <div className="flex justify-end">
                       <ActionMenu
                         actions={(() => {
@@ -618,6 +593,42 @@ const MyRequestsPage: React.FC = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Completion Alert Banner - Shown as Footer */}
+                  {req.apiStatus === "IN_PROGRESS" && req.workerMarkedCompleteAt && (
+                    <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-4 px-6 bg-green-50 dark:bg-green-500/10 border-t border-green-100 dark:border-green-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/20">
+                          <span className="material-symbols-outlined">done_all</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-green-700 dark:text-green-400">
+                            Job Marked as Completed!
+                          </p>
+                          <p className="text-[10px] font-medium text-green-600/70 dark:text-green-500/50">
+                            The worker has finished the job. Please confirm to finalize.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigate("/messages", { state: { requestId: req.id } })}
+                          className="h-10 px-4 bg-white dark:bg-surface-dark border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 flex items-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">chat</span>
+                          View Chat
+                        </button>
+                        <button
+                          onClick={() => void handleConfirmCompletion(req.id)}
+                          disabled={confirmingRequestId === req.id}
+                          className="h-10 px-6 bg-green-500 hover:bg-green-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {confirmingRequestId === req.id ? "Confirming..." : "Confirm & Pay"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 ))}
                 {filteredRequests.length === 0 && (
                   <div className="py-20 flex flex-col items-center gap-4 text-center">

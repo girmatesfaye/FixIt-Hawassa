@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { Report, Review, ServiceRequest, User, WorkerProfile } from "../models";
+import { Message, Report, Review, ServiceRequest, User, WorkerProfile } from "../models";
 import { sendNewRequestEmail, sendBookingAcceptedEmail } from "../services/emailService";
 
 type AuthenticatedRequest = Request & {
@@ -715,6 +715,13 @@ export const workerComplete = async (req: Request, res: Response) => {
 
     request.workerMarkedCompleteAt = new Date();
     await request.save();
+
+    await Message.create({
+      requestId: request._id,
+      senderId: request.assignedWorkerId,
+      text: "✅ I have marked this job as Complete. Please review the work and confirm completion to finalize.",
+      isRead: false,
+    });
 
     const updatedRequest = await ServiceRequest.findById(request._id)
       .populate("clientUserId", "fullName avatar")
