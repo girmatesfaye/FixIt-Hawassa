@@ -398,7 +398,7 @@ const MyRequestsPage: React.FC = () => {
                 {filteredRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col group hover:shadow-md transition-shadow overflow-hidden"
+                    className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col group hover:shadow-md transition-shadow"
                   >
                     <div className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="flex items-center gap-5 flex-1">
