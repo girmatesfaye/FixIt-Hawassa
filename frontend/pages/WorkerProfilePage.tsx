@@ -897,7 +897,7 @@ const WorkerProfilePage: React.FC = () => {
 
       <footer className="bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 py-10 mt-12 text-center">
         <p className="text-sm text-gray-400 font-medium">
-          © 2024 FixIt Hawassa.
+          © 2026 FixIt Hawassa.
         </p>
       </footer>
     </div>
