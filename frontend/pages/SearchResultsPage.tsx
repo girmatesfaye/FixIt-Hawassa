@@ -46,6 +46,7 @@ const SearchResultsPage: React.FC = () => {
     "recommended",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const requestDraft = useMemo((): RequestDraft | null => {
     const fromState = (location.state as { requestDraft?: RequestDraft } | null)
@@ -386,9 +387,20 @@ const SearchResultsPage: React.FC = () => {
     <div className="w-full flex flex-col">
 
 
-      <div className="flex-1 flex max-w-[1440px] mx-auto w-full p-6 gap-8">
+      <div className="flex-1 flex max-w-[1440px] mx-auto w-full p-4 sm:p-6 gap-8">
+        {/* Mobile Filter Overlay */}
+        {isMobileFilterOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[60] lg:hidden backdrop-blur-sm"
+            onClick={() => setIsMobileFilterOpen(false)}
+          />
+        )}
+
         {/* Sidebar Filters */}
-        <aside className="w-64 shrink-0 hidden lg:flex flex-col gap-8">
+        <aside className={`
+          fixed inset-y-0 left-0 z-[70] w-72 bg-white dark:bg-surface-dark p-6 border-r border-gray-100 dark:border-gray-800 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:w-64 lg:bg-transparent lg:dark:bg-transparent lg:border-none lg:p-0 flex flex-col gap-8 shrink-0 overflow-y-auto
+          ${isMobileFilterOpen ? "translate-x-0" : "-translate-x-full"}
+        `}>
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold tracking-tight text-[#120e1b] dark:text-white">
@@ -480,17 +492,24 @@ const SearchResultsPage: React.FC = () => {
               </label>
             </div>
           </div>
+          <button
+            onClick={() => setIsMobileFilterOpen(false)}
+            className="lg:hidden mt-4 w-full h-11 bg-primary text-white rounded-xl font-bold text-sm"
+          >
+            Apply Filters
+          </button>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col gap-6">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white tracking-tight">
-              Available Workers
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Choose a verified worker near you.
-            </p>
+        <main className="flex-1 flex flex-col gap-6 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div className="space-y-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#120e1b] dark:text-white tracking-tight">
+                Available Workers
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                Choose a verified worker near you.
+              </p>
             {requestDraft ? (
               <p className="text-xs text-primary font-semibold">
                 {requestDraft.category} in {requestDraft.area}
@@ -532,6 +551,14 @@ const SearchResultsPage: React.FC = () => {
                 {inviteError}
               </p>
             ) : null}
+            </div>
+            <button
+              onClick={() => setIsMobileFilterOpen(true)}
+              className="lg:hidden h-10 px-4 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2 shrink-0 hover:border-primary hover:text-primary transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+              Filters
+            </button>
           </div>
 
           {isLoading ? (
