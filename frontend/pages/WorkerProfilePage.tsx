@@ -358,12 +358,12 @@ const WorkerProfilePage: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
-          {/* Left Column */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+          {/* Left Column */
           <div className="flex-grow flex flex-col gap-6">
-            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-8">
               <div className="relative shrink-0">
-                <div className="size-40 rounded-full border-4 border-white dark:border-gray-700 shadow-lg overflow-hidden">
+                <div className="size-28 sm:size-40 rounded-full border-4 border-white dark:border-gray-700 shadow-lg overflow-hidden">
                   <img
                     src={worker.avatar}
                     alt={worker.name}
@@ -381,7 +381,7 @@ const WorkerProfilePage: React.FC = () => {
                       {worker.name}
                     </h1>
                   </div>
-                  <div className="inline-flex items-center gap-3 ml-2">
+                  <div className="inline-flex items-center gap-3 sm:ml-2">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                       {worker.isAvailable ? "Available" : "Unavailable"}
                     </span>
@@ -434,7 +434,7 @@ const WorkerProfilePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
               <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-6">
                 About Me
               </h3>
@@ -444,8 +444,8 @@ const WorkerProfilePage: React.FC = () => {
             </div>
 
             {/* Portfolio Section */}
-            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
                 <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white">
                   Proof of Work
                 </h3>
@@ -494,7 +494,7 @@ const WorkerProfilePage: React.FC = () => {
               )}
             </div>
 
-            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
               <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-8">
                 Recent Reviews
               </h3>
@@ -527,7 +527,7 @@ const WorkerProfilePage: React.FC = () => {
 
           {/* Right Sidebar */}
           <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-6">
-            <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800 lg:sticky lg:top-24">
               <h3 className="text-xl font-extrabold tracking-tight text-[#120e1b] dark:text-white mb-6">
                 Contact {worker.name.split(" ")[0]}
               </h3>

@@ -400,10 +400,10 @@ const MyRequestsPage: React.FC = () => {
                     key={req.id}
                     className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col group hover:shadow-md transition-shadow"
                   >
-                    <div className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="flex items-center gap-5 flex-1">
+                    <div className="p-4 sm:p-6 flex flex-col gap-4">
+                    <div className="flex items-start gap-3 sm:gap-5">
                       <div
-                        className={`size-14 rounded-2xl flex items-center justify-center ${
+                        className={`size-11 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 ${
                           req.category === "Plumbing"
                             ? "bg-blue-50 text-blue-600"
                             : req.category === "Electrical"
@@ -413,7 +413,7 @@ const MyRequestsPage: React.FC = () => {
                                 : "bg-green-50 text-green-600"
                         } dark:bg-opacity-10`}
                       >
-                        <span className="material-symbols-outlined text-3xl">
+                        <span className="material-symbols-outlined text-2xl sm:text-3xl">
                           {req.category === "Plumbing"
                             ? "plumbing"
                             : req.category === "Electrical"
@@ -423,13 +423,13 @@ const MyRequestsPage: React.FC = () => {
                                 : "carpenter"}
                         </span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="text-lg font-bold text-[#120e1b] dark:text-white">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h4 className="text-base sm:text-lg font-bold text-[#120e1b] dark:text-white truncate">
                             {req.title}
                           </h4>
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${
                               req.status === RequestStatus.IN_PROGRESS
                                 ? "bg-blue-100 text-blue-700"
                                 : req.status === RequestStatus.SEARCHING
@@ -442,7 +442,7 @@ const MyRequestsPage: React.FC = () => {
                             {req.status}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
+                        <div className="flex items-center gap-3 sm:gap-4 text-xs font-bold text-gray-400">
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-[16px]">
                               calendar_today
@@ -459,7 +459,7 @@ const MyRequestsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center flex-wrap gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-50 dark:border-gray-800">
+                    <div className="flex items-center flex-wrap gap-3 w-full pt-3 border-t border-gray-50 dark:border-gray-800">
                       {req.worker ? (
                         <div 
                           className="flex items-center gap-3 mr-4 cursor-pointer hover:opacity-80 transition-opacity"
@@ -515,7 +515,7 @@ const MyRequestsPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end ml-auto">
                       <ActionMenu
                         actions={(() => {
                           const base = [
@@ -593,10 +593,11 @@ const MyRequestsPage: React.FC = () => {
                       />
                     </div>
                   </div>
+                  </div>
 
                   {/* Completion Alert Banner - Shown as Footer */}
                   {req.apiStatus === "IN_PROGRESS" && req.workerMarkedCompleteAt && (
-                    <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-4 px-6 bg-green-50 dark:bg-green-500/10 border-t border-green-100 dark:border-green-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3 px-4 sm:p-4 sm:px-6 bg-green-50 dark:bg-green-500/10 border-t border-green-100 dark:border-green-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
                       <div className="flex items-center gap-3">
                         <div className="size-10 rounded-xl bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/20">
                           <span className="material-symbols-outlined">done_all</span>

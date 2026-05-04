@@ -319,34 +319,34 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
         </div>
 
         <div className="max-w-6xl mx-auto p-6 sm:p-10 flex flex-col gap-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             {/* Availability Toggle */}
             <div
-              className={`rounded-3xl p-6 border-2 transition-all flex items-center justify-between shadow-sm ${
+              className={`rounded-3xl p-4 sm:p-6 border-2 transition-all flex items-center justify-between gap-3 shadow-sm ${
                 isAvailable
                   ? "bg-green-50 border-green-100 dark:bg-green-950/20 dark:border-green-900"
                   : "bg-gray-50 border-gray-100 dark:bg-gray-900 dark:border-gray-800"
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <div
-                  className={`size-12 rounded-2xl flex items-center justify-center transition-colors ${
+                  className={`size-10 sm:size-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
                     isAvailable
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-500"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-2xl">
+                  <span className="material-symbols-outlined text-xl sm:text-2xl">
                     sensors
                   </span>
                 </div>
-                <div className="flex flex-col">
-                  <h3 className="text-base font-extrabold tracking-tight dark:text-white">
+                <div className="flex flex-col min-w-0">
+                  <h3 className="text-sm sm:text-base font-extrabold tracking-tight dark:text-white truncate">
                     {isAvailable
                       ? "You are visible to clients"
                       : "Your profile is hidden"}
                   </h3>
-                  <p className="text-[11px] font-bold text-gray-500 mt-0.5">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-gray-500 mt-0.5 line-clamp-2">
                     {isAvailable
                       ? "Clients can call or message you for physical work."
                       : "Turn this on to appear in Hawassa search results."}
@@ -377,7 +377,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
             </div>
 
             {/* Worker Reputation (Moved to top) */}
-            <div className="portal-panel rounded-3xl p-6 flex items-center justify-between">
+            <div className="portal-panel rounded-3xl p-4 sm:p-6 flex items-center justify-between">
               <div className="flex flex-col">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
                   Worker Reputation
@@ -401,25 +401,25 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           </div>
 
           {!isProfileComplete && (
-            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900 rounded-3xl p-8 flex items-center justify-between gap-6">
-              <div className="flex items-center gap-5">
-                <div className="size-14 rounded-full bg-amber-100 dark:bg-amber-800 flex items-center justify-center text-amber-600">
-                  <span className="material-symbols-outlined text-3xl">
+            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900 rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+              <div className="flex items-center gap-4 sm:gap-5">
+                <div className="size-12 sm:size-14 rounded-full bg-amber-100 dark:bg-amber-800 flex items-center justify-center text-amber-600 shrink-0">
+                  <span className="material-symbols-outlined text-2xl sm:text-3xl">
                     add_a_photo
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-lg font-extrabold tracking-tight text-amber-900 dark:text-amber-100">
+                  <h4 className="text-base sm:text-lg font-extrabold tracking-tight text-amber-900 dark:text-amber-100">
                     Boost your profile visibility
                   </h4>
-                  <p className="text-sm font-bold text-amber-700 mt-1">
+                  <p className="text-xs sm:text-sm font-bold text-amber-700 mt-1">
                     Complete your profile to be recommended to more clients in Hawassa.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => navigate("/worker/edit-profile")}
-                className="h-11 px-8 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20"
+                className="h-10 sm:h-11 px-6 sm:px-8 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20 w-full sm:w-auto shrink-0"
               >
                 Upload Photos
               </button>
@@ -653,18 +653,18 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               {/* Profile Overview */}
-              <div className="portal-panel rounded-3xl p-8">
-                <div className="flex items-start gap-8 mb-8">
-                  <div className="size-24 rounded-3xl overflow-hidden shadow-lg border-2 border-white dark:border-gray-700">
+              <div className="portal-panel rounded-3xl p-5 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-8 mb-8">
+                  <div className="size-20 sm:size-24 rounded-3xl overflow-hidden shadow-lg border-2 border-white dark:border-gray-700 shrink-0">
                     <img
                       src={profileAvatar}
                       alt={workerName}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-2xl font-extrabold tracking-tight dark:text-white">
+                  <div className="flex-1 text-center sm:text-left">
+                    <div className="flex items-center justify-center sm:justify-start gap-3 mb-1">
+                      <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight dark:text-white">
                         {workerName}
                       </h2>
                       <span className="material-symbols-outlined text-primary fill-current text-[24px]">

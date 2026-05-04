@@ -260,13 +260,13 @@ const EditWorkerProfilePage: React.FC = () => {
   return (
     <div className="min-h-full bg-white dark:bg-background-dark font-sans flex flex-col">
       {/* Action Bar */}
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-[#120e1b] dark:text-white">
+            <h1 className="text-lg sm:text-xl font-bold text-[#120e1b] dark:text-white">
               Edit Profile
             </h1>
-            <p className="text-xs font-medium text-gray-500">
+            <p className="text-xs font-medium text-gray-500 hidden sm:block">
               Update your presence in Hawassa.
             </p>
           </div>
@@ -274,15 +274,15 @@ const EditWorkerProfilePage: React.FC = () => {
             <button
               onClick={handleSave}
               disabled={isSaving || isLoading}
-              className="px-6 h-10 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+              className="px-4 sm:px-6 h-9 sm:h-10 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 shrink-0"
             >
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-6 py-8">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
 
 
 
@@ -580,7 +580,7 @@ const EditWorkerProfilePage: React.FC = () => {
                           e.preventDefault();
                           setPortfolio(portfolio.filter((_, i) => i !== index));
                         }}
-                        className="absolute top-2 right-2 size-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                        className="absolute top-2 right-2 size-8 bg-black/50 text-white rounded-full flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-500"
                       >
                         <span className="material-symbols-outlined text-sm">
                           delete

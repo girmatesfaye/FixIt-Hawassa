@@ -17,7 +17,7 @@ const MessagesPage: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [me, setMe] = useState<any>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
   const currentRole = getStoredRole();
   const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
   const requestedThreadId =
@@ -338,7 +338,7 @@ const MessagesPage: React.FC = () => {
               </header>
 
               {/* Messages List */}
-              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
                 {messages.map((msg) => {
                   const sender = typeof msg.senderId === "object" ? msg.senderId : null;
                   const senderId = sender?._id || msg.senderId;
@@ -408,8 +408,17 @@ const MessagesPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
-              Select a conversation to start messaging
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 px-6 text-center">
+              <div className="size-16 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-gray-300">chat_bubble_outline</span>
+              </div>
+              <p className="text-sm font-medium">Select a conversation to start messaging</p>
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="lg:hidden h-10 px-6 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+              >
+                View Conversations
+              </button>
             </div>
           )}
         </section>

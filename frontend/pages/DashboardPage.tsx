@@ -397,9 +397,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   ).length;
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
 
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-6 sm:gap-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Hero / Greeting */}
               <div className="flex flex-col justify-between gap-6 portal-panel p-6 sm:p-8 relative overflow-hidden">
@@ -513,7 +513,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                   View All
                 </Link>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-5">
                 {(() => {
                   const defaultCategories = [
                     { id: "default-1", name: "Plumbing", icon: "plumbing" },
@@ -548,7 +548,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                     <button
                       key={svc.id || svc.name}
                       onClick={() => handleServiceClick(svc.name)}
-                      className="group flex flex-col items-center text-center gap-4 p-5 rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                      className="group flex flex-col items-center text-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                     >
                       <div
                         className={`size-14 rounded-2xl ${color} flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform shadow-sm`}
