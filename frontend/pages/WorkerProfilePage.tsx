@@ -359,7 +359,7 @@ const WorkerProfilePage: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
-          {/* Left Column */
+          {/* Left Column */}
           <div className="flex-grow flex flex-col gap-6">
             <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-8">
               <div className="relative shrink-0">

@@ -341,7 +341,7 @@ const MyRequestsPage: React.FC = () => {
   };
 
   return (
-    <main className="flex-1 max-w-[1000px] mx-auto w-full px-4 py-10">
+    <main className="flex-1 max-w-[1000px] mx-auto w-full px-4 py-6 sm:py-10">
       <div className="flex flex-col gap-8">
 
           <div>
@@ -354,18 +354,18 @@ const MyRequestsPage: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl w-fit">
+          <div className="flex gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl w-full sm:w-fit">
             <button
               onClick={() => setActiveTab("Active")}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "Active" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
+              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "Active" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
             >
-              Active Requests
+              Active
             </button>
             <button
               onClick={() => setActiveTab("History")}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "History" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
+              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "History" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
             >
-              Order History
+              History
             </button>
           </div>
 

@@ -141,7 +141,7 @@ const HelpPage: React.FC = () => {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-6 py-16 space-y-16">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-16 space-y-10 sm:space-y-16">
         {/* Role-Specific Sections */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center max-w-5xl mx-auto">
           {isClient && (
@@ -172,7 +172,7 @@ const HelpPage: React.FC = () => {
         </div>
 
         {/* Contact Support */}
-        <div className="bg-[#120e1b] dark:bg-primary/10 rounded-[3rem] p-10 sm:p-16 text-center relative overflow-hidden shadow-2xl">
+        <div className="bg-[#120e1b] dark:bg-primary/10 rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-center relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
           
           <div className="relative z-10">
