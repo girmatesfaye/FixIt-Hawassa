@@ -482,35 +482,12 @@ const MyRequestsPage: React.FC = () => {
                         </div>
                       ) : (
                         <div className="mr-8">
-                          {req.lastDeclinedWorker &&
-                          req.status === RequestStatus.SEARCHING ? (
-                            <div>
-                              <p className="text-[10px] font-semibold text-red-600 uppercase tracking-widest flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[14px]">
-                                  warning
-                                </span>
-                                Last invite declined
-                              </p>
-                              <p className="text-xs font-semibold text-gray-500 mt-1">
-                                {req.lastDeclinedWorker} declined. Find another pro?
-                              </p>
-                              <Link 
-                                to="/search-results" 
-                                state={{ category: req.category }}
-                                className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
-                              >
-                                View Recommended Pros
-                                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                              </Link>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[14px] animate-pulse">
-                                info
-                              </span>
-                              Searching for pros
-                            </p>
-                          )}
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] animate-pulse">
+                              info
+                            </span>
+                            Searching for pros
+                          </p>
                         </div>
                       )}
                     </div>

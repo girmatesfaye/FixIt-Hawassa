@@ -386,6 +386,14 @@ export const getRecommendationsForRequest = async (
     });
   }
 
+  // Hide the worker who declined this specific request from recommendations
+  if (request.lastDeclinedWorkerId) {
+    const declinedWorkerIdStr = String(request.lastDeclinedWorkerId);
+    snapshotRecommendations = snapshotRecommendations.filter(
+      (rec) => String(rec.id) !== declinedWorkerIdStr
+    );
+  }
+
   const paginated = paginateRecommendations(
     snapshotRecommendations,
     page,
