@@ -227,7 +227,7 @@ export const getUsers = async (_req: Request, res: Response) => {
   try {
     const [users, reportCounts, workerProfiles] = await Promise.all([
       User.find()
-        .select("fullName role status phone area createdAt")
+        .select("fullName role status phone area createdAt avatar")
         .sort({ createdAt: -1 })
         .lean(),
       Report.aggregate([
@@ -260,6 +260,7 @@ export const getUsers = async (_req: Request, res: Response) => {
       phone: user.phone,
       area: user.area,
       createdAt: user.createdAt,
+      avatar: user.avatar,
       reportCount: reportsByUser.get(String(user._id)) ?? 0,
       workerProfile: workerProfileByUserId.get(String(user._id)) ?? null,
     }));
@@ -399,7 +400,7 @@ export const getUserById = async (req: Request, res: Response) => {
     }
 
     const user = await User.findById(req.params.id)
-      .select("fullName role status phone area isVerified createdAt")
+      .select("fullName role status phone area isVerified createdAt avatar")
       .lean();
 
     if (!user) {
@@ -425,6 +426,7 @@ export const getUserById = async (req: Request, res: Response) => {
         area: user.area,
         isVerified: user.isVerified,
         createdAt: user.createdAt,
+        avatar: user.avatar,
         reportCount,
         reportedAgainstCount,
         workerProfile,
@@ -500,6 +502,7 @@ export const updateUser = async (req: Request, res: Response) => {
         area: user.area,
         isVerified: user.isVerified,
         createdAt: user.createdAt,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
@@ -560,6 +563,7 @@ export const updateUserStatus = async (req: Request, res: Response) => {
         area: user.area,
         isVerified: user.isVerified,
         createdAt: user.createdAt,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
