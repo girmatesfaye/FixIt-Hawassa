@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { saveSession } from "../services/auth";
+import AuthVisual from "../components/AuthVisual";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -190,39 +191,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       </div>
 
       {/* Right Column: Visual Section */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-[#40513b]">
-        <img
-          alt="FixIt Hawassa"
-          className="absolute inset-0 w-full h-full object-cover opacity-60"
-          src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070&auto=format&fit=crop"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#40513b] via-transparent to-transparent"></div>
-        <div className="absolute inset-0 flex flex-col justify-end p-20 text-white">
-          <div className="max-w-xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-              <span className="size-2 rounded-full bg-primary animate-pulse"></span>
-              <span className="text-xs font-black uppercase tracking-widest">Available in Hawassa</span>
-            </div>
-            <h2 className="text-5xl font-black leading-[1.1] tracking-tight">
-              Quality service, <br/>whenever you need it.
-            </h2>
-            <p className="text-lg font-medium text-white/80 leading-relaxed max-w-md">
-              Connecting you with the most reliable professionals in the city for plumbing, electrical, cleaning, and more.
-            </p>
-            <div className="pt-10 flex items-center gap-10">
-              <div className="flex flex-col gap-1">
-                <span className="text-3xl font-black">500+</span>
-                <span className="text-[10px] uppercase font-black tracking-widest text-white/50">Verified Pros</span>
-              </div>
-              <div className="w-px h-10 bg-white/20"></div>
-              <div className="flex flex-col gap-1">
-                <span className="text-3xl font-black">2.4k</span>
-                <span className="text-[10px] uppercase font-black tracking-widest text-white/50">Completed Tasks</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AuthVisual />
     </div>
   );
 };

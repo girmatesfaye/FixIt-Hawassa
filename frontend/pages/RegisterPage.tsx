@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { saveSession } from "../services/auth";
 import toast from "react-hot-toast";
+import AuthVisual from "../components/AuthVisual";
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -396,34 +397,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
       </div>
 
       {/* Right Column: Visual Section */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-[#40513b]">
-        <img
-          alt="Community"
-          className="absolute inset-0 w-full h-full object-cover opacity-60"
-          src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1974&auto=format&fit=crop"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#40513b] via-transparent to-transparent"></div>
-        <div className="absolute inset-0 flex flex-col justify-end p-20 text-white">
-          <div className="max-w-xl space-y-6">
-            <h2 className="text-5xl font-black leading-[1.1] tracking-tight">
-              Build your career, <br/>serve your city.
-            </h2>
-            <p className="text-lg font-medium text-white/80 leading-relaxed max-w-md">
-              Whether you are looking for work or looking for help, FixIt is the bridge that connects you to the best of Hawassa.
-            </p>
-            <div className="pt-10 grid grid-cols-2 gap-10">
-              <div className="flex flex-col gap-1">
-                <span className="text-3xl font-black">100%</span>
-                <span className="text-[10px] uppercase font-black tracking-widest text-white/50">Verified Users</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-3xl font-black">Free</span>
-                <span className="text-[10px] uppercase font-black tracking-widest text-white/50">To Get Started</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AuthVisual />
     </div>
   );
 };
