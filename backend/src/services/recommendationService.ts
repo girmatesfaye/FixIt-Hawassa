@@ -43,11 +43,7 @@ export const rankWorkers = (
   const filtered = workers.filter((w) => {
     const passRating = w.rating >= minRating;
     const passActive = onlyActive ? w.isActive : true;
-    
-    if (!passRating || !passActive) {
-      console.log(`[ranking] Worker ${w.name} filtered out. Rating(${w.rating} >= ${minRating}): ${passRating}, Active(${w.isActive}): ${passActive}`);
-    }
-    
+
     return passRating && passActive;
   });
 
@@ -64,20 +60,9 @@ export const rankWorkers = (
         ? w.skills.some((skill) => {
             const s = skill.toLowerCase().trim();
             const c = request.category.toLowerCase().trim();
-            const isMatch = s.includes(c) || c.includes(s);
-            if (isMatch) {
-              console.log(`[ranking] MATCH FOUND: Worker ${w.name} Skill "${s}" matches Category "${c}"`);
-            } else {
-              // Only log non-matches if we are debugging a specific worker
-              // console.log(`[ranking] No match: Worker ${w.name} Skill "${s}" vs Category "${c}"`);
-            }
-            return isMatch;
+            return s.includes(c) || c.includes(s);
           })
         : false;
-        
-      if (!categoryMatch && request) {
-         console.log(`[ranking] NO CATEGORY MATCH for ${w.name}. RequestCat: "${request.category.toLowerCase().trim()}", WorkerSkills: [${w.skills.map(s => `"${s.toLowerCase().trim()}"`).join(", ")}]`);
-      }
 
       const areaMatch = request && w.area && request.area
         ? w.area.toLowerCase().trim() === request.area.toLowerCase().trim()
@@ -94,8 +79,6 @@ export const rankWorkers = (
         (w.rating * 1.0) +              // Quality (Increased weight)
         (w.completionRate * 1.5) +      // Reliability
         (reviewScore * 0.5);            // Popularity
-
-      console.log(`[ranking] Worker: ${w.name}, CatMatch: ${categoryMatch}, AreaMatch: ${areaMatch}, Score: ${score.toFixed(2)}`);
 
       return {
         ...w,

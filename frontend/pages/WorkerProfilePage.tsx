@@ -176,7 +176,6 @@ const WorkerProfilePage: React.FC = () => {
         setWorker({
           id: workerData.id,
           name: workerData.name,
-          avatar: profileAvatar || fallbackAvatar,
           title: profile?.title || profile?.skills?.[0] || "",
           skills: Array.isArray(profile?.skills)
             ? profile.skills.filter(Boolean)

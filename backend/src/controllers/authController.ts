@@ -17,7 +17,7 @@ const registerSchema = z.object({
   fullName: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.string().optional(),
+  role: z.enum(["client", "worker", "admin"]).optional(),
   area: z.string().optional(),
   location: z.string().optional(),
   nationalId: z.string().optional(),

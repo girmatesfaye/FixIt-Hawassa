@@ -72,11 +72,25 @@ const CategoryManagementPage: React.FC = () => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
+
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   const PAGE_SIZE = 8;
 
-  const totalPages = Math.max(1, Math.ceil(categories.length / PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCategories.length / PAGE_SIZE),
+  );
 
-  const paginated = categories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paginated = filteredCategories.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
 
   const openEditModal = (cat: any) => {
     setEditCategoryId(cat.id);
@@ -200,21 +214,17 @@ const CategoryManagementPage: React.FC = () => {
     }
   };
 
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-[#120e1b]">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-lg sm:text-xl font-semibold text-[#120e1b]">
           Category Management
         </h1>
       </div>
 
       {/* Filter & Add Bar */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center">
+        <div className="relative flex-1 min-w-0">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
             search
           </span>
@@ -226,7 +236,7 @@ const CategoryManagementPage: React.FC = () => {
             className="w-full h-11 pl-10 pr-4 bg-gray-50 border-none rounded-xl text-sm focus:ring-1 focus:ring-primary"
           />
         </div>
-        <button className="h-11 px-6 rounded-xl border border-gray-200 flex items-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        <button className="h-11 w-full lg:w-auto px-4 sm:px-6 rounded-xl border border-gray-200 flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors shrink-0">
           <span className="material-symbols-outlined text-[18px]">
             filter_list
           </span>
@@ -234,7 +244,7 @@ const CategoryManagementPage: React.FC = () => {
         </button>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="h-11 px-6 bg-primary text-white rounded-xl flex items-center gap-2 text-sm font-medium hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+          className="h-11 w-full lg:w-auto px-4 sm:px-6 bg-primary text-white rounded-xl flex items-center justify-center gap-2 text-sm font-medium hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 shrink-0"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           Add New Category
@@ -242,13 +252,13 @@ const CategoryManagementPage: React.FC = () => {
       </div>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
         {paginated.map((category) => (
           <div
             key={category.id}
-            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all group"
+            className="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all group"
           >
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-5 sm:gap-6">
               <div
                 className={`size-12 rounded-xl ${category.iconBg} flex items-center justify-center`}
               >
@@ -269,79 +279,89 @@ const CategoryManagementPage: React.FC = () => {
               <div className="h-px bg-gray-50"></div>
 
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span className="material-symbols-outlined text-gray-400 text-lg">
                     engineering
                   </span>
-                  <span className="text-xs font-medium text-gray-600 whitespace-nowrap">
+                  <span className="text-xs font-medium text-gray-600 truncate">
                     {category.workers} Workers
                   </span>
                 </div>
-                <div className="flex items-center justify-end gap-2">
-                  <span
-                    className={`text-[10px] font-semibold uppercase tracking-wide ${
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center justify-between gap-3 sm:justify-start">
+                    <span
+                      className={`text-[10px] font-semibold uppercase tracking-wide ${
                       category.status === "Active"
                         ? "text-green-600"
                         : "text-gray-500"
-                    }`}
-                  >
-                    {category.status === "Active" ? "On" : "Off"}
-                  </span>
-                  <button
-                    onClick={() =>
-                      handleToggleStatus(
-                        category.id,
-                        category.status === "Active",
-                      )
-                    }
-                    role="switch"
-                    aria-checked={category.status === "Active"}
-                    aria-label={`Set ${category.name} ${category.status === "Active" ? "inactive" : "active"}`}
-                    title={category.status}
-                    className={`relative h-6 w-11 rounded-full border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                      category.status === "Active"
-                        ? "bg-emerald-500 border-emerald-500 shadow-sm shadow-emerald-500/30"
-                        : "bg-gray-200 border-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 flex items-center justify-center ${
+                      }`}
+                    >
+                      {category.status === "Active" ? "On" : "Off"}
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleToggleStatus(
+                          category.id,
+                          category.status === "Active",
+                        )
+                      }
+                      role="switch"
+                      aria-checked={category.status === "Active"}
+                      aria-label={`Set ${category.name} ${category.status === "Active" ? "inactive" : "active"}`}
+                      title={category.status}
+                      className={`relative h-6 w-11 rounded-full border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 shrink-0 ${
                         category.status === "Active"
-                          ? "translate-x-5"
-                          : "translate-x-0.5"
+                          ? "bg-emerald-500 border-emerald-500 shadow-sm shadow-emerald-500/30"
+                          : "bg-gray-200 border-gray-300"
                       }`}
                     >
                       <span
-                        className={`material-symbols-outlined text-[11px] ${
+                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 flex items-center justify-center ${
                           category.status === "Active"
-                            ? "text-emerald-600"
-                            : "text-gray-400"
+                            ? "translate-x-5"
+                            : "translate-x-0.5"
                         }`}
                       >
-                        {category.status === "Active" ? "check" : "close"}
+                        <span
+                          className={`material-symbols-outlined text-[11px] ${
+                            category.status === "Active"
+                              ? "text-emerald-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {category.status === "Active" ? "check" : "close"}
+                        </span>
                       </span>
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => openEditModal(category)}
-                    title="Edit category"
-                    aria-label={`Edit ${category.name}`}
-                    className="size-8 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      edit
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => openDeleteModal(category.id, category.name)}
-                    title="Delete category"
-                    aria-label={`Delete ${category.name}`}
-                    className="size-8 rounded-md border border-red-100 text-red-600 hover:bg-red-50 flex items-center justify-center"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      delete
-                    </span>
-                  </button>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
+                    <button
+                      onClick={() => openEditModal(category)}
+                      title="Edit category"
+                      aria-label={`Edit ${category.name}`}
+                      className="h-9 px-3 sm:size-8 sm:px-0 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        edit
+                      </span>
+                      <span className="text-[11px] font-semibold sm:hidden">
+                        Edit
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => openDeleteModal(category.id, category.name)}
+                      title="Delete category"
+                      aria-label={`Delete ${category.name}`}
+                      className="h-9 px-3 sm:size-8 sm:px-0 rounded-md border border-red-100 text-red-600 hover:bg-red-50 flex items-center justify-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        delete
+                      </span>
+                      <span className="text-[11px] font-semibold sm:hidden">
+                        Delete
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -385,13 +405,13 @@ const CategoryManagementPage: React.FC = () => {
             <label className="text-sm font-bold text-[#120e1b] dark:text-white">
               Category Icon
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {CATEGORY_ICON_OPTIONS.map((item) => (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => setNewIcon(item.value)}
-                  className={`h-12 px-3 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-colors ${
+                  className={`min-h-12 px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-colors text-left ${
                     newIcon === item.value
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -404,7 +424,7 @@ const CategoryManagementPage: React.FC = () => {
                 </button>
               ))}
             </div>
-            <div className="h-12 px-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+            <div className="min-h-12 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
               <span className="text-xs font-semibold text-gray-500">Preview:</span>
               <div className="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px]">
@@ -414,7 +434,7 @@ const CategoryManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4">
             <button
               onClick={() => setIsAddModalOpen(false)}
               className="flex-1 h-12 rounded-xl border border-gray-200 dark:border-gray-700 font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
@@ -458,13 +478,13 @@ const CategoryManagementPage: React.FC = () => {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-[#120e1b]">Icon</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {CATEGORY_ICON_OPTIONS.map((item) => (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => setEditIcon(item.value)}
-                  className={`h-10 px-3 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-colors ${
+                  className={`min-h-10 px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-colors text-left ${
                     editIcon === item.value
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -478,7 +498,7 @@ const CategoryManagementPage: React.FC = () => {
               ))}
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
             <button
               onClick={() => setIsEditModalOpen(false)}
               className="flex-1 h-12 rounded-xl border border-gray-200 font-bold text-gray-500"
@@ -511,7 +531,7 @@ const CategoryManagementPage: React.FC = () => {
             </span>
             ? This action cannot be undone.
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
             <button
               onClick={() => {
                 setIsDeleteModalOpen(false);
@@ -532,17 +552,17 @@ const CategoryManagementPage: React.FC = () => {
       </Modal>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-gray-200 pt-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 pt-6">
         <p className="text-xs font-medium text-gray-500 tracking-wider">
           Showing{" "}
           <span className="text-[#120e1b]">{(page - 1) * PAGE_SIZE + 1}</span> -{" "}
           <span className="text-[#120e1b]">
-            {Math.min(page * PAGE_SIZE, categories.length)}
+            {Math.min(page * PAGE_SIZE, filteredCategories.length)}
           </span>{" "}
-          of <span className="text-[#120e1b]">{categories.length}</span>{" "}
+          of <span className="text-[#120e1b]">{filteredCategories.length}</span>{" "}
           categories
         </p>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}

@@ -284,16 +284,18 @@ const ReportManagementPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-8">Loading reports...</div>;
+  if (loading) return <div className="p-4 sm:p-6 lg:p-8">Loading reports...</div>;
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-[#120e1b]">Report Management</h1>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-lg sm:text-xl font-semibold text-[#120e1b]">
+          Report Management
+        </h1>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat, i) => (
           <div
             key={i}
@@ -344,8 +346,8 @@ const ReportManagementPage: React.FC = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px_180px] gap-3 sm:gap-4 items-stretch">
+        <div className="relative min-w-0">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
             search
           </span>
@@ -360,7 +362,7 @@ const ReportManagementPage: React.FC = () => {
             className="w-full h-11 pl-10 pr-4 bg-gray-50 border-none rounded-xl text-sm focus:ring-1 focus:ring-red-500"
           />
         </div>
-        <label className="h-11 px-3 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 bg-white">
+        <label className="h-11 w-full px-3 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 bg-white min-w-0">
           <span className="material-symbols-outlined text-[18px]">
             filter_list
           </span>
@@ -370,7 +372,7 @@ const ReportManagementPage: React.FC = () => {
               setStatusFilter(event.target.value as "all" | ReportStatus);
               setPage(1);
             }}
-            className="bg-transparent outline-none text-sm font-bold text-gray-600"
+            className="bg-transparent outline-none text-sm font-bold text-gray-600 min-w-0 w-full appearance-none"
           >
             <option value="all">All</option>
             <option value="pending">Pending</option>
@@ -379,7 +381,7 @@ const ReportManagementPage: React.FC = () => {
             <option value="dismissed">Dismissed</option>
           </select>
         </label>
-        <label className="h-11 px-3 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 bg-white">
+        <label className="h-11 w-full px-3 rounded-xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-600 bg-white min-w-0">
           <span className="material-symbols-outlined text-[18px]">sort</span>
           <select
             value={sortOrder}
@@ -387,7 +389,7 @@ const ReportManagementPage: React.FC = () => {
               setSortOrder(event.target.value as "latest" | "oldest");
               setPage(1);
             }}
-            className="bg-transparent outline-none text-sm font-bold text-gray-600"
+            className="bg-transparent outline-none text-sm font-bold text-gray-600 min-w-0 w-full appearance-none"
           >
             <option value="latest">Latest</option>
             <option value="oldest">Oldest</option>
@@ -396,82 +398,86 @@ const ReportManagementPage: React.FC = () => {
       </div>
 
       {/* Reports Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {paginatedReports.map((report) => (
           <div
             key={report.id}
             className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
           >
-            <div className="p-8 space-y-6 flex-1">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1.5">
+            <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 flex-1 min-w-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                <div className="space-y-1.5 min-w-0">
                   <span className="px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 text-[10px] font-semibold uppercase tracking-wider rounded-md">
                     {report.category}
                   </span>
-                  <h3 className="text-base font-semibold text-[#120e1b] mt-2 block">
+                  <h3 className="text-base font-semibold text-[#120e1b] mt-2 block break-words">
                     {report.title}
                   </h3>
-                  <p className="text-[10px] font-medium text-gray-500 uppercase">
+                  <p className="text-[10px] font-medium text-gray-500 uppercase break-all">
                     Report ID: {report.id}
                   </p>
                 </div>
-                <span className="text-[10px] font-medium text-gray-500 mt-1">
+                <span className="text-[10px] font-medium text-gray-500 sm:mt-1 break-words">
                   {report.time}
                 </span>
               </div>
 
-              <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-50">
-                <p className="text-sm text-gray-600 leading-relaxed italic">
+              <div className="bg-gray-50/50 rounded-2xl p-4 sm:p-6 border border-gray-50 min-w-0">
+                <p className="text-sm text-gray-600 leading-relaxed italic break-words">
                   {report.content}
                 </p>
               </div>
 
-              <div className="flex items-center gap-6">
-                <div className="flex-1 p-3 rounded-2xl border border-gray-50 bg-gray-50/20 flex items-center gap-3">
-                  <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-                    {report.reporter.avatar.length === 2 ? (
-                      report.reporter.avatar
-                    ) : (
-                      <img
-                        src={report.reporter.avatar}
-                        className="rounded-full"
-                      />
-                    )}
+              <div className="flex flex-col gap-3 sm:gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6 min-w-0">
+                  <div className="flex-1 min-w-0 p-3 rounded-2xl border border-gray-50 bg-gray-50/20 flex items-center gap-3">
+                    <div className="size-10 shrink-0 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden">
+                      {report.reporter.avatar.length === 2 ? (
+                        report.reporter.avatar
+                      ) : (
+                        <img
+                          src={report.reporter.avatar}
+                          alt={report.reporter.name}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                        Reporter (Client)
+                      </p>
+                      <p className="text-sm font-semibold text-[#120e1b] break-words">
+                        {report.reporter.name}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                      Reporter (Client)
-                    </p>
-                    <p className="text-sm font-semibold text-[#120e1b]">
-                      {report.reporter.name}
-                    </p>
+
+                  <div className="shrink-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-gray-300 rotate-90 sm:rotate-0">
+                      arrow_forward
+                    </span>
                   </div>
-                </div>
 
-                <div className="shrink-0 flex items-center">
-                  <span className="material-symbols-outlined text-gray-300">
-                    arrow_forward
-                  </span>
-                </div>
-
-                <div className="flex-1 p-3 rounded-2xl border border-gray-50 bg-gray-50/20 flex items-center gap-3">
-                  <img
-                    src={report.reported.avatar}
-                    className="size-10 rounded-full bg-gray-100"
-                  />
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                      Reported (Worker)
-                    </p>
-                    <p className="text-sm font-semibold text-[#120e1b]">
-                      {report.reported.name}
-                    </p>
+                  <div className="flex-1 min-w-0 p-3 rounded-2xl border border-gray-50 bg-gray-50/20 flex items-center gap-3">
+                    <img
+                      src={report.reported.avatar}
+                      alt={report.reported.name}
+                      className="size-10 shrink-0 rounded-full bg-gray-100 object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                        Reported (Worker)
+                      </p>
+                      <p className="text-sm font-semibold text-[#120e1b] break-words">
+                        {report.reported.name}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between gap-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-gray-50/50 border-t border-gray-50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <span
                 className={`px-3 py-1 rounded text-xs font-bold ${
                   report.status === "pending"
@@ -483,10 +489,10 @@ const ReportManagementPage: React.FC = () => {
               >
                 {report.status.toUpperCase()}
               </span>
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
                   onClick={() => openContactModal(report.id)}
-                  className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
+                  className="h-12 w-full sm:w-auto px-4 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
                 >
                   <span className="material-symbols-outlined text-xl">
                     mail
@@ -495,7 +501,7 @@ const ReportManagementPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleOpenResolveModal(report.id)}
-                  className="h-12 px-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition-all active:scale-[0.98]"
+                  className="h-12 w-full sm:w-auto px-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition-all active:scale-[0.98]"
                 >
                   <span className="material-symbols-outlined text-xl">
                     check_circle
@@ -523,6 +529,7 @@ const ReportManagementPage: React.FC = () => {
         isOpen={isResolveModalOpen}
         onClose={() => setIsResolveModalOpen(false)}
         title={`Resolve Report #${selectedReportId}`}
+        size="lg"
       >
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-1">
@@ -536,7 +543,7 @@ const ReportManagementPage: React.FC = () => {
               <h4 className="text-sm font-bold text-[#120e1b] uppercase tracking-tight">
                 Resolution Action Summary
               </h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <button
                   onClick={() => setResolutionAction("warning")}
                   className={`relative flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left ${
@@ -631,8 +638,8 @@ const ReportManagementPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
-              <div className="flex flex-col">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl bg-red-50 border border-red-100">
+              <div className="flex flex-col min-w-0">
                 <span className="text-sm font-bold text-[#120e1b]">
                   Mark as dangerous report
                 </span>
@@ -662,8 +669,8 @@ const ReportManagementPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-100">
-              <div className="flex flex-col">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl bg-gray-50 border border-gray-100">
+              <div className="flex flex-col min-w-0">
                 <span className="text-sm font-bold text-[#120e1b]">
                   Notify both parties
                 </span>
@@ -682,7 +689,7 @@ const ReportManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-2">
             <button
               onClick={() => setIsResolveModalOpen(false)}
               className="flex-1 h-12 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 transition-all"
@@ -706,6 +713,7 @@ const ReportManagementPage: React.FC = () => {
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
         title={`Contact Users #${selectedContactReportId ?? ""}`}
+        size="lg"
       >
         {selectedContactReport ? (
           <div className="space-y-4">
@@ -725,7 +733,7 @@ const ReportManagementPage: React.FC = () => {
                     ? `tel:${selectedContactReport.reporter.phone}`
                     : undefined
                 }
-                className={`mt-3 inline-flex h-10 px-4 items-center rounded-lg text-xs font-bold uppercase tracking-widest ${selectedContactReport.reporter.phone ? "bg-primary text-white" : "bg-gray-100 text-gray-400 pointer-events-none"}`}
+                className={`mt-3 inline-flex w-full sm:w-auto h-10 px-4 items-center justify-center rounded-lg text-xs font-bold uppercase tracking-widest ${selectedContactReport.reporter.phone ? "bg-primary text-white" : "bg-gray-100 text-gray-400 pointer-events-none"}`}
               >
                 Call Reporter
               </a>
@@ -747,7 +755,7 @@ const ReportManagementPage: React.FC = () => {
                     ? `tel:${selectedContactReport.reported.phone}`
                     : undefined
                 }
-                className={`mt-3 inline-flex h-10 px-4 items-center rounded-lg text-xs font-bold uppercase tracking-widest ${selectedContactReport.reported.phone ? "bg-primary text-white" : "bg-gray-100 text-gray-400 pointer-events-none"}`}
+                className={`mt-3 inline-flex w-full sm:w-auto h-10 px-4 items-center justify-center rounded-lg text-xs font-bold uppercase tracking-widest ${selectedContactReport.reported.phone ? "bg-primary text-white" : "bg-gray-100 text-gray-400 pointer-events-none"}`}
               >
                 Call Worker
               </a>
@@ -757,7 +765,7 @@ const ReportManagementPage: React.FC = () => {
       </Modal>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between border-t border-gray-200 pt-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 pt-6">
         <p className="text-xs font-medium text-gray-500 tracking-wider">
           Showing{" "}
           <span className="text-[#120e1b] font-semibold">
@@ -769,7 +777,7 @@ const ReportManagementPage: React.FC = () => {
           </span>{" "}
           reports
         </p>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => setPage((current) => Math.max(1, current - 1))}
             disabled={currentPage <= 1}

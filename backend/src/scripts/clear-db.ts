@@ -1,5 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
+import type { Model } from "mongoose";
 import { env, isPlaceholderMongoUri } from "../config/env";
 import { 
   User, 
@@ -22,7 +23,7 @@ const clearDatabase = async () => {
   console.log("Connecting to MongoDB...");
   await mongoose.connect(env.mongoUri);
 
-  const collections = [
+  const collections: Array<{ name: string; model: Model<any> }> = [
     { name: "Users", model: User },
     { name: "Worker Profiles", model: WorkerProfile },
     { name: "Service Requests", model: ServiceRequest },

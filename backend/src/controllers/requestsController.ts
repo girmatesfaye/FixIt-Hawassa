@@ -89,6 +89,7 @@ const mapRequestResponse = (request: {
   maintenanceLevel: "New" | "Medium" | "Old";
   hasPhotos: boolean;
   photoUrls?: string[];
+  status: string;
   createdAt: Date | string;
   updatedAt: Date | string;
   hasReview?: boolean;

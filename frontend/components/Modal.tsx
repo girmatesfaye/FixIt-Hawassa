@@ -6,10 +6,20 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  size?: "md" | "lg" | "xl";
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = "md",
+}) => {
   if (!isOpen) return null;
+
+  const sizeClass =
+    size === "xl" ? "max-w-4xl" : size === "lg" ? "max-w-2xl" : "max-w-md";
 
   const modalContent = (
     <div
@@ -17,7 +27,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-surface-dark ring-1 ring-black/5 flex flex-col max-h-[90vh]"
+        className={`relative w-full ${sizeClass} overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-surface-dark ring-1 ring-black/5 flex flex-col max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-gray-50 p-5 dark:border-gray-800 shrink-0">

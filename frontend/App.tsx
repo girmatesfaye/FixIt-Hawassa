@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import {
   HashRouter as Router,
   Routes,
@@ -6,30 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import DashboardPage from "./pages/DashboardPage";
-import ServiceRequestPage from "./pages/ServiceRequestPage";
-import SearchResultsPage from "./pages/SearchResultsPage";
-import WorkerProfilePage from "./pages/WorkerProfilePage";
-import MessagesPage from "./pages/MessagesPage";
-import MyRequestsPage from "./pages/MyRequestsPage";
-import ClientReportsPage from "./pages/ClientReportsPage";
-import WorkerHubPage from "./pages/WorkerHubPage";
-import EditWorkerProfilePage from "./pages/EditWorkerProfilePage";
-import HelpPage from "./pages/HelpPage";
-import AdminLayout from "./admin/AdminLayout";
 import ClientLayout from "./components/ClientLayout";
 import WorkerLayout from "./components/WorkerLayout";
-import UserManagementPage from "./admin/UserManagementPage";
-import ReportManagementPage from "./admin/ReportManagementPage";
-import AnalyticsPage from "./admin/AnalyticsPage";
-import CategoryManagementPage from "./admin/CategoryManagementPage";
-import AdminSettingsPage from "./admin/AdminSettingsPage";
 import {
   clearSession,
   getAuthToken,
@@ -40,6 +18,33 @@ import {
   saveSession,
   UserRole,
 } from "./services/auth";
+
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ServiceRequestPage = lazy(() => import("./pages/ServiceRequestPage"));
+const SearchResultsPage = lazy(() => import("./pages/SearchResultsPage"));
+const WorkerProfilePage = lazy(() => import("./pages/WorkerProfilePage"));
+const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+const MyRequestsPage = lazy(() => import("./pages/MyRequestsPage"));
+const ClientReportsPage = lazy(() => import("./pages/ClientReportsPage"));
+const WorkerHubPage = lazy(() => import("./pages/WorkerHubPage"));
+const EditWorkerProfilePage = lazy(
+  () => import("./pages/EditWorkerProfilePage"),
+);
+const HelpPage = lazy(() => import("./pages/HelpPage"));
+const AdminLayout = lazy(() => import("./admin/AdminLayout"));
+const UserManagementPage = lazy(() => import("./admin/UserManagementPage"));
+const ReportManagementPage = lazy(() => import("./admin/ReportManagementPage"));
+const AnalyticsPage = lazy(() => import("./admin/AnalyticsPage"));
+const CategoryManagementPage = lazy(
+  () => import("./admin/CategoryManagementPage"),
+);
+const AdminSettingsPage = lazy(() => import("./admin/AdminSettingsPage"));
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -120,7 +125,6 @@ const App: React.FC = () => {
         return;
       }
 
-      // Refresh token when less than 15 minutes remain.
       if (expiryMs - Date.now() <= 15 * 60 * 1000) {
         const refreshed = await refreshAuthSession();
         if (!refreshed) {
@@ -165,6 +169,14 @@ const App: React.FC = () => {
     );
   }
 
+  const routeFallback = (
+    <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+        Loading page...
+      </p>
+    </div>
+  );
+
   return (
     <Router>
       <Toaster
@@ -192,99 +204,108 @@ const App: React.FC = () => {
           },
         }}
       />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <LandingPage
-              isAuthenticated={isAuthenticated}
-              userRole={userRole}
-              onLogout={handleLogout}
-            />
-          }
-        />
-        <Route path="/login" element={<LoginPage onLoginSuccess={handleLogin} />} />
-        <Route
-          path="/register"
-          element={<RegisterPage onRegisterSuccess={handleLogin} />}
-        />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Suspense fallback={routeFallback}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <LandingPage
+                isAuthenticated={isAuthenticated}
+                userRole={userRole}
+                onLogout={handleLogout}
+              />
+            }
+          />
+          <Route
+            path="/login"
+            element={<LoginPage onLoginSuccess={handleLogin} />}
+          />
+          <Route
+            path="/register"
+            element={<RegisterPage onRegisterSuccess={handleLogin} />}
+          />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Shared Authenticated Routes */}
-        <Route
-          element={
-            isAuthenticated ? (
-              userRole === "worker" ? (
+          <Route
+            element={
+              isAuthenticated ? (
+                userRole === "worker" ? (
+                  <WorkerLayout onLogout={handleLogout} />
+                ) : (
+                  <ClientLayout onLogout={handleLogout} />
+                )
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          >
+            <Route path="messages" element={<MessagesPage />} />
+            <Route
+              path="dashboard"
+              element={<DashboardPage onLogout={handleLogout} />}
+            />
+            <Route path="help" element={<HelpPage />} />
+          </Route>
+
+          <Route
+            element={
+              isAuthenticated && userRole === "client" ? (
+                <ClientLayout onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          >
+            <Route path="reports" element={<ClientReportsPage />} />
+            <Route path="request-service" element={<ServiceRequestPage />} />
+            <Route path="search-results" element={<SearchResultsPage />} />
+            <Route path="bookings" element={<MyRequestsPage />} />
+            <Route path="worker/:id" element={<WorkerProfilePage />} />
+          </Route>
+
+          <Route
+            element={
+              isAuthenticated && userRole === "worker" ? (
                 <WorkerLayout onLogout={handleLogout} />
               ) : (
-                <ClientLayout onLogout={handleLogout} />
+                <Navigate to="/login" />
               )
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        >
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="dashboard" element={<DashboardPage onLogout={handleLogout} />} />
-          <Route path="help" element={<HelpPage />} />
-        </Route>
+            }
+          >
+            <Route
+              path="worker-hub"
+              element={<WorkerHubPage onLogout={handleLogout} />}
+            />
+            <Route
+              path="worker/edit-profile"
+              element={<EditWorkerProfilePage />}
+            />
+          </Route>
 
-        {/* Client-Only Routes */}
-        <Route
-          element={
-            isAuthenticated && userRole === "client" ? (
-              <ClientLayout onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        >
-          <Route path="reports" element={<ClientReportsPage />} />
-          <Route path="request-service" element={<ServiceRequestPage />} />
-          <Route path="search-results" element={<SearchResultsPage />} />
-          <Route path="bookings" element={<MyRequestsPage />} />
-          <Route path="worker/:id" element={<WorkerProfilePage />} />
-        </Route>
+          <Route
+            path="/admin"
+            element={
+              isAuthenticated && userRole === "admin" ? (
+                <AdminLayout onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          >
+            <Route index element={<Navigate to="users" />} />
+            <Route path="users" element={<UserManagementPage />} />
+            <Route path="categories" element={<CategoryManagementPage />} />
+            <Route path="reports" element={<ReportManagementPage />} />
+            <Route path="dashboard" element={<AnalyticsPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+          </Route>
 
-        {/* Worker-Only Routes */}
-        <Route
-          element={
-            isAuthenticated && userRole === "worker" ? (
-              <WorkerLayout onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        >
-          <Route path="worker-hub" element={<WorkerHubPage onLogout={handleLogout} />} />
-          <Route path="worker/edit-profile" element={<EditWorkerProfilePage />} />
-        </Route>
-
-
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            isAuthenticated && userRole === "admin" ? (
-              <AdminLayout onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        >
-          <Route index element={<Navigate to="users" />} />
-          <Route path="users" element={<UserManagementPage />} />
-          <Route path="categories" element={<CategoryManagementPage />} />
-          <Route path="reports" element={<ReportManagementPage />} />
-          <Route path="dashboard" element={<AnalyticsPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 };

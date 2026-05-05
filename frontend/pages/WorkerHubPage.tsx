@@ -47,6 +47,7 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
     null,
   );
   const [isReportDetailModalOpen, setIsReportDetailModalOpen] = useState(false);
+  const [selectedRequestImage, setSelectedRequestImage] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [myUserId, setMyUserId] = useState("");
 
@@ -487,12 +488,22 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       {request.photoUrls.length ? (
                         <div className="flex gap-2 overflow-x-auto pb-1">
                           {request.photoUrls.slice(0, 3).map((photoUrl) => (
-                            <img
+                            <button
                               key={photoUrl}
-                              src={getUploadedImageUrl(photoUrl)}
-                              alt="Service request"
-                              className="size-12 rounded-lg object-cover border border-gray-100 dark:border-gray-700"
-                            />
+                              type="button"
+                              onClick={() =>
+                                setSelectedRequestImage(
+                                  getUploadedImageUrl(photoUrl),
+                                )
+                              }
+                              className="shrink-0 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            >
+                              <img
+                                src={getUploadedImageUrl(photoUrl)}
+                                alt="Service request"
+                                className="size-12 object-cover"
+                              />
+                            </button>
                           ))}
                         </div>
                       ) : null}
@@ -592,12 +603,22 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
                       {request.photoUrls.length ? (
                         <div className="flex gap-2 overflow-x-auto pb-1">
                           {request.photoUrls.slice(0, 3).map((photoUrl) => (
-                            <img
+                            <button
                               key={photoUrl}
-                              src={getUploadedImageUrl(photoUrl)}
-                              alt="Service request"
-                              className="size-12 rounded-lg object-cover border border-gray-100 dark:border-gray-700"
-                            />
+                              type="button"
+                              onClick={() =>
+                                setSelectedRequestImage(
+                                  getUploadedImageUrl(photoUrl),
+                                )
+                              }
+                              className="shrink-0 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            >
+                              <img
+                                src={getUploadedImageUrl(photoUrl)}
+                                alt="Service request"
+                                className="size-12 object-cover"
+                              />
+                            </button>
                           ))}
                         </div>
                       ) : null}
@@ -932,6 +953,24 @@ const WorkerHubPage: React.FC<WorkerHubPageProps> = ({ onLogout }) => {
             </button>
           </div>
         )}
+      </Modal>
+      <Modal
+        isOpen={Boolean(selectedRequestImage)}
+        onClose={() => setSelectedRequestImage("")}
+        title="Request Photo"
+      >
+        {selectedRequestImage ? (
+          <div className="flex flex-col gap-4">
+            <img
+              src={selectedRequestImage}
+              alt="Request preview"
+              className="w-full max-h-[70vh] rounded-2xl object-contain bg-gray-50 dark:bg-gray-900"
+            />
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              Click any request image in Pending Invitations to preview it here.
+            </p>
+          </div>
+        ) : null}
       </Modal>
   </div>
 );

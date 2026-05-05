@@ -102,7 +102,6 @@ const loadRankedWorkers = async (
       ranked: rankWorkers(
         workersFromMongo,
         requestDraft,
-        filters.maxDistanceKm,
         filters.minRating,
         filters.onlyActive,
       ),

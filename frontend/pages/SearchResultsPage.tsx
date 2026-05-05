@@ -491,37 +491,6 @@ const SearchResultsPage: React.FC = () => {
                 one.
               </p>
             )}
-            {currentRequest?.status === "PENDING" &&
-            currentRequest.assignedWorkerId ? (
-              <p className="text-xs font-semibold text-amber-600">
-                Waiting for {currentRequest.assignedWorkerId.name ?? "worker"}{" "}
-                to accept your request.
-              </p>
-            ) : null}
-            {currentRequest?.status === "IN_PROGRESS" &&
-            currentRequest.assignedWorkerId ? (
-              <p className="text-xs font-semibold text-green-600">
-                {currentRequest.assignedWorkerId.name ?? "Your worker"} accepted
-                the request. Work is now in progress.
-              </p>
-            ) : null}
-            {currentRequest?.status === "SEARCHING" &&
-            currentRequest.lastDeclinedWorkerId ? (
-              <p className="text-xs font-semibold text-red-600">
-                {currentRequest.lastDeclinedWorkerId.name ?? "The worker"}{" "}
-                declined your request. Invite another worker.
-              </p>
-            ) : null}
-            {statusNotice ? (
-              <p className="text-xs font-semibold text-red-600">
-                {statusNotice}
-              </p>
-            ) : null}
-            {inviteError ? (
-              <p className="text-xs font-semibold text-red-600">
-                {inviteError}
-              </p>
-            ) : null}
             </div>
             <button
               onClick={() => setIsMobileFilterOpen(true)}
@@ -531,6 +500,89 @@ const SearchResultsPage: React.FC = () => {
               Filters
             </button>
           </div>
+
+          {currentRequest?.status === "PENDING" &&
+          currentRequest.assignedWorkerId ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
+              <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white">
+                <span className="material-symbols-outlined text-[20px]">
+                  schedule
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-amber-900">
+                  Waiting for {currentRequest.assignedWorkerId.name ?? "the worker"} to accept your request
+                </p>
+                <p className="mt-1 text-xs font-medium text-amber-700">
+                  Your invitation has been sent. Once the worker accepts, the request will move into progress.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {currentRequest?.status === "IN_PROGRESS" &&
+          currentRequest.assignedWorkerId ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 shadow-sm">
+              <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-green-500 text-white">
+                <span className="material-symbols-outlined text-[20px]">
+                  task_alt
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-green-900">
+                  {currentRequest.assignedWorkerId.name ?? "Your worker"} accepted your request
+                </p>
+                <p className="mt-1 text-xs font-medium text-green-700">
+                  Work is now in progress and you can continue through chat and status updates.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {currentRequest?.status === "SEARCHING" &&
+          currentRequest.lastDeclinedWorkerId ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
+              <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white">
+                <span className="material-symbols-outlined text-[20px]">
+                  error
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-red-900">
+                  {currentRequest.lastDeclinedWorkerId.name ?? "The worker"} declined your request
+                </p>
+                <p className="mt-1 text-xs font-medium text-red-700">
+                  Please choose another worker from the recommendations below.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {statusNotice ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
+              <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white">
+                <span className="material-symbols-outlined text-[20px]">
+                  info
+                </span>
+              </div>
+              <p className="min-w-0 text-sm font-semibold text-red-800">
+                {statusNotice}
+              </p>
+            </div>
+          ) : null}
+
+          {inviteError ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
+              <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white">
+                <span className="material-symbols-outlined text-[20px]">
+                  warning
+                </span>
+              </div>
+              <p className="min-w-0 text-sm font-semibold text-red-800">
+                {inviteError}
+              </p>
+            </div>
+          ) : null}
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 gap-4">
