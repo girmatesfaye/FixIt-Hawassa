@@ -347,7 +347,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
       <main className="flex-grow">
         {/* Hero */}
-        <section className="relative w-full py-20 md:py-32 overflow-hidden bg-background-green">
+        <section className="relative w-full py-16 md:py-32 overflow-hidden bg-background-green">
           <div className="absolute inset-0 z-0">
             {heroImages.map((img, idx) => (
               <img
@@ -454,7 +454,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         {/* Expanded How it Works */}
         <section
           id="how-it-works"
-          className="py-24 md:py-32 bg-white dark:bg-background-dark scroll-mt-20"
+          className="py-16 md:py-32 bg-white dark:bg-background-dark scroll-mt-20"
         >
           <div className="px-4 max-w-6xl mx-auto">
             <div className="text-center mb-16 space-y-4">
@@ -465,16 +465,16 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 How it works
               </h2>
               <div className="flex justify-center mt-8">
-                <div className="p-1.5 bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex gap-2">
+                <div className="p-1.5 bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setActiveTab("client")}
-                    className={`px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "client" ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:text-gray-600"}`}
+                    className={`flex-1 sm:flex-none px-5 sm:px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "client" ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:text-gray-600"}`}
                   >
                     I am a Client
                   </button>
                   <button
                     onClick={() => setActiveTab("worker")}
-                    className={`px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "worker" ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:text-gray-600"}`}
+                    className={`flex-1 sm:flex-none px-5 sm:px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "worker" ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:text-gray-600"}`}
                   >
                     I am a Worker
                   </button>
