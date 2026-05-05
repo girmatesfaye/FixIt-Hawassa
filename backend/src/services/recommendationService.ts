@@ -37,22 +37,18 @@ export const getRecommendationReasons = (
 export const rankWorkers = (
   workers: WorkerRecommendation[],
   request: RequestDraft | null,
-  maxDistanceKm: number,
   minRating: number,
   onlyActive: boolean,
 ): Array<WorkerRecommendation & { score: number; reasons: string[] }> => {
   const filtered = workers.filter((w) => {
-    // If distance is the default 99, we only filter it if maxDistanceKm is less than 99
-    // This allows default workers to show up unless the user specifically filters for close ones
-    const passDistance = w.distanceKm <= maxDistanceKm;
     const passRating = w.rating >= minRating;
     const passActive = onlyActive ? w.isActive : true;
     
-    if (!passDistance || !passRating || !passActive) {
-      console.log(`[ranking] Worker ${w.name} filtered out. Distance(${w.distanceKm} <= ${maxDistanceKm}): ${passDistance}, Rating(${w.rating} >= ${minRating}): ${passRating}, Active(${w.isActive}): ${passActive}`);
+    if (!passRating || !passActive) {
+      console.log(`[ranking] Worker ${w.name} filtered out. Rating(${w.rating} >= ${minRating}): ${passRating}, Active(${w.isActive}): ${passActive}`);
     }
     
-    return passDistance && passRating && passActive;
+    return passRating && passActive;
   });
 
   if (!filtered.length) {
@@ -61,8 +57,6 @@ export const rankWorkers = (
 
   const maxReviews = Math.max(...filtered.map((w) => w.reviews), 1);
   const minReviews = Math.min(...filtered.map((w) => w.reviews));
-  const maxDistance = Math.max(...filtered.map((w) => w.distanceKm), 1);
-  const minDistance = Math.min(...filtered.map((w) => w.distanceKm));
 
   return filtered
     .map((w) => {
@@ -89,11 +83,6 @@ export const rankWorkers = (
         ? w.area.toLowerCase().trim() === request.area.toLowerCase().trim()
         : false;
 
-      // Handle normalization more safely
-      const distanceScore = maxDistance === minDistance 
-        ? (w.distanceKm < 10 ? 1 : 0.5) // If all same, give boost to those clearly marked as "close"
-        : 1 - normalize(w.distanceKm, minDistance, maxDistance);
-
       const reviewScore = maxReviews === minReviews 
         ? 0.5 
         : normalize(w.reviews, minReviews, maxReviews);
@@ -103,7 +92,6 @@ export const rankWorkers = (
         (categoryMatch ? 5.0 : 0) +     // Primary: Category (Increased to 5.0)
         (areaMatch ? 3.0 : 0) +         // Secondary: Area (Increased to 3.0)
         (w.rating * 1.0) +              // Quality (Increased weight)
-        (distanceScore * 2.0) +         // Proximity
         (w.completionRate * 1.5) +      // Reliability
         (reviewScore * 0.5);            // Popularity
 

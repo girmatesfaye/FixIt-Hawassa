@@ -19,7 +19,6 @@ const workerProfileSchema = new Schema(
     isActive: { type: Boolean, default: true },
     completionRate: { type: Number, default: 0 },
     responseMinutes: { type: Number, default: 30 },
-    distanceKm: { type: Number, default: 99 },
     avatar: { type: String, default: "" },
     portfolio: [{ type: String }],
   },

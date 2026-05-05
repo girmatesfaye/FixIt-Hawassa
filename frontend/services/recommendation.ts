@@ -9,13 +9,11 @@ const API_BASE_URL =
   "http://localhost:4000";
 
 export const fetchTopWorkers = async (filters?: {
-  maxDistanceKm?: number;
   minRating?: number;
   onlyActive?: boolean;
   limit?: number;
 }): Promise<WorkerRecommendation[]> => {
   const params = new URLSearchParams({
-    maxDistanceKm: String(filters?.maxDistanceKm ?? 20),
     minRating: String(filters?.minRating ?? 0),
     onlyActive: String(filters?.onlyActive ?? false),
     page: "1",
@@ -74,15 +72,13 @@ export const getRecommendationReasons = (
 export const rankWorkers = (
   workers: WorkerRecommendation[],
   request: RequestDraft | null,
-  maxDistanceKm: number,
   minRating: number,
   onlyActive: boolean,
 ): WorkerRecommendation[] => {
   const filtered = workers.filter((worker) => {
-    const passDistance = worker.distanceKm <= maxDistanceKm;
     const passRating = worker.rating >= minRating;
     const passActive = onlyActive ? worker.isActive : true;
-    return passDistance && passRating && passActive;
+    return passRating && passActive;
   });
 
   if (!filtered.length) {
@@ -91,8 +87,6 @@ export const rankWorkers = (
 
   const maxReviews = Math.max(...filtered.map((w) => w.reviews));
   const minReviews = Math.min(...filtered.map((w) => w.reviews));
-  const maxDistance = Math.max(...filtered.map((w) => w.distanceKm));
-  const minDistance = Math.min(...filtered.map((w) => w.distanceKm));
 
   return [...filtered].sort((a, b) => {
     const categoryBoostA = request
@@ -110,17 +104,11 @@ export const rankWorkers = (
         : 0
       : 0;
 
-    const distanceScoreA =
-      1 - normalize(a.distanceKm, minDistance, maxDistance);
-    const distanceScoreB =
-      1 - normalize(b.distanceKm, minDistance, maxDistance);
-
     const reviewScoreA = normalize(a.reviews, minReviews, maxReviews);
     const reviewScoreB = normalize(b.reviews, minReviews, maxReviews);
 
     const scoreA =
       a.rating * 0.35 +
-      distanceScoreA * 5 * 0.25 +
       a.completionRate * 5 * 0.2 +
       (1 - Math.min(a.responseMinutes, 30) / 30) * 5 * 0.1 +
       reviewScoreA * 5 * 0.1 +
@@ -128,7 +116,6 @@ export const rankWorkers = (
 
     const scoreB =
       b.rating * 0.35 +
-      distanceScoreB * 5 * 0.25 +
       b.completionRate * 5 * 0.2 +
       (1 - Math.min(b.responseMinutes, 30) / 30) * 5 * 0.1 +
       reviewScoreB * 5 * 0.1 +
@@ -141,7 +128,6 @@ export const rankWorkers = (
 export const fetchRecommendations = async (
   requestId: string,
   filters: {
-    maxDistanceKm: number;
     minRating: number;
     onlyActive: boolean;
     page: number;
@@ -157,7 +143,6 @@ export const fetchRecommendations = async (
   snapshotCreatedAt?: string;
 }> => {
   const params = new URLSearchParams({
-    maxDistanceKm: String(filters.maxDistanceKm),
     minRating: String(filters.minRating),
     onlyActive: String(filters.onlyActive),
     page: String(filters.page),

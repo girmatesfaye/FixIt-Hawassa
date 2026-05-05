@@ -341,261 +341,268 @@ const MyRequestsPage: React.FC = () => {
   };
 
   return (
-    <main className="flex-1 max-w-[1000px] mx-auto w-full px-4 py-6 sm:py-10">
-      <div className="flex flex-col gap-8">
+    <>
+      <main className="flex-1 max-w-[1000px] mx-auto w-full px-4 py-6 sm:py-10">
+        <div className="flex flex-col gap-8">
+        <div>
+          <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white mb-2">
+            My Bookings
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Manage and track your service calls
+          </p>
+        </div>
 
-          <div>
-            <h1 className="text-2xl font-bold text-[#120e1b] dark:text-white mb-2">
-              My Bookings
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Manage and track your service calls
-            </p>
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl w-full sm:w-fit">
+          <button
+            onClick={() => setActiveTab("Active")}
+            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "Active" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setActiveTab("History")}
+            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "History" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
+          >
+            History
+          </button>
+        </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl w-full sm:w-fit">
-            <button
-              onClick={() => setActiveTab("Active")}
-              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "Active" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
-            >
-              Active
-            </button>
-            <button
-              onClick={() => setActiveTab("History")}
-              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "History" ? "bg-white dark:bg-surface-dark text-primary shadow-sm" : "text-gray-500 hover:text-primary"}`}
-            >
-              History
-            </button>
-          </div>
-
-          {/* List */}
-          <div className="flex flex-col gap-4">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 dark:border-gray-700 border-t-primary dark:border-t-primary"></div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Loading requests...
-                </p>
-              </div>
-            ) : loadError ? (
-              <div className="py-20 flex flex-col items-center gap-4 text-center">
-                <h3 className="text-xl font-bold text-[#120e1b] dark:text-white">
-                  Could not load requests
-                </h3>
-                <p className="text-sm text-gray-500">{loadError}</p>
-                <button
-                  onClick={() => {
-                    void loadRequests();
-                  }}
-                  className="mt-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold"
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : (
-              <>
-                {filteredRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col group hover:shadow-md transition-shadow"
-                  >
+        {/* List */}
+        <div className="flex flex-col gap-4">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 dark:border-gray-700 border-t-primary dark:border-t-primary"></div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Loading requests...
+              </p>
+            </div>
+          ) : loadError ? (
+            <div className="py-20 flex flex-col items-center gap-4 text-center">
+              <h3 className="text-xl font-bold text-[#120e1b] dark:text-white">
+                Could not load requests
+              </h3>
+              <p className="text-sm text-gray-500">{loadError}</p>
+              <button
+                onClick={() => {
+                  void loadRequests();
+                } }
+                className="mt-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : (
+            <>
+              {filteredRequests.map((req) => (
+                <React.Fragment key={req.id}>
+                  <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col group hover:shadow-md transition-shadow">
                     <div className="p-4 sm:p-6 flex flex-col gap-4">
-                    <div className="flex items-start gap-3 sm:gap-5">
-                      <div
-                        className={`size-11 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 ${
-                          req.category === "Plumbing"
+                      <div className="flex items-start gap-3 sm:gap-5">
+                        <div
+                          className={`size-11 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 ${req.category === "Plumbing"
                             ? "bg-blue-50 text-blue-600"
                             : req.category === "Electrical"
                               ? "bg-amber-50 text-amber-600"
                               : req.category === "Painting"
                                 ? "bg-purple-50 text-purple-600"
-                                : "bg-green-50 text-green-600"
-                        } dark:bg-opacity-10`}
-                      >
-                        <span className="material-symbols-outlined text-2xl sm:text-3xl">
-                          {req.category === "Plumbing"
-                            ? "plumbing"
-                            : req.category === "Electrical"
-                              ? "electric_bolt"
-                              : req.category === "Painting"
-                                ? "format_paint"
-                                : "carpenter"}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h4 className="text-base sm:text-lg font-bold text-[#120e1b] dark:text-white truncate">
-                            {req.title}
-                          </h4>
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${
-                              req.status === RequestStatus.IN_PROGRESS
+                                : "bg-green-50 text-green-600"} dark:bg-opacity-10`}
+                        >
+                          <span className="material-symbols-outlined text-2xl sm:text-3xl">
+                            {req.category === "Plumbing"
+                              ? "plumbing"
+                              : req.category === "Electrical"
+                                ? "electric_bolt"
+                                : req.category === "Painting"
+                                  ? "format_paint"
+                                  : "carpenter"}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h4 className="text-base sm:text-lg font-bold text-[#120e1b] dark:text-white truncate">
+                              {req.title}
+                            </h4>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${req.status === RequestStatus.IN_PROGRESS
                                 ? "bg-blue-100 text-blue-700"
                                 : req.status === RequestStatus.SEARCHING
                                   ? "bg-amber-100 text-amber-700"
                                   : req.status === RequestStatus.PENDING
                                     ? "bg-purple-100 text-purple-700"
-                                    : "bg-green-100 text-green-700"
-                            }`}
-                          >
-                            {req.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 sm:gap-4 text-xs font-bold text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[16px]">
-                              calendar_today
-                            </span>{" "}
-                            {req.date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[16px]">
-                              payments
-                            </span>{" "}
-                            {req.cost}
-                          </span>
+                                    : "bg-green-100 text-green-700"}`}
+                            >
+                              {req.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 sm:gap-4 text-xs font-bold text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[16px]">
+                                calendar_today
+                              </span>{" "}
+                              {req.date}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[16px]">
+                                payments
+                              </span>{" "}
+                              {req.cost}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center flex-wrap gap-3 w-full pt-3 border-t border-gray-50 dark:border-gray-800">
-                      {req.worker ? (
-                        <div 
-                          className="flex items-center gap-3 mr-4 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => navigate(`/worker/${req.workerId}`, { state: { requestId: req.id } })}
-                        >
-                          <div className="text-right hidden sm:block">
-                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                              {req.status === RequestStatus.PENDING
-                                ? "Awaiting Reply"
-                                : "Assigned Pro"}
-                            </p>
-                            <p className="text-sm font-bold text-[#120e1b] dark:text-white">
-                              {req.worker}
-                            </p>
+                      <div className="flex items-center flex-wrap gap-3 w-full pt-3 border-t border-gray-50 dark:border-gray-800">
+                        {req.worker ? (
+                          <div
+                            className="flex items-center gap-3 mr-4 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() =>
+                              navigate(`/worker/${req.workerId}`, {
+                                state: { requestId: req.id },
+                              })
+                            }
+                          >
+                            <div className="text-right hidden sm:block">
+                              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                                {req.status === RequestStatus.PENDING
+                                  ? "Awaiting Reply"
+                                  : "Assigned Pro"}
+                              </p>
+                              <p className="text-sm font-bold text-[#120e1b] dark:text-white">
+                                {req.worker}
+                              </p>
+                            </div>
+                            <img
+                              src={req.avatar!}
+                              className="size-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
+                              alt=""
+                            />
                           </div>
-                          <img
-                            src={req.avatar!}
-                            className="size-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
-                            alt=""
-                          />
-                        </div>
-                      ) : (
-                        <div className="mr-8">
-                          {req.lastDeclinedWorker && req.status === RequestStatus.SEARCHING ? (
-                            <div>
-                              <p className="text-[10px] font-semibold text-red-600 uppercase tracking-widest flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[14px]">
+                        ) : (
+                          <div className="mr-8">
+                            {req.lastDeclinedWorker &&
+                            req.status === RequestStatus.SEARCHING ? (
+                              <div>
+                                <p className="text-[10px] font-semibold text-red-600 uppercase tracking-widest flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[14px]">
+                                    info
+                                  </span>
+                                  Invitation Declined
+                                </p>
+                                <p className="text-xs font-semibold text-gray-500 mt-1">
+                                  {req.lastDeclinedWorker} is unavailable. Please
+                                  choose another pro.
+                                </p>
+                                <Link
+                                  to="/search-results"
+                                  state={{
+                                    category: req.category,
+                                    requestId: req.id,
+                                  }}
+                                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
+                                >
+                                  View Recommended Pros
+                                  <span className="material-symbols-outlined text-[14px]">
+                                    arrow_forward
+                                  </span>
+                                </Link>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px] animate-pulse">
                                   info
                                 </span>
-                                Invitation Declined
+                                Searching for pros
                               </p>
-                              <p className="text-xs font-semibold text-gray-500 mt-1">
-                                {req.lastDeclinedWorker} is unavailable. Please choose another pro.
-                              </p>
-                              <Link 
-                                to="/search-results" 
-                                state={{ category: req.category, requestId: req.id }}
-                                className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
-                              >
-                                View Recommended Pros
-                                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                              </Link>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[14px] animate-pulse">
-                                info
-                              </span>
-                              Searching for pros
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex justify-end ml-auto">
-                      <ActionMenu
-                        actions={(() => {
-                          const base = [
-                            {
-                              label: req.apiStatus === "PENDING"
-                                ? "View Pro Profile"
-                                : req.hasMessagesAccess
-                                ? "Open Chat"
-                                : "Find Professionals",
-                              onClick: () => {
-                                if (req.apiStatus === "PENDING" && req.workerId) {
-                                  navigate(`/worker/${req.workerId}`, {
-                                    state: { requestId: req.id },
-                                  });
-                                } else if (req.hasMessagesAccess) {
-                                  navigate("/messages", {
-                                    state: { requestId: req.id },
-                                  });
-                                } else {
-                                  navigate("/search-results", {
-                                    state: { 
-                                      requestId: req.id,
-                                      category: req.category 
-                                    }
-                                  });
-                                }
-                              }
-                            },
-                          ];
-
-                          if (req.apiStatus === "PENDING" && req.workerId) {
-                            base.push({
-                              label: withdrawingRequestId === req.id ? "Withdrawing..." : "Withdraw Invitation",
-                              onClick: () => void handleWithdraw(req.id),
-                              disabled: withdrawingRequestId === req.id,
-                            });
-                          }
-
-                          if (req.apiStatus === "COMPLETED" && req.workerId) {
-                            base.push(
+                      <div className="flex justify-end ml-auto">
+                        <ActionMenu
+                          actions={(() => {
+                            const base = [
                               {
-                                label: reviewedRequestIds.includes(req.id)
-                                  ? "Rated"
-                                  : "Rate Worker",
-                                onClick: () => openReviewModal(req),
-                                disabled: reviewedRequestIds.includes(req.id),
+                                label:
+                                  req.apiStatus === "PENDING"
+                                    ? "View Pro Profile"
+                                    : req.hasMessagesAccess
+                                      ? "Open Chat"
+                                      : "Find Professionals",
+                                onClick: () => {
+                                  if (req.apiStatus === "PENDING" && req.workerId) {
+                                    navigate(`/worker/${req.workerId}`, {
+                                      state: { requestId: req.id },
+                                    });
+                                  } else if (req.hasMessagesAccess) {
+                                    navigate("/messages", {
+                                      state: { requestId: req.id },
+                                    });
+                                  } else {
+                                    navigate("/search-results", {
+                                      state: {
+                                        requestId: req.id,
+                                        category: req.category,
+                                      },
+                                    });
+                                  }
+                                },
                               },
-                              {
-                                label: reportedRequestIds.includes(req.id)
-                                  ? "Reported"
-                                  : "Report Worker",
-                                onClick: () => openReportModal(req),
-                                disabled: reportedRequestIds.includes(req.id),
-                              },
-                            );
-                          }
+                            ];
 
-                          if (
-                            req.apiStatus === "IN_PROGRESS" &&
-                            req.workerMarkedCompleteAt
-                          ) {
-                            base.push({
-                              label:
-                                confirmingRequestId === req.id
-                                  ? "Confirming..."
-                                  : "Confirm Complete",
-                              onClick: () =>
-                                void handleConfirmCompletion(req.id),
-                              disabled: confirmingRequestId === req.id,
-                            });
-                          }
+                            if (req.apiStatus === "PENDING" && req.workerId) {
+                              base.push({
+                                label:
+                                  withdrawingRequestId === req.id
+                                    ? "Withdrawing..."
+                                    : "Withdraw Invitation",
+                                onClick: () => void handleWithdraw(req.id),
+                                disabled: withdrawingRequestId === req.id,
+                              });
+                            }
 
-                          return base;
-                        })()}
-                      />
+                            if (req.apiStatus === "COMPLETED" && req.workerId) {
+                              base.push(
+                                {
+                                  label: reviewedRequestIds.includes(req.id)
+                                    ? "Rated"
+                                    : "Rate Worker",
+                                  onClick: () => openReviewModal(req),
+                                  disabled: reviewedRequestIds.includes(req.id),
+                                },
+                                {
+                                  label: reportedRequestIds.includes(req.id)
+                                    ? "Reported"
+                                    : "Report Worker",
+                                  onClick: () => openReportModal(req),
+                                  disabled: reportedRequestIds.includes(req.id),
+                                },
+                              );
+                            }
+
+                            if (
+                              req.apiStatus === "IN_PROGRESS" &&
+                              req.workerMarkedCompleteAt
+                            ) {
+                              base.push({
+                                label:
+                                  confirmingRequestId === req.id
+                                    ? "Confirming..."
+                                    : "Confirm Complete",
+                                onClick: () => void handleConfirmCompletion(req.id),
+                                disabled: confirmingRequestId === req.id,
+                              });
+                            }
+
+                            return base;
+                          })()}
+                        />
+                      </div>
                     </div>
                   </div>
-                  </div>
 
-                  {/* Completion Alert Banner - Shown as Footer */}
                   {req.apiStatus === "IN_PROGRESS" && req.workerMarkedCompleteAt && (
                     <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3 px-4 sm:p-4 sm:px-6 bg-green-50 dark:bg-green-500/10 border-t border-green-100 dark:border-green-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
                       <div className="flex items-center gap-3">
@@ -607,16 +614,21 @@ const MyRequestsPage: React.FC = () => {
                             Job Marked as Completed!
                           </p>
                           <p className="text-[10px] font-medium text-green-600/70 dark:text-green-500/50">
-                            The worker has finished the job. Please confirm to finalize.
+                            The worker has finished the job. Please confirm to
+                            finalize.
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => navigate("/messages", { state: { requestId: req.id } })}
+                          onClick={() =>
+                            navigate("/messages", { state: { requestId: req.id } })
+                          }
                           className="h-10 px-4 bg-white dark:bg-surface-dark border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 flex items-center gap-2"
                         >
-                          <span className="material-symbols-outlined text-[16px]">chat</span>
+                          <span className="material-symbols-outlined text-[16px]">
+                            chat
+                          </span>
                           View Chat
                         </button>
                         <button
@@ -624,41 +636,43 @@ const MyRequestsPage: React.FC = () => {
                           disabled={confirmingRequestId === req.id}
                           className="h-10 px-6 bg-green-500 hover:bg-green-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
                         >
-                          {confirmingRequestId === req.id ? "Confirming..." : "Confirm & Pay"}
+                          {confirmingRequestId === req.id
+                            ? "Confirming..."
+                            : "Confirm & Pay"}
                         </button>
                       </div>
                     </div>
                   )}
-                </div>
-                ))}
-                {filteredRequests.length === 0 && (
-                  <div className="py-20 flex flex-col items-center gap-4 text-center">
-                    <div className="size-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-                      <span className="material-symbols-outlined text-5xl">
-                        history
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-[#120e1b] dark:text-white">
-                        No requests found
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        You haven't made any requests in this category yet.
-                      </p>
-                    </div>
-                    <Link
-                      to="/dashboard"
-                      className="mt-4 px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20"
-                    >
-                      Book a Service
-                    </Link>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+                </React.Fragment>
+              ))}
 
+              {filteredRequests.length === 0 && (
+                <div className="py-20 flex flex-col items-center gap-4 text-center">
+                  <div className="size-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                    <span className="material-symbols-outlined text-5xl">
+                      history
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#120e1b] dark:text-white">
+                      No requests found
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      You haven't made any requests in this category yet.
+                    </p>
+                  </div>
+                  <Link
+                    to="/dashboard"
+                    className="mt-4 px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20"
+                  >
+                    Book a Service
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
       <Modal
         isOpen={isReviewModalOpen}
         onClose={() => {
@@ -715,7 +729,6 @@ const MyRequestsPage: React.FC = () => {
           </button>
         </div>
       </Modal>
-
       <Modal
         isOpen={isReportModalOpen}
         onClose={() => {
@@ -775,6 +788,7 @@ const MyRequestsPage: React.FC = () => {
         </div>
       </Modal>
     </main>
+    </>
   );
 };
 

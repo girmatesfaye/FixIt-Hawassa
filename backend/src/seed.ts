@@ -27,7 +27,6 @@ type WorkerSeed = {
     isActive: boolean;
     completionRate: number;
     responseMinutes: number;
-    distanceKm: number;
     avatar: string;
     portfolio: string[];
   };
@@ -63,7 +62,6 @@ const WORKERS: WorkerSeed[] = [
       isActive: true,
       completionRate: 0.96,
       responseMinutes: 8,
-      distanceKm: 2.1,
       avatar: "/uploads/workers/abebe.jpg",
       portfolio: [
         "/uploads/workers/abebe-job-1.jpg",
@@ -94,7 +92,6 @@ const WORKERS: WorkerSeed[] = [
       isActive: true,
       completionRate: 0.94,
       responseMinutes: 10,
-      distanceKm: 3.4,
       avatar: "/uploads/workers/tigist.jpg",
       portfolio: [
         "/uploads/workers/tigist-job-1.jpg",
@@ -125,7 +122,6 @@ const WORKERS: WorkerSeed[] = [
       isActive: true,
       completionRate: 0.91,
       responseMinutes: 14,
-      distanceKm: 4.8,
       avatar: "/uploads/workers/dawit.jpg",
       portfolio: [
         "/uploads/workers/dawit-job-1.jpg",
@@ -156,7 +152,6 @@ const WORKERS: WorkerSeed[] = [
       isActive: true,
       completionRate: 0.89,
       responseMinutes: 12,
-      distanceKm: 5.2,
       avatar: "/uploads/workers/meron.jpg",
       portfolio: [
         "/uploads/workers/meron-job-1.jpg",

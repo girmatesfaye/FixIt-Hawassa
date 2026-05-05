@@ -14,7 +14,6 @@ import { RequestDraft, WorkerRecommendation } from "../types";
 type AuthenticatedRequest = Request & { userId?: string };
 
 const querySchema = z.object({
-  maxDistanceKm: z.coerce.number().min(1).max(200).default(100),
   minRating: z.coerce.number().min(0).max(5).default(0),
   onlyActive: z.coerce.boolean().default(true),
   page: z.coerce.number().int().min(1).default(1),
@@ -24,7 +23,6 @@ const querySchema = z.object({
 const loadRankedWorkers = async (
   requestDraft: RequestDraft | null,
   filters: {
-    maxDistanceKm: number;
     minRating: number;
     onlyActive: boolean;
   },
@@ -81,7 +79,6 @@ const loadRankedWorkers = async (
           rating: liveReviewStats?.rating ?? profile.rating ?? 0,
           reviews: liveReviewStats?.reviews ?? profile.reviews ?? 0,
           isActive: profile.isActive,
-          distanceKm: profile.distanceKm ?? 99,
           completionRate: profile.completionRate ?? 0,
           responseMinutes: profile.responseMinutes ?? 30,
           skills: profile.skills ?? [],
@@ -197,11 +194,10 @@ export const rankRecommendations = async (req: Request, res: Response) => {
   }
 
   const requestDraft = (req.body ?? null) as RequestDraft | null;
-  const { maxDistanceKm, minRating, onlyActive, page, limit } =
+  const { minRating, onlyActive, page, limit } =
     parsedQuery.data;
 
   const { ranked, source } = await loadRankedWorkers(requestDraft, {
-    maxDistanceKm,
     minRating,
     onlyActive,
   });
@@ -213,7 +209,7 @@ export const rankRecommendations = async (req: Request, res: Response) => {
     page: paginated.page,
     limit: paginated.limit,
     hasMore: paginated.hasMore,
-    filters: { maxDistanceKm, minRating, onlyActive },
+    filters: { minRating, onlyActive },
     recommendations: paginated.items,
     source,
   });
@@ -236,7 +232,7 @@ export const getRecommendationsForRequest = async (
     ? requestIdRaw[0]
     : requestIdRaw;
   const authenticatedUserId = (req as AuthenticatedRequest).userId;
-  const { maxDistanceKm, minRating, onlyActive, page, limit } =
+  const { minRating, onlyActive, page, limit } =
     parsedQuery.data;
 
   if (!requestId) {
@@ -284,7 +280,6 @@ export const getRecommendationsForRequest = async (
 
   const snapshotQuery = {
     requestId: new Types.ObjectId(requestId),
-    "filters.maxDistanceKm": maxDistanceKm,
     "filters.minRating": minRating,
     "filters.onlyActive": onlyActive,
   };
@@ -293,7 +288,6 @@ export const getRecommendationsForRequest = async (
 
   if (!snapshotDoc) {
     const { ranked, source } = await loadRankedWorkers(requestDraft, {
-      maxDistanceKm,
       minRating,
       onlyActive,
     });
@@ -303,7 +297,7 @@ export const getRecommendationsForRequest = async (
       {
         $setOnInsert: {
           requestId: new Types.ObjectId(requestId),
-          filters: { maxDistanceKm, minRating, onlyActive },
+          filters: { minRating, onlyActive },
           recommendations: ranked,
           source,
           createdAt: new Date(),
@@ -333,7 +327,6 @@ export const getRecommendationsForRequest = async (
 
   if (!normalizedSnapshotRecommendations) {
     const { ranked, source } = await loadRankedWorkers(requestDraft, {
-      maxDistanceKm,
       minRating,
       onlyActive,
     });
@@ -406,7 +399,7 @@ export const getRecommendationsForRequest = async (
     page: paginated.page,
     limit: paginated.limit,
     hasMore: paginated.hasMore,
-    filters: { maxDistanceKm, minRating, onlyActive },
+    filters: { minRating, onlyActive },
     recommendations: paginated.items,
     source: snapshotDoc.source,
     snapshotCreatedAt:

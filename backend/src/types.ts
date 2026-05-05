@@ -19,7 +19,6 @@ export interface WorkerRecommendation {
   rating: number;
   reviews: number;
   isActive: boolean;
-  distanceKm: number;
   completionRate: number;
   responseMinutes: number;
   skills: string[];

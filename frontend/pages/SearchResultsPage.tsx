@@ -25,7 +25,6 @@ const SearchResultsPage: React.FC = () => {
   const location = useLocation();
   const PAGE_SIZE = 12;
   const UNREAD_MARKER_PREFIX = "fixit_last_seen_messages_";
-  const [distance, setDistance] = useState(100);
   const [minRating, setMinRating] = useState(0);
   const [onlyActive, setOnlyActive] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +41,7 @@ const SearchResultsPage: React.FC = () => {
   const [statusNotice, setStatusNotice] = useState("");
   const [myUserId, setMyUserId] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
-  const [sortBy, setSortBy] = useState<"recommended" | "rating" | "distance">(
+  const [sortBy, setSortBy] = useState<"recommended" | "rating">(
     "recommended",
   );
   const [searchQuery, setSearchQuery] = useState("");
@@ -221,7 +220,6 @@ const SearchResultsPage: React.FC = () => {
 
     if (!requestId) {
       fetchTopWorkers({
-        maxDistanceKm: distance,
         minRating,
         onlyActive,
         limit: PAGE_SIZE,
@@ -243,7 +241,6 @@ const SearchResultsPage: React.FC = () => {
     }
 
     fetchRecommendations(requestId, {
-      maxDistanceKm: distance,
       minRating,
       onlyActive,
       page: 1,
@@ -267,7 +264,7 @@ const SearchResultsPage: React.FC = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [distance, minRating, onlyActive, requestId]);
+  }, [minRating, onlyActive, requestId]);
 
   const handleLoadMore = () => {
     if (!requestId || isLoadingMore || !hasMore) {
@@ -277,7 +274,6 @@ const SearchResultsPage: React.FC = () => {
     setIsLoadingMore(true);
 
     fetchRecommendations(requestId, {
-      maxDistanceKm: distance,
       minRating,
       onlyActive,
       page: currentPage + 1,
@@ -362,10 +358,6 @@ const SearchResultsPage: React.FC = () => {
       });
     }
 
-    if (sortBy === "distance") {
-      return [...searched].sort((a, b) => a.distanceKm - b.distanceKm);
-    }
-
     return searched;
   }, [workers, searchQuery, sortBy]);
 
@@ -408,7 +400,6 @@ const SearchResultsPage: React.FC = () => {
               </h2>
               <button
                 onClick={() => {
-                  setDistance(100);
                   setMinRating(0);
                   setOnlyActive(true);
                   setSortBy("recommended");
@@ -429,7 +420,6 @@ const SearchResultsPage: React.FC = () => {
                   {[
                     { label: "Recommended", value: "recommended" as const },
                     { label: "Top Rated", value: "rating" as const },
-                    { label: "Near Me", value: "distance" as const },
                   ].map((opt) => (
                     <button
                       key={opt.value}
@@ -440,25 +430,6 @@ const SearchResultsPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Max Distance
-                  </label>
-                  <span className="text-sm font-medium text-primary">
-                    {distance}km
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={distance}
-                  onChange={(e) => setDistance(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-primary"
-                />
               </div>
 
               <div className="space-y-3">
@@ -647,9 +618,6 @@ const SearchResultsPage: React.FC = () => {
                                 </span>
                                 {worker.location}
                               </div>
-                              <p className="text-[11px] text-gray-400">
-                                {worker.distanceKm.toFixed(1)} km away
-                              </p>
                             </div>
 
                             <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
