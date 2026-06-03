@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "server.ts"],
+  "include": ["src", "src/server.ts"],
   "exclude": ["src/__tests__"]
 }
