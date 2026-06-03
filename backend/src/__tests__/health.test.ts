@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 import request from "supertest";
 import express from "express";
 import healthRouter from "../routes/health";

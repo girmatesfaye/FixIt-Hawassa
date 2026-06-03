@@ -64,21 +64,23 @@ export const rankWorkers = (
           })
         : false;
 
-      const areaMatch = request && w.area && request.area
-        ? w.area.toLowerCase().trim() === request.area.toLowerCase().trim()
-        : false;
+      const areaMatch =
+        request && w.area && request.area
+          ? w.area.toLowerCase().trim() === request.area.toLowerCase().trim()
+          : false;
 
-      const reviewScore = maxReviews === minReviews 
-        ? 0.5 
-        : normalize(w.reviews, minReviews, maxReviews);
+      const reviewScore =
+        maxReviews === minReviews
+          ? 0.5
+          : normalize(w.reviews, minReviews, maxReviews);
 
       // Final weighted formula:
       const score =
-        (categoryMatch ? 5.0 : 0) +     // Primary: Category (Increased to 5.0)
-        (areaMatch ? 3.0 : 0) +         // Secondary: Area (Increased to 3.0)
-        (w.rating * 1.0) +              // Quality (Increased weight)
-        (w.completionRate * 1.5) +      // Reliability
-        (reviewScore * 0.5);            // Popularity
+        (categoryMatch ? 5.0 : 0) +
+        (areaMatch ? 3.0 : 0) +
+        w.rating * 1.0 +
+        w.completionRate * 1.5 +
+        reviewScore * 0.5;
 
       return {
         ...w,
