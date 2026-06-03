@@ -1,23 +1,23 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
-import healthRouter from "./routes/health";
-import authRouter from "./routes/auth";
-import requestsRouter from "./routes/requests";
-import recommendationsRouter from "./routes/recommendations";
-import adminRouter from "./routes/admin";
-import workersRouter from "./routes/workers";
-import messagesRouter from "./routes/messages";
-import uploadRouter from "./routes/upload";
-import { getPublicCategories } from "./controllers/adminController";
-import { connectToDatabase } from "./config/db";
-import { env } from "./config/env";
+import healthRouter from "./src/routes/health";
+import authRouter from "./src/routes/auth";
+import requestsRouter from "./src/routes/requests";
+import recommendationsRouter from "./src/routes/recommendations";
+import adminRouter from "./src/routes/admin";
+import workersRouter from "./src/routes/workers";
+import messagesRouter from "./src/routes/messages";
+import uploadRouter from "./src/routes/upload";
+import { getPublicCategories } from "./src/controllers/adminController";
+import { connectToDatabase } from "./src/config/db";
+import { env } from "./src/config/env";
 import path from "path";
 
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
-import { initSocket } from "./socket";
+import { initSocket } from "./src/socket";
 import { createServer } from "http";
 
 const app = express();
