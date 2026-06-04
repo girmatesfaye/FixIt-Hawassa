@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { UserRole } from "../services/auth";
+import logoMuyayePrimary from "../assets/logo-muyaye-primary.svg";
 
 interface LandingPageProps {
   isAuthenticated: boolean;
@@ -204,9 +205,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="layout-content-container flex w-full max-w-[1200px] items-center justify-between">
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-4">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-primary/20">
-                  <span className="material-symbols-outlined">handyman</span>
-                </div>
+                <img
+                  src={logoMuyayePrimary}
+                  alt="Muyaye"
+                  className="h-10 w-auto"
+                />
                 <h2 className="text-lg font-bold leading-tight tracking-tight text-[#120e1b] dark:text-white">
                   Muyaye
                 </h2>
@@ -280,11 +283,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-lg">
-                  handyman
-                </span>
-              </div>
+              <img
+                src={logoMuyayePrimary}
+                alt="Muyaye"
+                className="h-8 w-auto"
+              />
               <span className="text-sm font-bold dark:text-white">Muyaye</span>
             </div>
             <button
@@ -639,11 +642,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="px-4 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col items-center md:items-start gap-2">
             <div className="flex items-center gap-3">
-              <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-sm">
-                  handyman
-                </span>
-              </div>
+              <img
+                src={logoMuyayePrimary}
+                alt="Muyaye"
+                className="h-8 w-auto"
+              />
               <h2 className="text-xl font-black dark:text-white">Muyaye</h2>
             </div>
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">

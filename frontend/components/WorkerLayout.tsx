@@ -6,6 +6,7 @@ import {
   useLocation,
   Link,
 } from "react-router-dom";
+import logoMuyayePrimary from "../assets/logo-muyaye-primary.svg";
 
 interface WorkerLayoutProps {
   onLogout: () => void;
@@ -102,11 +103,11 @@ const WorkerLayout: React.FC<WorkerLayoutProps> = ({ onLogout }) => {
             onClick={closeMobileMenu}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity overflow-hidden"
           >
-            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
-              <span className="material-symbols-outlined font-semibold text-xl">
-                engineering
-              </span>
-            </div>
+            <img
+              src={logoMuyayePrimary}
+              alt="Muyaye"
+              className="h-8 w-auto shrink-0"
+            />
             <div className="lg:max-w-0 lg:group-hover:max-w-[160px] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
               <h2 className="text-sm font-bold tracking-tight text-[#120e1b] dark:text-white">
                 Muyaye
