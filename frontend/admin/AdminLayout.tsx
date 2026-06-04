@@ -37,17 +37,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
     <div className="flex h-screen portal-shell font-sans overflow-hidden relative">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
           onClick={closeMobileMenu}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside
+        className={`
         fixed inset-y-0 left-0 z-[70] w-64 bg-[#f8faff] dark:bg-surface-dark border-r border-[#e8edf7] dark:border-gray-800 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:w-20 lg:hover:w-64 group flex flex-col shrink-0
         ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-      `}>
+      `}
+      >
         <div className="p-6 flex items-center justify-between">
           <Link
             to="/"
@@ -61,12 +63,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
             </div>
             <div className="lg:max-w-0 lg:group-hover:max-w-[160px] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
               <h2 className="text-xs font-semibold tracking-tight text-[#120e1b] dark:text-white">
-                FixIt Hawassa
+                Muyaye
               </h2>
-              <p className="text-[10px] font-medium text-gray-400">Admin Portal</p>
+              <p className="text-[10px] font-medium text-gray-400">
+                Admin Portal
+              </p>
             </div>
           </Link>
-          <button 
+          <button
             onClick={closeMobileMenu}
             className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
           >
@@ -153,14 +157,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
         {/* Top Header */}
         <header className="h-14 lg:h-10 portal-topbar border-x-0 border-t-0 flex items-center justify-between px-4 lg:px-8 shrink-0">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
             <h1 className="lg:hidden text-sm font-bold text-[#120e1b] dark:text-white tracking-tight">
-              {menuItems.find(i => location.pathname.startsWith(i.path))?.label || "Admin Portal"}
+              {menuItems.find((i) => location.pathname.startsWith(i.path))
+                ?.label || "Admin Portal"}
             </h1>
           </div>
 

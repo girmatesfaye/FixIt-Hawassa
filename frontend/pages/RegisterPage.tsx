@@ -56,12 +56,16 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
 
       // Bounding box for Hawassa area
       // Roughly: Lat [6.9, 7.2], Lon [38.3, 38.6]
-      const isWithinHawassaBounds = 
-        latitude >= 6.9 && latitude <= 7.2 && 
-        longitude >= 38.3 && longitude <= 38.6;
+      const isWithinHawassaBounds =
+        latitude >= 6.9 &&
+        latitude <= 7.2 &&
+        longitude >= 38.3 &&
+        longitude <= 38.6;
 
       if (!isWithinHawassaBounds) {
-        toast.error("FixIt is currently optimized for Hawassa. Please ensure your location is within the city limits.");
+        toast.error(
+          "Muyaye is currently optimized for Hawassa. Please ensure your location is within the city limits.",
+        );
         return null;
       }
 
@@ -206,7 +210,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
 
       const resolvedRole = result?.user?.role ?? role;
       const token = typeof result?.token === "string" ? result.token : "";
-      
+
       if (!token) {
         // Fallback if token wasn't returned for some reason
         navigate("/login");
@@ -215,7 +219,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
 
       saveSession(token, resolvedRole);
       onRegisterSuccess(resolvedRole);
-      
+
       if (resolvedRole === "admin") {
         navigate("/admin/users");
       } else if (resolvedRole === "worker") {
@@ -239,28 +243,40 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
         <div className="max-w-md w-full mx-auto space-y-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
-              <span className="material-symbols-outlined text-3xl font-bold">handyman</span>
+              <span className="material-symbols-outlined text-3xl font-bold">
+                handyman
+              </span>
             </div>
-            <h2 className="text-[#40513b] dark:text-white text-xl font-black tracking-tight">FixIt Hawassa</h2>
+            <h2 className="text-[#40513b] dark:text-white text-xl font-black tracking-tight">
+              Muyaye
+            </h2>
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-black text-[#40513b] dark:text-white tracking-tight">Create Account</h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Join our community of skilled professionals and clients.</p>
+            <h1 className="text-4xl font-black text-[#40513b] dark:text-white tracking-tight">
+              Create Account
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">
+              Join our community of skilled professionals and clients.
+            </p>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               {/* Role Selection */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Joining as</label>
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                  Joining as
+                </label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
                     onClick={() => setRole("client")}
                     className={`h-14 rounded-2xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${role === "client" ? "border-primary bg-primary/5 text-primary shadow-lg shadow-primary/10" : "border-gray-100 dark:border-gray-800 text-gray-400"}`}
                   >
-                    <span className="material-symbols-outlined text-xl">person</span>
+                    <span className="material-symbols-outlined text-xl">
+                      person
+                    </span>
                     Client
                   </button>
                   <button
@@ -268,14 +284,18 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                     onClick={() => setRole("worker")}
                     className={`h-14 rounded-2xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${role === "worker" ? "border-primary bg-primary/5 text-primary shadow-lg shadow-primary/10" : "border-gray-100 dark:border-gray-800 text-gray-400"}`}
                   >
-                    <span className="material-symbols-outlined text-xl">engineering</span>
+                    <span className="material-symbols-outlined text-xl">
+                      engineering
+                    </span>
                     Worker
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Full Name</label>
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                  Full Name
+                </label>
                 <input
                   required
                   value={fullName}
@@ -287,7 +307,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Email Address</label>
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                  Email Address
+                </label>
                 <input
                   required
                   value={email}
@@ -299,7 +321,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Location</label>
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                  Location
+                </label>
                 <div className="relative">
                   <input
                     required
@@ -309,14 +333,18 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                     placeholder="Neighborhood or Area"
                     type="text"
                   />
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">location_on</span>
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    location_on
+                  </span>
                   <button
                     type="button"
                     onClick={handleUseCurrentLocation}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-primary hover:text-primary-dark transition-colors"
                     title="Use my location"
                   >
-                    <span className="material-symbols-outlined">my_location</span>
+                    <span className="material-symbols-outlined">
+                      my_location
+                    </span>
                   </button>
                 </div>
               </div>
@@ -324,7 +352,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
               {role === "worker" && (
                 <>
                   <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Main Service Category</label>
+                    <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                      Main Service Category
+                    </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
@@ -342,22 +372,27 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
                   </div>
 
                   <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-
-                  <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">National ID</label>
-                  <input
-                    required
-                    value={nationalId}
-                    onChange={(e) => setNationalId(e.target.value.toUpperCase())}
-                    className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
-                    placeholder="ETH-WORKER-XXXX"
-                    type="text"
-                  />
+                    <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                      National ID
+                    </label>
+                    <input
+                      required
+                      value={nationalId}
+                      onChange={(e) =>
+                        setNationalId(e.target.value.toUpperCase())
+                      }
+                      className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 focus:border-primary focus:ring-0 transition-all text-base dark:text-white"
+                      placeholder="ETH-WORKER-XXXX"
+                      type="text"
+                    />
                   </div>
                 </>
               )}
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Password</label>
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                  Password
+                </label>
                 <input
                   required
                   value={password}
@@ -372,7 +407,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
             {formError && (
               <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
                 <p className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  <span className="material-symbols-outlined text-[18px]">
+                    error
+                  </span>
                   {formError}
                 </p>
               </div>
@@ -390,7 +427,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
           <div className="pt-4 flex flex-col items-center gap-6">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Already have an account?
-              <Link to="/login" className="text-primary font-black hover:underline ml-1.5">Log in</Link>
+              <Link
+                to="/login"
+                className="text-primary font-black hover:underline ml-1.5"
+              >
+                Log in
+              </Link>
             </p>
           </div>
         </div>

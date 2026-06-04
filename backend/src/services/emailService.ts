@@ -15,20 +15,20 @@ export const sendResetPasswordEmail = async (email: string, token: string) => {
   const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/#/reset-password?token=${token}`;
 
   const mailOptions = {
-    from: process.env.FROM_EMAIL || '"FixIt Hawassa" <noreply@fixit-hawassa.com>',
+    from: process.env.FROM_EMAIL || '"Muyaye" <noreply@muyaye.com>',
     to: email,
-    subject: "Password Reset Request - FixIt Hawassa",
+    subject: "Password Reset Request - Muyaye",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #609966;">Password Reset Request</h2>
-        <p>You requested a password reset for your FixIt Hawassa account.</p>
+        <p>You requested a password reset for your Muyaye account.</p>
         <p>Please click the button below to set a new password. This link is valid for 1 hour.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${resetUrl}" style="background-color: #609966; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
         </div>
         <p style="color: #666; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
         <hr style="border: none; border-top: 1px solid #eee; margin-top: 30px;" />
-        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 FixIt Hawassa. All rights reserved.</p>
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Muyaye. All rights reserved.</p>
       </div>
     `,
   };
@@ -43,29 +43,38 @@ export const sendResetPasswordEmail = async (email: string, token: string) => {
 
 export const sendWelcomeEmail = async (email: string, name: string) => {
   const mailOptions = {
-    from: process.env.FROM_EMAIL || '"FixIt Hawassa" <noreply@fixit-hawassa.com>',
+    from: process.env.FROM_EMAIL || '"Muyaye" <noreply@muyaye.com>',
     to: email,
-    subject: "Welcome to FixIt Hawassa!",
+    subject: "Welcome to Muyaye!",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #609966;">Welcome, ${name}!</h2>
-        <p>Thank you for joining the FixIt Hawassa community. We're excited to help you find the best local professionals or grow your professional business.</p>
+        <p>Thank you for joining the Muyaye community. We're excited to help you find the best local professionals or grow your professional business.</p>
         <p>Log in to your dashboard to get started.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.FRONTEND_URL || "http://localhost:3000"}" style="background-color: #609966; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Go to Dashboard</a>
         </div>
-        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 FixIt Hawassa. All rights reserved.</p>
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Muyaye. All rights reserved.</p>
       </div>
     `,
   };
-  try { await transporter.sendMail(mailOptions); } catch (e) { console.error("Welcome email failed", e); }
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (e) {
+    console.error("Welcome email failed", e);
+  }
 };
 
-export const sendNewRequestEmail = async (workerEmail: string, workerName: string, category: string, area: string) => {
+export const sendNewRequestEmail = async (
+  workerEmail: string,
+  workerName: string,
+  category: string,
+  area: string,
+) => {
   const mailOptions = {
-    from: process.env.FROM_EMAIL || '"FixIt Hawassa" <noreply@fixit-hawassa.com>',
+    from: process.env.FROM_EMAIL || '"Muyaye" <noreply@muyaye.com>',
     to: workerEmail,
-    subject: "New Job Request! - FixIt Hawassa",
+    subject: "New Job Request! - Muyaye",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #609966;">New Request for ${category}</h2>
@@ -74,18 +83,26 @@ export const sendNewRequestEmail = async (workerEmail: string, workerName: strin
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/#/worker-hub" style="background-color: #609966; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">View Request</a>
         </div>
-        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 FixIt Hawassa. All rights reserved.</p>
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Muyaye. All rights reserved.</p>
       </div>
     `,
   };
-  try { await transporter.sendMail(mailOptions); } catch (e) { console.error("New request email failed", e); }
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (e) {
+    console.error("New request email failed", e);
+  }
 };
 
-export const sendBookingAcceptedEmail = async (clientEmail: string, clientName: string, workerName: string) => {
+export const sendBookingAcceptedEmail = async (
+  clientEmail: string,
+  clientName: string,
+  workerName: string,
+) => {
   const mailOptions = {
-    from: process.env.FROM_EMAIL || '"FixIt Hawassa" <noreply@fixit-hawassa.com>',
+    from: process.env.FROM_EMAIL || '"Muyaye" <noreply@muyaye.com>',
     to: clientEmail,
-    subject: "Booking Accepted! - FixIt Hawassa",
+    subject: "Booking Accepted! - Muyaye",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #609966;">Great News, ${clientName}!</h2>
@@ -94,30 +111,34 @@ export const sendBookingAcceptedEmail = async (clientEmail: string, clientName: 
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/#/bookings" style="background-color: #609966; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">View Booking</a>
         </div>
-        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 FixIt Hawassa. All rights reserved.</p>
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Muyaye. All rights reserved.</p>
       </div>
     `,
   };
-  try { await transporter.sendMail(mailOptions); } catch (e) { console.error("Booking accepted email failed", e); }
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (e) {
+    console.error("Booking accepted email failed", e);
+  }
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/#/verify-email?token=${token}`;
 
   const mailOptions = {
-    from: process.env.FROM_EMAIL || '"FixIt Hawassa" <noreply@fixit-hawassa.com>',
+    from: process.env.FROM_EMAIL || '"Muyaye" <noreply@muyaye.com>',
     to: email,
-    subject: "Verify Your Email - FixIt Hawassa",
+    subject: "Verify Your Email - Muyaye",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #609966;">Action Required: Verify Your Email</h2>
-        <p>Thank you for signing up for FixIt Hawassa! Please click the button below to verify your email address. This link is valid for 24 hours.</p>
+        <p>Thank you for signing up for Muyaye! Please click the button below to verify your email address. This link is valid for 24 hours.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verifyUrl}" style="background-color: #609966; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Verify Email Address</a>
         </div>
         <p style="color: #666; font-size: 14px;">If you didn't create an account, you can safely ignore this email.</p>
         <hr style="border: none; border-top: 1px solid #eee; margin-top: 30px;" />
-        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 FixIt Hawassa. All rights reserved.</p>
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Muyaye. All rights reserved.</p>
       </div>
     `,
   };

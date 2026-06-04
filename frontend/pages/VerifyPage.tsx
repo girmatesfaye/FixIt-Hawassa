@@ -151,7 +151,7 @@ const VerifyPage: React.FC<VerifyPageProps> = ({ onVerify }) => {
                 </span>
               </div>
               <h2 className="text-[#120e1b] dark:text-white text-xl font-bold">
-                FixIt Hawassa
+                Muyaye
               </h2>
             </div>
 

@@ -115,45 +115,55 @@ const WorkerProfilePage: React.FC = () => {
     (location.state as { requestId?: string } | null)?.requestId ?? "";
 
   const [clientRequests, setClientRequests] = useState<any[]>([]);
-  
+
   // Engagement levels - Improved to find the MOST RELEVANT request
   const currentEngagement = React.useMemo(() => {
     // 1. If we came from a specific request, that's our source of truth
     if (existingRequestId) {
-      return clientRequests.find(r => r.id === existingRequestId || r._id === existingRequestId);
+      return clientRequests.find(
+        (r) => r.id === existingRequestId || r._id === existingRequestId,
+      );
     }
-    
+
     // 2. Otherwise, find the LATEST request with this worker
     const workerRequests = clientRequests
-      .filter(r => String(r.assignedWorkerId?._id || r.assignedWorkerId) === String(id))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
+      .filter(
+        (r) =>
+          String(r.assignedWorkerId?._id || r.assignedWorkerId) === String(id),
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
     return workerRequests[0]; // Latest one
   }, [clientRequests, id, existingRequestId]);
-  
-  const isEngagementAccepted = currentEngagement && 
-    (currentEngagement.status === "IN_PROGRESS" || currentEngagement.status === "COMPLETED");
-    
-  const isEngagementCompleted = currentEngagement && 
-    currentEngagement.status === "COMPLETED";
+
+  const isEngagementAccepted =
+    currentEngagement &&
+    (currentEngagement.status === "IN_PROGRESS" ||
+      currentEngagement.status === "COMPLETED");
+
+  const isEngagementCompleted =
+    currentEngagement && currentEngagement.status === "COMPLETED";
 
   const fetchWorker = async () => {
     try {
       if (!id) return;
-      
+
       // Also fetch client's own requests to check for engagement
       const token = getAuthToken();
       if (token) {
         fetch(`${API_BASE_URL}/requests/mine`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data.requests)) {
-            setClientRequests(data.requests);
-          }
-        })
-        .catch(() => {});
+          .then((res) => res.json())
+          .then((data) => {
+            if (Array.isArray(data.requests)) {
+              setClientRequests(data.requests);
+            }
+          })
+          .catch(() => {});
       }
 
       const res = await fetch(`${API_BASE_URL}/workers/${id}`);
@@ -171,7 +181,9 @@ const WorkerProfilePage: React.FC = () => {
           : [];
 
         const fallbackAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${workerData.id}`;
-        const profileAvatar = toPublicAssetUrl(workerData.avatar || profile?.avatar || "");
+        const profileAvatar = toPublicAssetUrl(
+          workerData.avatar || profile?.avatar || "",
+        );
 
         setWorker({
           id: workerData.id,
@@ -198,7 +210,9 @@ const WorkerProfilePage: React.FC = () => {
           resolvedReviews.map((r) => ({
             id: r._id || `${workerData.id}-${r.createdAt || Math.random()}`,
             name: r.clientId?.fullName || "Client",
-            avatar: getUploadedImageUrl(r.clientId?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.clientId?.fullName || "A")}`,
+            avatar:
+              getUploadedImageUrl(r.clientId?.avatar) ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.clientId?.fullName || "A")}`,
             date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "",
             rating: Number(r.rating ?? 0),
             comment: r.comment || "",
@@ -225,7 +239,9 @@ const WorkerProfilePage: React.FC = () => {
   const submitReview = async () => {
     try {
       if (!existingRequestId || !id) {
-        toast.error("Open this profile from your completed request to submit feedback.");
+        toast.error(
+          "Open this profile from your completed request to submit feedback.",
+        );
         return;
       }
 
@@ -246,17 +262,25 @@ const WorkerProfilePage: React.FC = () => {
         return;
       }
 
-      toast.error(error instanceof Error ? error.message : "Failed to submit review");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit review",
+      );
     }
   };
 
   const submitReport = async () => {
     try {
       // Validate based on engagement
-      const needsJobToReport = ["Overcharging", "Poor Quality of Work", "No-show / Delay"].includes(reportReason);
-      
+      const needsJobToReport = [
+        "Overcharging",
+        "Poor Quality of Work",
+        "No-show / Delay",
+      ].includes(reportReason);
+
       if (needsJobToReport && !currentEngagement) {
-        toast.error(`You can only report for "${reportReason}" if you have an active or completed request with this worker.`);
+        toast.error(
+          `You can only report for "${reportReason}" if you have an active or completed request with this worker.`,
+        );
         return;
       }
 
@@ -264,7 +288,8 @@ const WorkerProfilePage: React.FC = () => {
 
       await submitWorkerReport({
         workerId: id,
-        requestId: currentEngagement?.id || currentEngagement?._id || "PROFILE_REPORT",
+        requestId:
+          currentEngagement?.id || currentEngagement?._id || "PROFILE_REPORT",
         type: reportReason,
         text: reportDescription,
       });
@@ -278,7 +303,9 @@ const WorkerProfilePage: React.FC = () => {
         return;
       }
 
-      toast.error(error instanceof Error ? error.message : "Failed to submit report");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit report",
+      );
     }
   };
 
@@ -353,8 +380,6 @@ const WorkerProfilePage: React.FC = () => {
 
   return (
     <div className="w-full">
-
-
       {/* Main Content */}
       <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
@@ -456,7 +481,9 @@ const WorkerProfilePage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs font-bold text-[#120e1b] dark:text-white hover:text-primary transition-colors border border-gray-100 dark:border-gray-700"
                     >
-                      <span className="material-symbols-outlined text-[18px]">smart_display</span>
+                      <span className="material-symbols-outlined text-[18px]">
+                        smart_display
+                      </span>
                       TikTok Portfolio
                     </a>
                   )}
@@ -536,40 +563,55 @@ const WorkerProfilePage: React.FC = () => {
                   <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 flex flex-col gap-5">
                     <div className="flex flex-col gap-2">
                       <h4 className="text-sm font-bold text-[#120e1b] dark:text-white flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
+                        <span className="material-symbols-outlined text-primary text-xl">
+                          verified_user
+                        </span>
                         Secure Booking
                       </h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                        To protect your privacy and ensure safety, we hide contact details until a formal request is made and accepted.
+                        To protect your privacy and ensure safety, we hide
+                        contact details until a formal request is made and
+                        accepted.
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       {/* Step 1 */}
                       <div className="flex gap-4">
-                        <div className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${currentEngagement?.status === "PENDING" ? "bg-green-500 text-white" : "bg-primary text-white"}`}>
+                        <div
+                          className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${currentEngagement?.status === "PENDING" ? "bg-green-500 text-white" : "bg-primary text-white"}`}
+                        >
                           {currentEngagement?.status === "PENDING" ? "✓" : "1"}
                         </div>
                         <div className="flex flex-col gap-1">
-                          <p className={`text-xs font-bold ${currentEngagement?.status === "PENDING" ? "text-green-600 dark:text-green-400" : "text-[#120e1b] dark:text-white"}`}>
+                          <p
+                            className={`text-xs font-bold ${currentEngagement?.status === "PENDING" ? "text-green-600 dark:text-green-400" : "text-[#120e1b] dark:text-white"}`}
+                          >
                             Send Invitation
                           </p>
-                          <p className="text-[10px] font-medium text-gray-400">Describe your needs and invite {worker.name.split(" ")[0]}.</p>
+                          <p className="text-[10px] font-medium text-gray-400">
+                            Describe your needs and invite{" "}
+                            {worker.name.split(" ")[0]}.
+                          </p>
                         </div>
                       </div>
 
                       {/* Step 2 */}
                       <div className="flex gap-4">
-                        <div className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${currentEngagement?.status === "PENDING" ? "bg-amber-500 text-white animate-pulse" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}>
+                        <div
+                          className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${currentEngagement?.status === "PENDING" ? "bg-amber-500 text-white animate-pulse" : "bg-gray-200 dark:bg-gray-700 text-gray-500"}`}
+                        >
                           2
                         </div>
                         <div className="flex flex-col gap-1">
-                          <p className={`text-xs font-bold ${currentEngagement?.status === "PENDING" ? "text-amber-600 dark:text-amber-400" : "text-gray-400"}`}>
+                          <p
+                            className={`text-xs font-bold ${currentEngagement?.status === "PENDING" ? "text-amber-600 dark:text-amber-400" : "text-gray-400"}`}
+                          >
                             Worker Acceptance
                           </p>
                           <p className="text-[10px] font-medium text-gray-400">
-                            {currentEngagement?.status === "PENDING" 
-                              ? "Waiting for response..." 
+                            {currentEngagement?.status === "PENDING"
+                              ? "Waiting for response..."
                               : "Once accepted, contact details reveal automatically."}
                           </p>
                         </div>
@@ -579,16 +621,21 @@ const WorkerProfilePage: React.FC = () => {
                     {currentEngagement?.status === "PENDING" ? (
                       <div className="flex flex-col gap-3">
                         <div className="p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30 flex gap-2">
-                          <span className="material-symbols-outlined text-amber-500 text-[18px]">info</span>
+                          <span className="material-symbols-outlined text-amber-500 text-[18px]">
+                            info
+                          </span>
                           <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-tight">
-                            Invitation is active! We'll notify you once they accept.
+                            Invitation is active! We'll notify you once they
+                            accept.
                           </p>
                         </div>
                         <button
                           disabled
                           className="h-12 w-full bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-xl font-bold uppercase tracking-widest text-[11px] flex items-center justify-center gap-2"
                         >
-                          <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                          <span className="material-symbols-outlined text-sm animate-spin">
+                            sync
+                          </span>
                           Waiting for Worker
                         </button>
                       </div>
@@ -598,7 +645,9 @@ const WorkerProfilePage: React.FC = () => {
                         disabled={isHiring}
                         className="h-14 w-full bg-primary hover:bg-primary-dark text-white rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-primary/25 transition-all active:scale-95 flex items-center justify-center gap-3"
                       >
-                        <span className="material-symbols-outlined">person_add</span>
+                        <span className="material-symbols-outlined">
+                          person_add
+                        </span>
                         {isHiring ? "Sending..." : "Send Work Request"}
                       </button>
                     )}
@@ -607,11 +656,17 @@ const WorkerProfilePage: React.FC = () => {
                   <div className="bg-green-50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-100 dark:border-green-900/30 flex flex-col gap-5">
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/30">
-                        <span className="material-symbols-outlined">check_circle</span>
+                        <span className="material-symbols-outlined">
+                          check_circle
+                        </span>
                       </div>
                       <div className="flex flex-col">
-                        <h4 className="text-sm font-bold text-green-700 dark:text-green-400">Contact Unlocked</h4>
-                        <p className="text-[10px] font-bold text-green-600/70 dark:text-green-400/70 uppercase tracking-widest">Request Accepted</p>
+                        <h4 className="text-sm font-bold text-green-700 dark:text-green-400">
+                          Contact Unlocked
+                        </h4>
+                        <p className="text-[10px] font-bold text-green-600/70 dark:text-green-400/70 uppercase tracking-widest">
+                          Request Accepted
+                        </p>
                       </div>
                     </div>
 
@@ -620,7 +675,9 @@ const WorkerProfilePage: React.FC = () => {
                         href={worker.phone ? `tel:${worker.phone}` : "#"}
                         className="h-12 bg-white dark:bg-gray-800 border-2 border-green-500/20 hover:border-green-500 text-green-600 dark:text-green-400 rounded-xl font-bold flex items-center justify-center gap-3 transition-all hover:bg-green-500 hover:text-white active:scale-95 text-xs shadow-sm"
                       >
-                        <span className="material-symbols-outlined text-[18px]">call</span>
+                        <span className="material-symbols-outlined text-[18px]">
+                          call
+                        </span>
                         {worker.phone || "Phone Hidden"}
                       </a>
 
@@ -631,17 +688,28 @@ const WorkerProfilePage: React.FC = () => {
                           rel="noopener noreferrer"
                           className="h-12 bg-[#26a5e4] hover:bg-[#1e8ec5] text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 text-xs shadow-md shadow-[#26a5e4]/20"
                         >
-                          <span className="material-symbols-outlined text-[18px]">send</span>
+                          <span className="material-symbols-outlined text-[18px]">
+                            send
+                          </span>
                           Telegram Message
                         </a>
                       )}
 
                       <button
-                        onClick={() => navigate("/messages", { state: { requestId: currentEngagement?._id || currentEngagement?.id } })}
+                        onClick={() =>
+                          navigate("/messages", {
+                            state: {
+                              requestId:
+                                currentEngagement?._id || currentEngagement?.id,
+                            },
+                          })
+                        }
                         className="h-12 w-full bg-primary text-white hover:bg-primary-dark rounded-xl font-bold flex items-center justify-center gap-3 transition-all text-xs shadow-md shadow-primary/20"
                       >
-                        <span className="material-symbols-outlined text-[18px]">chat</span>
-                        Open FixIt Chat
+                        <span className="material-symbols-outlined text-[18px]">
+                          chat
+                        </span>
+                        Open Muyaye Chat
                       </button>
                     </div>
                   </div>
@@ -652,7 +720,9 @@ const WorkerProfilePage: React.FC = () => {
                 <button
                   onClick={() => {
                     if (!isEngagementCompleted) {
-                      toast.error("You can only review a worker after a job is COMPLETED.");
+                      toast.error(
+                        "You can only review a worker after a job is COMPLETED.",
+                      );
                       return;
                     }
                     setIsReviewModalOpen(true);
@@ -668,11 +738,13 @@ const WorkerProfilePage: React.FC = () => {
                   </span>
                   Write a Review
                 </button>
-                
+
                 <button
                   onClick={() => {
                     if (!isEngagementCompleted) {
-                      toast.error("You can only report an issue after the job is COMPLETED.");
+                      toast.error(
+                        "You can only report an issue after the job is COMPLETED.",
+                      );
                       return;
                     }
                     setIsReportModalOpen(true);
@@ -683,13 +755,15 @@ const WorkerProfilePage: React.FC = () => {
                       : "bg-gray-50 dark:bg-gray-900/50 border-2 border-transparent text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">flag</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    flag
+                  </span>
                   Report a Problem
                 </button>
 
                 {!isEngagementCompleted && (
                   <p className="text-[10px] text-center text-gray-400 font-medium px-4">
-                    {currentEngagement 
+                    {currentEngagement
                       ? "Reviewing & reporting will unlock once the job is marked as completed."
                       : "Reviewing & reporting are locked until a service request is marked as completed."}
                   </p>
@@ -700,16 +774,18 @@ const WorkerProfilePage: React.FC = () => {
             {/* Trust Footer */}
             <div className="p-6 bg-gray-50/50 dark:bg-gray-900/10 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-gray-400 text-lg">verified</span>
+                <span className="material-symbols-outlined text-gray-400 text-lg">
+                  verified
+                </span>
                 <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Every job booked through FixIt Hawassa is protected by our professional service guidelines. 
+                  Every job booked through Muyaye is protected by our
+                  professional service guidelines.
                 </p>
               </div>
             </div>
           </div>
         </div>
       </main>
-
 
       {/* Lightbox Modal */}
       {selectedGalleryIdx !== null && (
@@ -895,9 +971,7 @@ const WorkerProfilePage: React.FC = () => {
       </Modal>
 
       <footer className="bg-white dark:bg-background-dark border-t border-gray-100 dark:border-gray-800 py-10 mt-12 text-center">
-        <p className="text-sm text-gray-400 font-medium">
-          © 2026 FixIt Hawassa.
-        </p>
+        <p className="text-sm text-gray-400 font-medium">© 2026 Muyaye.</p>
       </footer>
     </div>
   );

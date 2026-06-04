@@ -94,11 +94,11 @@ const HelpPage: React.FC = () => {
     },
     {
       q: "Is my personal information safe?",
-      a: "Yes, FixIt Hawassa only shares your contact details with a professional AFTER a request is confirmed or explicitly accepted. Your location is kept private until then.",
+      a: "Yes, Muyaye only shares your contact details with a professional AFTER a request is confirmed or explicitly accepted. Your location is kept private until then.",
     },
     {
-      q: "Can I use FixIt on mobile?",
-      a: "Absolutely! FixIt Hawassa is fully responsive and works perfectly on any smartphone browser. You can request services and chat on the go.",
+      q: "Can I use Muyaye on mobile?",
+      a: "Absolutely! Muyaye is fully responsive and works perfectly on any smartphone browser. You can request services and chat on the go.",
     },
   ];
 
@@ -113,7 +113,7 @@ const HelpPage: React.FC = () => {
     },
     {
       q: "How do I pay the worker?",
-      a: "Currently, FixIt facilitates the connection. Payment is handled directly between you and the worker (Cash, Telebirr, etc.) once the work is completed and confirmed.",
+      a: "Currently, Muyaye facilitates the connection. Payment is handled directly between you and the worker (Cash, Telebirr, etc.) once the work is completed and confirmed.",
     },
   ];
 
@@ -255,7 +255,7 @@ const HelpPage: React.FC = () => {
       </main>
 
       <footer className="mt-auto py-12 text-center border-t border-[#e8edf7] dark:border-gray-800 text-gray-400 text-[10px] font-bold uppercase tracking-[3px]">
-        &copy; 2026 FixIt Hawassa &bull; Supporting Local Talent
+        &copy; 2026 Muyaye &bull; Supporting Local Talent
       </footer>
     </div>
   );

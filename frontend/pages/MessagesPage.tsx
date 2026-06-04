@@ -17,7 +17,9 @@ const MessagesPage: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [me, setMe] = useState<any>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : true,
+  );
   const currentRole = getStoredRole();
   const homePath = currentRole === "worker" ? "/worker-hub" : "/dashboard";
   const requestedThreadId =
@@ -122,7 +124,7 @@ const MessagesPage: React.FC = () => {
     if (selectedContact !== null && requests[selectedContact]) {
       const requestId = requests[selectedContact].id;
       fetchMessages(requestId);
-      
+
       // Join socket room
       if (socketRef.current) {
         socketRef.current.emit("join_room", requestId);
@@ -154,7 +156,7 @@ const MessagesPage: React.FC = () => {
       });
       if (res.ok) {
         setNewMessage("");
-        // No need to fetchMessages(requestId) here anymore, 
+        // No need to fetchMessages(requestId) here anymore,
         // the socket will broadcast it to us too!
       }
     } catch (err) {
@@ -186,7 +188,7 @@ const MessagesPage: React.FC = () => {
                   </span>
                 </div>
                 <h2 className="text-base font-bold tracking-tight dark:text-white">
-                  FixIt Hawassa
+                  Muyaye
                 </h2>
               </Link>
             </div>
@@ -210,7 +212,10 @@ const MessagesPage: React.FC = () => {
               </Link>
               <div className="size-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 dark:border-gray-700">
                 <img
-                  src={getUploadedImageUrl(me?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`}
+                  src={
+                    getUploadedImageUrl(me?.avatar) ||
+                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(me?.name ?? "User")}`
+                  }
                   alt="User"
                   className="w-full h-full object-cover"
                 />
@@ -219,7 +224,6 @@ const MessagesPage: React.FC = () => {
           </div>
         </header>
       )}
-
 
       {/* Chat Container */}
       <main className="flex-1 flex overflow-hidden max-w-[1440px] mx-auto w-full border-x border-gray-100 dark:border-gray-800 bg-white dark:bg-surface-dark relative">
@@ -273,12 +277,14 @@ const MessagesPage: React.FC = () => {
                   <div className="relative shrink-0">
                     <div className="size-10 rounded-full overflow-hidden bg-gray-100 border border-gray-100 dark:border-gray-700">
                       <img
-                        src={
-                          (() => {
-                            const contactObj = contact.assignedWorkerId || contact.clientUserId;
-                            return getUploadedImageUrl(contactObj?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(getContactName(contact))}`;
-                          })()
-                        }
+                        src={(() => {
+                          const contactObj =
+                            contact.assignedWorkerId || contact.clientUserId;
+                          return (
+                            getUploadedImageUrl(contactObj?.avatar) ||
+                            `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(getContactName(contact))}`
+                          );
+                        })()}
                         alt={getContactName(contact)}
                         className="w-full h-full object-cover"
                       />
@@ -319,12 +325,15 @@ const MessagesPage: React.FC = () => {
                   </button>
                   <div className="size-10 rounded-full overflow-hidden bg-gray-100 border border-gray-100 dark:border-gray-700">
                     <img
-                      src={
-                        (() => {
-                          const contactObj = requests[selectedContact].assignedWorkerId || requests[selectedContact].clientUserId;
-                          return getUploadedImageUrl(contactObj?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(getContactName(requests[selectedContact]))}`;
-                        })()
-                      }
+                      src={(() => {
+                        const contactObj =
+                          requests[selectedContact].assignedWorkerId ||
+                          requests[selectedContact].clientUserId;
+                        return (
+                          getUploadedImageUrl(contactObj?.avatar) ||
+                          `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(getContactName(requests[selectedContact]))}`
+                        );
+                      })()}
                       alt=""
                       className="w-full h-full object-cover"
                     />
@@ -340,11 +349,12 @@ const MessagesPage: React.FC = () => {
               {/* Messages List */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
                 {messages.map((msg) => {
-                  const sender = typeof msg.senderId === "object" ? msg.senderId : null;
+                  const sender =
+                    typeof msg.senderId === "object" ? msg.senderId : null;
                   const senderId = sender?._id || msg.senderId;
                   const isMe = String(senderId) === String(me?.id || me?._id);
                   const isAdmin = sender?.role === "admin";
-                  
+
                   return (
                     <div
                       key={msg._id}
@@ -354,20 +364,28 @@ const MessagesPage: React.FC = () => {
                         className={`max-w-[85%] sm:max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}
                       >
                         {!isMe && (
-                          <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 px-1 ${isAdmin ? "text-red-500" : "text-gray-400"}`}>
-                            {isAdmin ? "FixIt Admin" : (sender?.fullName || "Partner")}
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider mb-1 px-1 ${isAdmin ? "text-red-500" : "text-gray-400"}`}
+                          >
+                            {isAdmin
+                              ? "Muyaye Admin"
+                              : sender?.fullName || "Partner"}
                           </span>
                         )}
                         <div
                           className={`rounded-2xl p-4 shadow-sm w-full ${
-                            isMe 
-                              ? "bg-primary text-white rounded-tr-none" 
+                            isMe
+                              ? "bg-primary text-white rounded-tr-none"
                               : isAdmin
                                 ? "bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100 border-2 border-red-500/30 rounded-tl-none"
                                 : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700"
                           }`}
                         >
-                          <p className={`text-sm leading-relaxed ${isAdmin ? "font-bold" : ""}`}>{msg.text}</p>
+                          <p
+                            className={`text-sm leading-relaxed ${isAdmin ? "font-bold" : ""}`}
+                          >
+                            {msg.text}
+                          </p>
                           <div
                             className={`text-[10px] mt-2 font-semibold uppercase opacity-60 ${isMe ? "text-right" : "text-left"}`}
                           >
@@ -410,9 +428,13 @@ const MessagesPage: React.FC = () => {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 px-6 text-center">
               <div className="size-16 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-                <span className="material-symbols-outlined text-3xl text-gray-300">chat_bubble_outline</span>
+                <span className="material-symbols-outlined text-3xl text-gray-300">
+                  chat_bubble_outline
+                </span>
               </div>
-              <p className="text-sm font-medium">Select a conversation to start messaging</p>
+              <p className="text-sm font-medium">
+                Select a conversation to start messaging
+              </p>
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="lg:hidden h-10 px-6 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform"

@@ -65,7 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       toast.success("Login successful!");
       const resolvedRole = result.role ?? "client";
       const token = result.token;
-      
+
       // Save session
       saveSession(token, resolvedRole);
 
@@ -94,20 +94,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         <div className="max-w-md w-full mx-auto space-y-10">
           <div className="flex items-center gap-3 mb-8">
             <div className="size-10 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
-              <span className="material-symbols-outlined text-3xl font-bold">handyman</span>
+              <span className="material-symbols-outlined text-3xl font-bold">
+                handyman
+              </span>
             </div>
-            <h2 className="text-[#40513b] dark:text-white text-xl font-black tracking-tight">FixIt Hawassa</h2>
+            <h2 className="text-[#40513b] dark:text-white text-xl font-black tracking-tight">
+              Muyaye
+            </h2>
           </div>
 
           <div className="space-y-3">
-            <h1 className="text-4xl font-black text-[#40513b] dark:text-white tracking-tight">Welcome Back</h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Log in to your account to manage your requests.</p>
+            <h1 className="text-4xl font-black text-[#40513b] dark:text-white tracking-tight">
+              Welcome Back
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">
+              Log in to your account to manage your requests.
+            </p>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Email Address</label>
+                <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                  Email Address
+                </label>
                 <input
                   required
                   value={email}
@@ -123,8 +133,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">Password</label>
-                  <Link to="/forgot-password" title="Recover your password" size="sm" className="text-xs font-bold text-primary hover:text-primary-dark transition-colors">
+                  <label className="text-sm font-bold text-[#40513b] dark:text-gray-200">
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    title="Recover your password"
+                    size="sm"
+                    className="text-xs font-bold text-primary hover:text-primary-dark transition-colors"
+                  >
                     Forgot Password?
                   </Link>
                 </div>
@@ -156,7 +173,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             {formError && (
               <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
                 <p className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  <span className="material-symbols-outlined text-[18px]">
+                    error
+                  </span>
                   {formError}
                 </p>
               </div>
@@ -174,7 +193,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="pt-4 flex flex-col items-center gap-6">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Don't have an account?
-              <Link to="/register" className="text-primary font-black hover:underline ml-1.5">Sign up</Link>
+              <Link
+                to="/register"
+                className="text-primary font-black hover:underline ml-1.5"
+              >
+                Sign up
+              </Link>
             </p>
 
             <button
@@ -183,7 +207,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               onClick={() => setFormError("Admin access is restricted.")}
               className="inline-flex items-center gap-1.5 text-[11px] font-black text-gray-400 hover:text-primary uppercase tracking-widest transition-all"
             >
-              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+              <span className="material-symbols-outlined text-[16px]">
+                admin_panel_settings
+              </span>
               Admin Portal
             </button>
           </div>

@@ -46,7 +46,7 @@ const AuthVisual: React.FC = () => {
       {slides.map((slide, index) => (
         <img
           key={index}
-          alt={`FixIt Hawassa Service ${index}`}
+          alt={`Muyaye Service ${index}`}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
             index === currentSlide ? "opacity-60" : "opacity-0"
           }`}

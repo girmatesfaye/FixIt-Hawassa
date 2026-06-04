@@ -1,8 +1,5 @@
 {
-  "name": "FixIt Hawassa",
+  "name": "Muyaye",
   "description": "A comprehensive platform connecting skilled informal workers with clients in Hawassa, featuring service booking, real-time tracking, and verified professional profiles.",
-  "requestFramePermissions": [
-    "camera",
-    "geolocation"
-  ]
+  "requestFramePermissions": ["camera", "geolocation"]
 }

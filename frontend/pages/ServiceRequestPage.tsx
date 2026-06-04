@@ -19,7 +19,9 @@ const ServiceRequestPage: React.FC = () => {
   const location = useLocation();
   const navCategory = (location.state as { category?: string } | null)
     ?.category;
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(navCategory || null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    navCategory || null,
+  );
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   let savedCategory: string | undefined = undefined;
@@ -103,12 +105,16 @@ const ServiceRequestPage: React.FC = () => {
 
       // Bounding box for Hawassa area
       // Roughly: Lat [6.9, 7.2], Lon [38.3, 38.6]
-      const isWithinHawassaBounds = 
-        latitude >= 6.9 && latitude <= 7.2 && 
-        longitude >= 38.3 && longitude <= 38.6;
+      const isWithinHawassaBounds =
+        latitude >= 6.9 &&
+        latitude <= 7.2 &&
+        longitude >= 38.3 &&
+        longitude <= 38.6;
 
       if (!isWithinHawassaBounds) {
-        toast.error("FixIt is currently optimized for Hawassa. Please ensure your location is within the city limits.");
+        toast.error(
+          "Muyaye is currently optimized for Hawassa. Please ensure your location is within the city limits.",
+        );
         return null;
       }
 
@@ -272,7 +278,8 @@ const ServiceRequestPage: React.FC = () => {
           return;
         }
 
-        const msg = result?.message ?? "Could not submit your request. Please try again.";
+        const msg =
+          result?.message ?? "Could not submit your request. Please try again.";
         setFormError(msg);
         toast.error(msg);
         return;
@@ -300,9 +307,6 @@ const ServiceRequestPage: React.FC = () => {
 
   return (
     <div className="w-full">
-
-
-
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-10">
         {/* Stepper */}
         <div className="flex items-center justify-between mb-12 relative px-4">
@@ -366,72 +370,78 @@ const ServiceRequestPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {loadingCategories ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-32 rounded-3xl bg-gray-100 dark:bg-gray-800 animate-pulse"
-                  ></div>
-                ))
-              ) : (
-                (() => {
-                  const defaultCategories = [
-                    { id: "default-1", name: "Plumbing", icon: "plumbing" },
-                    { id: "default-2", name: "Electrical", icon: "bolt" },
-                    { id: "default-3", name: "Painting", icon: "format_paint" },
-                    {
-                      id: "default-4",
-                      name: "Cleaning",
-                      icon: "cleaning_services",
-                    },
-                    { id: "default-5", name: "Carpentry", icon: "carpenter" },
-                    { id: "default-6", name: "Masonry", icon: "architecture" },
-                    { id: "default-7", name: "General Fixes", icon: "build" },
-                  ];
+              {loadingCategories
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-32 rounded-3xl bg-gray-100 dark:bg-gray-800 animate-pulse"
+                    ></div>
+                  ))
+                : (() => {
+                    const defaultCategories = [
+                      { id: "default-1", name: "Plumbing", icon: "plumbing" },
+                      { id: "default-2", name: "Electrical", icon: "bolt" },
+                      {
+                        id: "default-3",
+                        name: "Painting",
+                        icon: "format_paint",
+                      },
+                      {
+                        id: "default-4",
+                        name: "Cleaning",
+                        icon: "cleaning_services",
+                      },
+                      { id: "default-5", name: "Carpentry", icon: "carpenter" },
+                      {
+                        id: "default-6",
+                        name: "Masonry",
+                        icon: "architecture",
+                      },
+                      { id: "default-7", name: "General Fixes", icon: "build" },
+                    ];
 
-                  const merged = [...defaultCategories];
-                  categories.forEach((dynamic) => {
-                    if (
-                      !merged.find(
-                        (m) =>
-                          m.name.toLowerCase() === dynamic.name.toLowerCase(),
-                      )
-                    ) {
-                      merged.push(dynamic);
-                    }
-                  });
+                    const merged = [...defaultCategories];
+                    categories.forEach((dynamic) => {
+                      if (
+                        !merged.find(
+                          (m) =>
+                            m.name.toLowerCase() === dynamic.name.toLowerCase(),
+                        )
+                      ) {
+                        merged.push(dynamic);
+                      }
+                    });
 
-                  return merged;
-                })().map((svc, index) => {
-                  const colors = [
-                    "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
-                    "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
-                    "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
-                    "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
-                    "bg-green-50 text-green-500 dark:bg-green-500/10",
-                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
-                  ];
-                  const color = colors[index % colors.length];
-                  return (
-                    <button
-                      key={svc.id || svc.name}
-                      onClick={() => setSelectedCategory(svc.name)}
-                      className="group flex flex-col items-center text-center gap-4 p-6 rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                    >
-                      <div
-                        className={`size-14 rounded-2xl ${color} flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform shadow-sm`}
+                    return merged;
+                  })().map((svc, index) => {
+                    const colors = [
+                      "bg-blue-50 text-blue-500 dark:bg-blue-500/10",
+                      "bg-amber-50 text-amber-500 dark:bg-amber-500/10",
+                      "bg-orange-50 text-orange-500 dark:bg-orange-500/10",
+                      "bg-purple-50 text-purple-500 dark:bg-purple-500/10",
+                      "bg-green-50 text-green-500 dark:bg-green-500/10",
+                      "bg-slate-50 text-slate-500 dark:bg-slate-500/10",
+                    ];
+                    const color = colors[index % colors.length];
+                    return (
+                      <button
+                        key={svc.id || svc.name}
+                        onClick={() => setSelectedCategory(svc.name)}
+                        className="group flex flex-col items-center text-center gap-4 p-6 rounded-3xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                       >
-                        <span className="material-symbols-outlined text-3xl">
-                          {svc.icon || "build"}
-                        </span>
-                      </div>
-                      <p className="text-sm font-bold dark:text-white leading-tight">
-                        {svc.name}
-                      </p>
-                    </button>
-                  );
-                })
-              )}
+                        <div
+                          className={`size-14 rounded-2xl ${color} flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform shadow-sm`}
+                        >
+                          <span className="material-symbols-outlined text-3xl">
+                            {svc.icon || "build"}
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold dark:text-white leading-tight">
+                          {svc.name}
+                        </p>
+                      </button>
+                    );
+                  })}
             </div>
 
             <div className="pt-4 flex justify-center">

@@ -2,9 +2,9 @@ CHAPTER ONE: INTRODUCTION
 
 1.1 Background of the Implementation
 
-FixIt Hawassa is a full-stack service marketplace system designed for Hawassa, Ethiopia. The system connects clients who need maintenance or repair services with verified local workers such as electricians, plumbers, painters, cleaners, and other skilled service providers.
+Muyaye is a full-stack service marketplace system designed for Hawassa, Ethiopia. The system connects clients who need maintenance or repair services with verified local workers such as electricians, plumbers, painters, cleaners, and other skilled service providers.
 
-The implementation addresses common problems in local service discovery, including difficulty finding trusted workers, lack of structured service request tracking, weak communication between clients and workers, and limited administrative control over reports or unsafe worker behavior. FixIt Hawassa provides one platform for clients, workers, and administrators.
+The implementation addresses common problems in local service discovery, including difficulty finding trusted workers, lack of structured service request tracking, weak communication between clients and workers, and limited administrative control over reports or unsafe worker behavior. Muyaye provides one platform for clients, workers, and administrators.
 
 The implemented system has three main user groups:
 
@@ -98,7 +98,7 @@ Report resolution algorithm:
 - Admins review reports and can set report status to pending, investigating, resolved, or dismissed.
 - Dangerous reports or suspend actions can automatically suspend a worker account and deactivate the worker profile.
 
-2.2 Coding Standards
+  2.2 Coding Standards
 
 The project follows TypeScript-based coding standards in both frontend and backend.
 
@@ -132,7 +132,7 @@ Security coding standards:
 - File upload size and file type are validated before upload.
 - CORS is restricted to local development and configured frontend production URL.
 
-2.3 Coding Process
+  2.3 Coding Process
 
 The coding process followed an incremental development approach.
 
@@ -190,32 +190,32 @@ Testing environments:
 - MongoDB database configured through `MONGODB_URI`.
 - Cloudinary image upload configured through Cloudinary environment variables.
 
-3.2 Test Case Design
+  3.2 Test Case Design
 
-| Test Case ID | Feature | Input Data | Expected Result | Type |
-| --- | --- | --- | --- | --- |
-| TC-01 | Client registration | Valid name, email, password, client role | User is created and token is returned | Valid |
-| TC-02 | Worker registration | Worker role without national ID | System rejects registration | Invalid |
-| TC-03 | Worker registration | Worker role with recognized worker national ID | Worker user and worker profile are created | Valid |
-| TC-04 | Login | Correct email/password for verified active user | Login succeeds and role-based next route is returned | Valid |
-| TC-05 | Login | Wrong password | Login fails with invalid credentials | Invalid |
-| TC-06 | Login | Suspended account | Login fails with account inactive message | Invalid |
-| TC-07 | Create request | Category, 20+ character description, area, landmark, maintenance level | Request is saved as `SEARCHING` or `PENDING` | Valid |
-| TC-08 | Create request | Description shorter than 20 characters | Request is rejected by validation | Invalid |
-| TC-09 | Worker recommendation | Request category and area match available worker | Matching worker ranks higher | Valid |
-| TC-10 | Assign worker | Client assigns valid worker to own request | Request status changes to `PENDING` | Valid |
-| TC-11 | Assign worker | Client attempts to assign worker to another client request | System returns forbidden access | Invalid |
-| TC-12 | Worker response | Assigned worker accepts invitation | Request status changes to `IN_PROGRESS` | Valid |
-| TC-13 | Worker response | Non-assigned worker attempts response | System returns forbidden access | Invalid |
-| TC-14 | Chat | Client/assigned worker sends message on `IN_PROGRESS` request | Message is saved and emitted through Socket.IO | Valid |
-| TC-15 | Chat | User outside request sends message | System returns forbidden access | Invalid |
-| TC-16 | Complete request | Worker marks in-progress request complete | Completion timestamp is saved and client is notified in chat | Valid |
-| TC-17 | Confirm completion | Client confirms after worker completion | Request status becomes `COMPLETED` | Valid |
-| TC-18 | Review worker | Client reviews completed confirmed request | Review is saved and worker rating is recalculated | Valid |
-| TC-19 | Review worker | Client reviews before completion | System rejects review | Invalid |
-| TC-20 | Report worker | Client reports completed confirmed worker | Report is saved as pending | Valid |
-| TC-21 | Admin resolve report | Admin selects resolution and dangerous/suspend action | Report is updated and worker can be suspended | Valid |
-| TC-22 | Category management | Admin creates category with name/description/icon | Category is saved and visible to clients/workers | Valid |
+| Test Case ID | Feature               | Input Data                                                             | Expected Result                                              | Type    |
+| ------------ | --------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------ | ------- |
+| TC-01        | Client registration   | Valid name, email, password, client role                               | User is created and token is returned                        | Valid   |
+| TC-02        | Worker registration   | Worker role without national ID                                        | System rejects registration                                  | Invalid |
+| TC-03        | Worker registration   | Worker role with recognized worker national ID                         | Worker user and worker profile are created                   | Valid   |
+| TC-04        | Login                 | Correct email/password for verified active user                        | Login succeeds and role-based next route is returned         | Valid   |
+| TC-05        | Login                 | Wrong password                                                         | Login fails with invalid credentials                         | Invalid |
+| TC-06        | Login                 | Suspended account                                                      | Login fails with account inactive message                    | Invalid |
+| TC-07        | Create request        | Category, 20+ character description, area, landmark, maintenance level | Request is saved as `SEARCHING` or `PENDING`                 | Valid   |
+| TC-08        | Create request        | Description shorter than 20 characters                                 | Request is rejected by validation                            | Invalid |
+| TC-09        | Worker recommendation | Request category and area match available worker                       | Matching worker ranks higher                                 | Valid   |
+| TC-10        | Assign worker         | Client assigns valid worker to own request                             | Request status changes to `PENDING`                          | Valid   |
+| TC-11        | Assign worker         | Client attempts to assign worker to another client request             | System returns forbidden access                              | Invalid |
+| TC-12        | Worker response       | Assigned worker accepts invitation                                     | Request status changes to `IN_PROGRESS`                      | Valid   |
+| TC-13        | Worker response       | Non-assigned worker attempts response                                  | System returns forbidden access                              | Invalid |
+| TC-14        | Chat                  | Client/assigned worker sends message on `IN_PROGRESS` request          | Message is saved and emitted through Socket.IO               | Valid   |
+| TC-15        | Chat                  | User outside request sends message                                     | System returns forbidden access                              | Invalid |
+| TC-16        | Complete request      | Worker marks in-progress request complete                              | Completion timestamp is saved and client is notified in chat | Valid   |
+| TC-17        | Confirm completion    | Client confirms after worker completion                                | Request status becomes `COMPLETED`                           | Valid   |
+| TC-18        | Review worker         | Client reviews completed confirmed request                             | Review is saved and worker rating is recalculated            | Valid   |
+| TC-19        | Review worker         | Client reviews before completion                                       | System rejects review                                        | Invalid |
+| TC-20        | Report worker         | Client reports completed confirmed worker                              | Report is saved as pending                                   | Valid   |
+| TC-21        | Admin resolve report  | Admin selects resolution and dangerous/suspend action                  | Report is updated and worker can be suspended                | Valid   |
+| TC-22        | Category management   | Admin creates category with name/description/icon                      | Category is saved and visible to clients/workers             | Valid   |
 
 3.3 Test Procedures
 
@@ -278,7 +278,7 @@ Recommended database deployment controls:
 - Enable automated database backup.
 - Store environment variables in secure deployment settings, not in public repositories.
 
-4.2 System Level Security
+  4.2 System Level Security
 
 System-level security is implemented in the Express backend and frontend session handling.
 
@@ -378,11 +378,11 @@ Training methods:
 - Practice accounts for client, worker, and admin roles.
 - Help page inside the application.
 
-5.3 User Manual
+  5.3 User Manual
 
 Client user manual:
 
-1. Open the FixIt Hawassa web application.
+1. Open the Muyaye web application.
 2. Register as a client using full name, email, password, phone, and area.
 3. Verify the email address if verification is required.
 4. Log in and open the dashboard.
@@ -498,7 +498,7 @@ Possible future modifications:
 - Add dispute escalation workflow.
 - Add worker availability scheduling.
 
-6.2 Backup and Recovery Strategy
+  6.2 Backup and Recovery Strategy
 
 Backup strategy:
 
@@ -529,7 +529,7 @@ CHAPTER SEVEN: CONCLUSION AND RECOMMENDATION
 
 7.1 Conclusion
 
-FixIt Hawassa successfully implements a full-stack service marketplace for connecting clients and local workers in Hawassa. The system includes role-based authentication, worker profiles, service request management, worker recommendation ranking, job assignment, real-time messaging, completion confirmation, reviews, reports, category management, and admin analytics.
+Muyaye successfully implements a full-stack service marketplace for connecting clients and local workers in Hawassa. The system includes role-based authentication, worker profiles, service request management, worker recommendation ranking, job assignment, real-time messaging, completion confirmation, reviews, reports, category management, and admin analytics.
 
 The project demonstrates practical use of modern web technologies including React, Vite, TypeScript, Express, MongoDB, Socket.IO, Cloudinary, JWT authentication, and automated testing tools. The system also includes meaningful security controls such as password hashing, role-based access, request validation, rate limiting, upload restrictions, and admin-level account moderation.
 

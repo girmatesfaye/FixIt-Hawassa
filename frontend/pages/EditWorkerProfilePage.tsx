@@ -123,12 +123,16 @@ const EditWorkerProfilePage: React.FC = () => {
 
       // Bounding box for Hawassa area
       // Roughly: Lat [6.9, 7.2], Lon [38.3, 38.6]
-      const isWithinHawassaBounds = 
-        latitude >= 6.9 && latitude <= 7.2 && 
-        longitude >= 38.3 && longitude <= 38.6;
+      const isWithinHawassaBounds =
+        latitude >= 6.9 &&
+        latitude <= 7.2 &&
+        longitude >= 38.3 &&
+        longitude <= 38.6;
 
       if (!isWithinHawassaBounds) {
-        toast.error("FixIt is currently optimized for Hawassa. Please ensure your location is within the city limits.");
+        toast.error(
+          "Muyaye is currently optimized for Hawassa. Please ensure your location is within the city limits.",
+        );
         return null;
       }
 
@@ -283,10 +287,6 @@ const EditWorkerProfilePage: React.FC = () => {
       </div>
 
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
-
-
-
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column */}
           <div className="lg:col-span-5 space-y-8">
@@ -495,10 +495,12 @@ const EditWorkerProfilePage: React.FC = () => {
                         "Masonry",
                         "General Fixes",
                       ];
-                      
-                      const dynamicNames = categories.map(c => c.name);
-                      const allNames = Array.from(new Set([...defaultCategoryNames, ...dynamicNames]));
-                      
+
+                      const dynamicNames = categories.map((c) => c.name);
+                      const allNames = Array.from(
+                        new Set([...defaultCategoryNames, ...dynamicNames]),
+                      );
+
                       return allNames;
                     })().map((catName) => {
                       const selected = skills.includes(catName);
