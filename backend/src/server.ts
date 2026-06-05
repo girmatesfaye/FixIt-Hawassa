@@ -24,6 +24,14 @@ const app = express();
 const httpServer = createServer(app);
 const port = env.port;
 
+const getAllowedOrigins = (): string[] => {
+  return [process.env.FRONTEND_URL, process.env.FRONTEND_URLS]
+    .filter(Boolean)
+    .flatMap((value) => String(value).split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+};
+
 // Initialize Socket.io
 initSocket(httpServer);
 
@@ -35,15 +43,17 @@ app.use(
 );
 
 // 2. CORS - Lock down to production domains
-const allowedOrigins = [
-  "http://localhost:3000",
-  process.env.FRONTEND_URL,
-].filter(Boolean) as string[];
+const allowedOrigins = getAllowedOrigins();
+const hasExplicitAllowedOrigins = allowedOrigins.length > 0;
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        !hasExplicitAllowedOrigins ||
+        allowedOrigins.includes(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -114,8 +124,8 @@ app.use(
 
 const bootstrap = async () => {
   await connectToDatabase();
-  httpServer.listen(port, () => {
-    console.log(`FixIt backend listening on http://localhost:${port}`);
+  httpServer.listen(port, "0.0.0.0", () => {
+    console.log(`FixIt backend listening on port ${port}`);
   });
 };
 
