@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
-  <rect width="100%" height="100%" fill="#FFFFFF"/>
-  <circle cx="80" cy="80" r="64" fill="#0CA789" />
-  <text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="#FFFFFF" font-family="Poppins, Inter, Arial, sans-serif" font-weight="700" font-size="60">M</text>
-  <text x="115" y="120" fill="#FF7A45" font-family="\"Noto Sans Ethiopic\", \"Abyssinica SIL\", Arial, sans-serif" font-size="36">ሙ</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Muyaye monogram logo</title>
+  <desc id="desc">Green circular Muyaye logo with an M and Ethiopic accent</desc>
+  <rect width="160" height="160" fill="#FFFFFF"/>
+  <circle cx="80" cy="80" r="64" fill="#0CA789"/>
+  <text x="80" y="92" text-anchor="middle" fill="#FFFFFF" font-family="Poppins, Inter, Arial, sans-serif" font-weight="700" font-size="64">M</text>
+  <text x="112" y="123" fill="#FF7A45" font-family="Noto Sans Ethiopic, Abyssinica SIL, Arial, sans-serif" font-size="36">ሙ</text>
 </svg>
