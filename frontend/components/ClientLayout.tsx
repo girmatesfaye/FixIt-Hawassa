@@ -6,7 +6,7 @@ import {
   useLocation,
   Link,
 } from "react-router-dom";
-import logoMuyayePrimary from "../assets/logo-muyaye-primary.svg";
+import logoMuyayeMonogram from "../assets/logo-muyaye-monogram.svg";
 
 interface ClientLayoutProps {
   onLogout: () => void;
@@ -107,16 +107,13 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ onLogout }) => {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity overflow-hidden"
           >
             <img
-              src={logoMuyayePrimary}
+              src={logoMuyayeMonogram}
               alt="Muyaye"
               className="h-8 w-auto shrink-0"
             />
-            <div className="lg:max-w-0 lg:group-hover:max-w-[160px] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap">
-              <h2 className="text-sm font-bold tracking-tight text-[#120e1b] dark:text-white">
-                Muyaye
-              </h2>
-              <p className="text-xs font-medium text-primary">Client Portal</p>
-            </div>
+            <p className="lg:max-w-0 lg:group-hover:max-w-[160px] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 overflow-hidden whitespace-nowrap text-xs font-medium text-primary">
+              Client Portal
+            </p>
           </Link>
           <button
             onClick={closeMobileMenu}

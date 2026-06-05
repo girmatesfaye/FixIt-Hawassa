@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { UserRole } from "../services/auth";
-import logoMuyayePrimary from "../assets/logo-muyaye-primary.svg";
+import logoMuyayeMonogram from "../assets/logo-muyaye-monogram.svg";
 
 interface LandingPageProps {
   isAuthenticated: boolean;
@@ -206,13 +206,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-4">
                 <img
-                  src={logoMuyayePrimary}
+                  src={logoMuyayeMonogram}
                   alt="Muyaye"
                   className="h-10 w-auto"
                 />
-                <h2 className="text-lg font-bold leading-tight tracking-tight text-[#120e1b] dark:text-white">
-                  Muyaye
-                </h2>
               </Link>
             </div>
 
@@ -284,11 +281,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
-                src={logoMuyayePrimary}
+                src={logoMuyayeMonogram}
                 alt="Muyaye"
                 className="h-8 w-auto"
               />
-              <span className="text-sm font-bold dark:text-white">Muyaye</span>
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
@@ -643,11 +639,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex flex-col items-center md:items-start gap-2">
             <div className="flex items-center gap-3">
               <img
-                src={logoMuyayePrimary}
+                src={logoMuyayeMonogram}
                 alt="Muyaye"
                 className="h-8 w-auto"
               />
-              <h2 className="text-xl font-black dark:text-white">Muyaye</h2>
             </div>
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
               Bridging skills and needs
